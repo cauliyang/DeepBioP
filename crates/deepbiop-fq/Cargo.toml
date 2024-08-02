@@ -36,3 +36,7 @@ candle-core = { workspace = true }
 [dev-dependencies]
 bio = { workspace = true }
 tempfile = { workspace = true }
+
+
+[features]
+python = []

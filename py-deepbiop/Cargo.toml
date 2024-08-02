@@ -8,5 +8,13 @@ name = "deepbiop"
 crate-type = ["cdylib"]
 
 [dependencies]
-deepbiop-fq = { workspace = true }
+deepbiop-fq = { workspace = true, features = ['python'] }
 pyo3 = { workspace = true }
+log = { workspace = true }
+ahash = { workspace = true }
+rayon = { workspace = true }
+pyo3-log = { workspace = true }
+anyhow = { workspace = true }
+needletail = { workspace = true }
+numpy = { workspace = true }
+parquet = { workspace = true }
