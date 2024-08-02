@@ -164,6 +164,7 @@ mod tests {
             .unwrap();
 
         let result = encoder.encode("tests/data/one_record.fq").unwrap();
+
         let temp_file = tempfile::NamedTempFile::new().unwrap();
         write_json(temp_file, result).unwrap();
     }
