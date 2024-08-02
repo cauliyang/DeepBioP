@@ -1,16 +1,12 @@
 [package]
 name = "py-deepbiop"
 version = "0.1.0"
-edition = "2024"
+edition = "2021"
 
 [lib]
 name = "deepbiop"
 crate-type = ["cdylib"]
 
 [dependencies]
-deepbiop-fq = { workspace = true, features = ["python"] }
-pyo3 = { workspace = true, features = [
-    "abi3-py310",
-    "extension-module",
-    "anyhow",
-] }
+deepbiop-fq = { workspace = true }
+pyo3 = { workspace = true }
