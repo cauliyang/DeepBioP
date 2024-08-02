@@ -5,9 +5,9 @@ mod record;
 mod tensor;
 mod triat;
 
+pub use self::parquet::*;
 pub use json::*;
 pub use option::*;
-pub use parquet::*;
 pub use record::*;
 pub use tensor::*;
 pub use triat::*;

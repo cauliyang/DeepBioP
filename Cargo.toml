@@ -17,7 +17,7 @@ anyhow = "1.0"
 walkdir = { version = "2.4" }
 rayon = { version = "1.8" }
 pyo3 = { version = "0.21.0", features = [
-    "abi3-py310",
+    "abi3-py39",
     "extension-module",
     "anyhow",
 ] }
