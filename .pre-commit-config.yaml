@@ -1,0 +1,88 @@
+default_language_version:
+  node: system
+
+repos:
+  - repo: https://github.com/pre-commit/pre-commit-hooks
+    rev: v4.6.0
+    hooks:
+      - id: check-yaml
+        stages: [commit]
+      - id: check-json
+        stages: [commit]
+      - id: check-toml
+        stages: [commit]
+      - id: check-merge-conflict
+        stages: [commit]
+      - id: check-case-conflict
+        stages: [commit]
+      - id: detect-private-key
+        stages: [commit]
+      - id: check-added-large-files
+        args: ["--maxkb=150000"]
+      - id: end-of-file-fixer
+      - id: trailing-whitespace
+
+  - repo: https://github.com/doublify/pre-commit-rust
+    rev: v1.0
+    hooks:
+      - id: fmt
+      - id: cargo-check
+
+  - repo: https://github.com/charliermarsh/ruff-pre-commit
+    rev: "v0.4.2"
+    hooks:
+      - id: ruff
+        args: [--fix, --exit-non-zero-on-fix, --unsafe-fixes]
+      - id: ruff-format
+
+    # python docstring coverage checking
+  - repo: local
+    hooks:
+      - id: interrogate
+        name: interrogate
+        entry: interrogate
+        language: system
+        types: ["python"]
+        args:
+          [
+            --verbose,
+            --fail-under=80,
+            --ignore-init-module,
+            --ignore-init-method,
+            --ignore-module,
+            --ignore-nested-functions,
+            -vv,
+          ]
+
+  # shell scripts linter
+  - repo: https://github.com/shellcheck-py/shellcheck-py
+    rev: v0.10.0.1
+    hooks:
+      - id: shellcheck
+
+  # md formatting
+  - repo: https://github.com/executablebooks/mdformat
+    rev: 0.7.17
+    hooks:
+      - id: mdformat
+        args: ["--number"]
+        additional_dependencies:
+          - mdformat-gfm
+          - mdformat-tables
+          - mdformat_frontmatter
+          # - mdformat-toc
+          # - mdformat-black
+
+  - repo: https://github.com/DevinR528/cargo-sort
+    rev: v1.0.9
+    hooks:
+      - id: cargo-sort
+
+  - repo: local
+    hooks:
+      - id: clippy
+        name: clippy
+        language: system
+        types: [file, rust]
+        entry: cargo clippy --bins --tests --examples --all -- -D rust_2018_idioms -D warnings # Use -D warnings option to ensure the job fails when encountering warnings
+        pass_filenames: false
