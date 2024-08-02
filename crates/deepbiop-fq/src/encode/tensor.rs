@@ -14,8 +14,8 @@ use noodles::fastq;
 use pyo3::prelude::*;
 
 use crate::{
+    encode::RecordData,
     error::EncodingError,
-    fq_encode::RecordData,
     kmer::{generate_kmers_table, to_kmer_target_region},
     types::{Element, Id2KmerTable, Kmer2IdTable, Matrix, Tensor},
 };
@@ -374,7 +374,7 @@ mod tests {
     use ndarray::Array1;
 
     use crate::{
-        fq_encode::FqEncoderOptionBuilder,
+        encode::FqEncoderOptionBuilder,
         kmer::{kmerids_to_seq, to_original_targtet_region},
     };
 

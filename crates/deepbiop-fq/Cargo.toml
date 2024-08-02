@@ -11,7 +11,27 @@ readme = "../../README.md"
 description = "Deep Learning Preprocessing Library for Fastq Format"
 
 [dependencies]
+thiserror = { workspace = true }
+anyhow = { workspace = true }
 noodles = { workspace = true }
+rayon = { workspace = true }
+log = { workspace = true }
+needletail = { workspace = true }
+ahash = { workspace = true }
+numpy = { workspace = true }
+ndarray = { workspace = true }
+serde = { workspace = true }
+serde_json = { workspace = true }
+pyo3 = { workspace = true }
+derive_builder = { workspace = true }
+itertools = { workspace = true }
+lexical = { workspace = true }
+flate2 = { workspace = true }
+bstr = { workspace = true }
 
+parquet = { workspace = true }
+arrow = { workspace = true }
+candle-core = { workspace = true }
 
-[[example]]
+[dev-dependencies]
+tempfile = { workspace = true }

@@ -146,7 +146,7 @@ impl Encoder for JsonEncoder {
 
 #[cfg(test)]
 mod tests {
-    use crate::{fq_encode::FqEncoderOptionBuilder, output::write_json};
+    use crate::{encode::FqEncoderOptionBuilder, io::write_json};
 
     use super::*;
 

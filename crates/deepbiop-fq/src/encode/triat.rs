@@ -6,7 +6,7 @@ use rayon::prelude::*;
 use std::ops::Range;
 use std::path::{Path, PathBuf};
 
-use crate::output;
+use crate::io;
 use crate::types::Element;
 
 use super::RecordData;
@@ -63,7 +63,7 @@ pub trait Encoder {
 
     fn fetch_records<P: AsRef<Path>>(&mut self, path: P, kmer_size: u8) -> Result<Vec<RecordData>> {
         info!("fetching records from {}", path.as_ref().display());
-        let _records = output::read_noodel_records_from_fq_or_zip_fq(path)?;
+        let _records = io::read_noodel_records_from_fq_or_zip_fq(path)?;
 
         let records: Vec<RecordData> = _records
             .into_par_iter()

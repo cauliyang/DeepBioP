@@ -11,7 +11,9 @@ use noodles::bgzf;
 use noodles::fastq::record::Record as FastqRecord;
 use rayon::prelude::*;
 
-use crate::fq_encode::RecordData;
+use flate2::read::GzDecoder;
+
+use crate::encode::RecordData;
 
 pub fn write_fq(records: &[RecordData], file_path: Option<PathBuf>) -> Result<()> {
     let sink: Box<dyn io::Write> = if let Some(file) = file_path {
@@ -124,7 +126,6 @@ pub fn write_fq_parallel_for_noodle_record(
 }
 
 pub fn read_noodle_records_from_gzip_fq<P: AsRef<Path>>(file_path: P) -> Result<Vec<FastqRecord>> {
-    use flate2::read::GzDecoder;
     let mut reader = File::open(file_path)
         .map(GzDecoder::new)
         .map(BufReader::new)

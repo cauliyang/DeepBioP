@@ -10,9 +10,9 @@ use arrow::datatypes::{DataType, Field, Schema};
 use bstr::BString;
 use derive_builder::Builder;
 use log::info;
-use serde_derive::{Deserialize, Serialize};
+use serde::{Deserialize, Serialize};
 
-use crate::{output::write_parquet, types::Element};
+use crate::{io::write_parquet, types::Element};
 
 use super::{triat::Encoder, FqEncoderOption, RecordData};
 use anyhow::{Context, Result};
@@ -242,7 +242,7 @@ impl Encoder for ParquetEncoder {
 
 #[cfg(test)]
 mod tests {
-    use crate::fq_encode::FqEncoderOptionBuilder;
+    use crate::encode::FqEncoderOptionBuilder;
 
     use super::*;
     #[test]

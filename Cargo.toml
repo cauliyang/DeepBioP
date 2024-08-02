@@ -4,7 +4,7 @@ members = ["crates/*"]
 
 [workspace.package]
 version = "0.1.0"
-edition = "2024"
+edition = "2021"
 authors = ["Yangyang Li <sunlifeliz5@gmail.com>"]
 homepage = "https://github.com/cauliyang/DeepBioP"
 repository = "https://github.com/cauliyang/DeepBioP"
@@ -41,8 +41,7 @@ ahash = "0.8.11"
 numpy = "0.21"
 ndarray = { version = "0.15", features = ["serde", "rayon"] }
 num-traits = { version = "0.2" }
-serde = "1.0"
-serde_derive = "1.0"
+serde = { version = "1.0", features = ["derive"] }
 serde_json = "1.0"
 rand = "0.8"
 rand_distr = "0.4"
@@ -55,7 +54,7 @@ lazy_static = "1.4.0"
 tempfile = "3.10"
 parquet = "52.0.0"
 arrow = "52.0"
-candle-core = { git = "https://github.com/huggingface/candle.git", version = "0.5.1" }
+candle-core = { git = "https://github.com/huggingface/candle.git", version = "0.6.0" }
 colored = "2"
 textwrap = "0.16"
 flate2 = { version = "1.0.30", features = [
