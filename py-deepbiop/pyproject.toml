@@ -212,3 +212,9 @@ exclude_lines = [
     "if TYPE_CHECKING:",
     "from typing_extensions import ",
 ]
+
+[tool.rye]
+dev-dependencies = [
+    "interrogate>=1.7.0",
+    "mkdocs>=1.6.0",
+]
