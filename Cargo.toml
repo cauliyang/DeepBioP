@@ -1,6 +1,79 @@
-[package]
-name = "DeepBioP"
-version = "0.1.0"
-edition = "2021"
+[workspace]
+resolver = "2"
+members = ["crates/*"]
 
-[dependencies]
+[workspace.package]
+version = "0.1.0"
+edition = "2024"
+authors = ["Yangyang Li <sunlifeliz5@gmail.com>"]
+homepage = "https://github.com/cauliyang/DeepBioP"
+repository = "https://github.com/cauliyang/DeepBioP"
+license = "Apache-2.0"
+
+[workspace.dependencies]
+thiserror = "1.0"
+anyhow = "1.0"
+walkdir = { version = "2.4" }
+rayon = { version = "1.8" }
+pyo3 = { version = "0.21.0", features = [
+    "abi3-py310",
+    "extension-module",
+    "anyhow",
+] }
+
+ctrlc = "3.4"
+log = "0.4"
+pyo3-log = "0.10"
+noodles = { version = "0.78.0", features = [
+    "bgzf",
+    "core",
+    "csi",
+    "fasta",
+    "fastq",
+    "sam",
+    "bam",
+] }
+
+bio = "2.0"
+needletail = "0.5"
+
+ahash = "0.8.11"
+numpy = "0.21"
+ndarray = { version = "0.15", features = ["serde", "rayon"] }
+num-traits = { version = "0.2" }
+serde = "1.0"
+serde_derive = "1.0"
+serde_json = "1.0"
+rand = "0.8"
+rand_distr = "0.4"
+bitvec = "1.0"
+itertools = "0.13.0"
+derive_builder = "0.20"
+lexical = "6.1"
+bstr = "1.9.1"
+lazy_static = "1.4.0"
+tempfile = "3.10"
+parquet = "52.0.0"
+arrow = "52.0"
+candle-core = { git = "https://github.com/huggingface/candle.git", version = "0.5.1" }
+colored = "2"
+textwrap = "0.16"
+flate2 = { version = "1.0.30", features = [
+    "zlib-ng",
+], default-features = false }
+
+
+[profile.opt-dev]
+inherits = "dev"
+opt-level = 1
+
+[profile.debug-release]
+inherits = "release"
+debug = true
+incremental = true
+codegen-units = 16
+lto = "thin"
+
+[profile.release]
+codegen-units = 1
+lto = "fat"

@@ -1,0 +1,17 @@
+[package]
+name = "deepbiop-fq"
+version = { workspace = true }
+authors = { workspace = true }
+edition = { workspace = true }
+homepage = { workspace = true }
+repository = { workspace = true }
+keywords = ["arrow", "parquet", "fastq"]
+license = { workspace = true }
+readme = "../../README.md"
+description = "Deep Learning Preprocessing Library for Fastq Format"
+
+[dependencies]
+noodles = { workspace = true }
+
+
+[[example]]
