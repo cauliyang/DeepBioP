@@ -11,7 +11,7 @@ readme = "../README.md"
 description = "Deep Learning Preprocessing Library for Biological Data"
 
 [dependencies]
-deepbiop-fq = { path = "../crates/deepbiop-fq", optional = true }
+deepbiop-fq = { path = "../crates/deepbiop-fq", version = "0.1", optional = true }
 
 [features]
 default = []

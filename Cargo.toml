@@ -1,6 +1,6 @@
 [workspace]
 resolver = "2"
-members = ["crates/*", "py-deepbiop", "deepbiop"]
+members = ["crates/*", "py-deepbiop", "deepbiop", "tmp/tt"]
 
 [workspace.package]
 version = "0.1.1"
