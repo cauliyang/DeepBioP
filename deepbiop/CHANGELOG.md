@@ -6,6 +6,17 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.1.1](https://github.com/cauliyang/DeepBioP/releases/tag/deepbiop-v0.1.1) - 2024-08-03
+
+### Added
+- Update project versions and dependencies
+- Add deepbiop as a new package within the workspace
+- Add initial project files and configurations
+
+### Other
+- Add missing documentation warning and inline doc
+- Initial commit
+
 ## [0.1.1](https://github.com/cauliyang/DeepBioP/compare/deepbiop-v0.1.0...deepbiop-v0.1.1) - 2024-08-03
 
 ### Added
