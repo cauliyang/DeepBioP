@@ -259,5 +259,7 @@ mod tests {
             .unwrap();
         let (record_batch, scheme) = encoder.encode("tests/data/one_record.fq").unwrap();
         write_parquet("test.parquet", record_batch, scheme).unwrap();
+        // remove test.parquet
+        std::fs::remove_file("test.parquet").unwrap();
     }
 }
