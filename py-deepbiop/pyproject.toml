@@ -217,4 +217,6 @@ exclude_lines = [
 dev-dependencies = [
     "interrogate>=1.7.0",
     "mkdocs>=1.6.0",
+    "mkdocs-material>=9.5.31",
+    "pymdown-extensions>=10.9",
 ]
