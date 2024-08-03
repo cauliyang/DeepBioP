@@ -722,6 +722,13 @@ dependencies = [
 ]
 
 [[package]]
+name = "deepbiop"
+version = "0.1.0"
+dependencies = [
+ "deepbiop-fq",
+]
+
+[[package]]
 name = "deepbiop-fq"
 version = "0.1.0"
 dependencies = [

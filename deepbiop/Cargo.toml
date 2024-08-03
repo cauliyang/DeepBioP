@@ -1,0 +1,22 @@
+[package]
+name = "deepbiop"
+version = { workspace = true }
+authors = { workspace = true }
+edition = { workspace = true }
+homepage = { workspace = true }
+repository = { workspace = true }
+keywords = ["arrow", "parquet", "fastq"]
+license = { workspace = true }
+readme = "../README.md"
+description = "Deep Learning Preprocessing Library for Biological Data"
+
+[dependencies]
+deepbiop-fq = { path = "../crates/deepbiop-fq", optional = true }
+
+[features]
+default = []
+fastq = ["dep:deepbiop-fq"]
+
+
+[package.metadata.docs.rs]
+all-features = true
