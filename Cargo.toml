@@ -3,7 +3,7 @@ resolver = "2"
 members = ["crates/*", "py-deepbiop", "deepbiop"]
 
 [workspace.package]
-version = "0.1.0"
+version = "0.1.1"
 edition = "2021"
 authors = ["Yangyang Li <sunlifeliz5@gmail.com>"]
 homepage = "https://github.com/cauliyang/DeepBioP"
@@ -61,7 +61,7 @@ flate2 = { version = "1.0.30", features = [
     "zlib-ng",
 ], default-features = false }
 
-deepbiop-fq = { version = "0.1.0", path = "crates/deepbiop-fq" }
+deepbiop-fq = { version = "0.1.1", path = "crates/deepbiop-fq" }
 
 [profile.opt-dev]
 inherits = "dev"
