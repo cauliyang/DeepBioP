@@ -196,8 +196,7 @@ fn encode_fq_paths_to_tensor(
         kmer2id,
     ))
 }
-
-#[allow(clippy::too_many_arguments)]
+#[allow(clippy::too_many_arguments, clippy::type_complexity)]
 #[pyfunction]
 fn encode_fq_path_to_tensor(
     py: Python,
@@ -388,7 +387,7 @@ fn reverse_complement(seq: String) -> String {
     String::from_utf8(seq.as_bytes().reverse_complement()).unwrap()
 }
 
-// regiester default sub_module
+// register default sub_module
 pub fn register_default_module(parent_module: &Bound<'_, PyModule>) -> PyResult<()> {
     let child_module = PyModule::new_bound(parent_module.py(), "default")?;
     child_module.add("QUAL_OFFSET", deepbiop_fq::default::QUAL_OFFSET)?;
@@ -402,8 +401,8 @@ pub fn register_default_module(parent_module: &Bound<'_, PyModule>) -> PyResult<
     Ok(())
 }
 
-// regiester fq sub_module
-pub fn regiester_fq_mododule(parent_module: &Bound<'_, PyModule>) -> PyResult<()> {
+// register fq sub_module
+pub fn register_fq_module(parent_module: &Bound<'_, PyModule>) -> PyResult<()> {
     let child_module = PyModule::new_bound(parent_module.py(), "fq")?;
 
     child_module.add_class::<PyRecordData>()?;

@@ -15,24 +15,12 @@ thiserror = "1.0"
 anyhow = "1.0"
 walkdir = { version = "2.4" }
 rayon = { version = "1.8" }
-pyo3 = { version = "0.21.0", features = [
-    "abi3-py39",
-    "extension-module",
-    "anyhow",
-] }
+pyo3 = { version = "0.21.0", features = ["abi3-py39", "extension-module", "anyhow"] }
 
 ctrlc = "3.4"
 log = "0.4"
 pyo3-log = "0.10"
-noodles = { version = "0.78.0", features = [
-    "bgzf",
-    "core",
-    "csi",
-    "fasta",
-    "fastq",
-    "sam",
-    "bam",
-] }
+noodles = { version = "0.78.0", features = ["bgzf", "core", "csi", "fasta", "fastq", "sam", "bam"] }
 
 bio = "2.0"
 needletail = "0.5"
@@ -57,9 +45,7 @@ arrow = "52.0"
 candle-core = { git = "https://github.com/huggingface/candle.git", version = "0.6.0" }
 colored = "2"
 textwrap = "0.16"
-flate2 = { version = "1.0.30", features = [
-    "zlib-ng",
-], default-features = false }
+flate2 = { version = "1.0.30", features = ["zlib-ng"], default-features = false }
 
 deepbiop-fq = { version = "0.1.1", path = "crates/deepbiop-fq" }
 
