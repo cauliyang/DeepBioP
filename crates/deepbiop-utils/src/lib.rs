@@ -1,7 +1,7 @@
+pub mod blat;
+
 #[cfg(feature = "python")]
-mod python;
-#[cfg(feature = "python")]
-pub use python::*;
+pub mod python;
 
 use colored::Colorize;
 use pyo3::prelude::*;

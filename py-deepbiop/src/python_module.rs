@@ -459,7 +459,13 @@ pub fn register_bam_module(parent_module: &Bound<'_, PyModule>) -> PyResult<()> 
 pub fn register_utils_module(parent_module: &Bound<'_, PyModule>) -> PyResult<()> {
     let child_module = PyModule::new_bound(parent_module.py(), "utils")?;
 
+    child_module.add_class::<utils::blat::PslAlignment>()?;
+
     child_module.add_function(wrap_pyfunction!(utils::highlight_targets, &child_module)?)?;
+    child_module.add_function(wrap_pyfunction!(
+        utils::python::parse_psl_by_qname,
+        &child_module
+    )?)?;
 
     parent_module.add_submodule(&child_module)?;
     Ok(())
