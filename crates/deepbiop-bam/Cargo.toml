@@ -1,0 +1,42 @@
+[package]
+name = "deepbiop-bam"
+version = { workspace = true }
+authors = { workspace = true }
+edition = { workspace = true }
+homepage = { workspace = true }
+repository = { workspace = true }
+keywords = ["bam"]
+license = { workspace = true }
+readme = "../../README.md"
+description = "Deep Learning Processing Library for Bam Format"
+
+[dependencies]
+thiserror = { workspace = true }
+anyhow = { workspace = true }
+noodles = { workspace = true }
+rayon = { workspace = true }
+log = { workspace = true }
+needletail = { workspace = true }
+ahash = { workspace = true }
+numpy = { workspace = true }
+ndarray = { workspace = true }
+serde = { workspace = true }
+serde_json = { workspace = true }
+pyo3 = { workspace = true }
+derive_builder = { workspace = true }
+itertools = { workspace = true }
+lexical = { workspace = true }
+flate2 = { workspace = true }
+bstr = { workspace = true }
+
+parquet = { workspace = true }
+arrow = { workspace = true }
+candle-core = { workspace = true }
+
+[dev-dependencies]
+bio = { workspace = true }
+tempfile = { workspace = true }
+
+
+[features]
+python = []

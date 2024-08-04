@@ -2,13 +2,9 @@ use std::path::PathBuf;
 
 use ahash::HashMap;
 
-use deepbiop_fq::encode as fq_encode;
-use deepbiop_fq::encode::Encoder as FQ_ENCODER;
-use deepbiop_fq::io as fq_io;
-use deepbiop_fq::kmer;
-use deepbiop_fq::types::Element;
-use deepbiop_fq::types::Kmer2IdTable;
-use deepbiop_fq::utils as fq_utils;
+use deepbiop_bam as bam;
+
+use deepbiop_fq::{self as fastq, encode::Encoder, types::Element};
 
 use anyhow::Result;
 use log::warn;
@@ -30,10 +26,10 @@ pub fn encode_qual(qual: String, qual_offset: u8) -> Vec<u8> {
 }
 
 #[pyclass(name = "RecordData")]
-pub struct PyRecordData(fq_encode::RecordData);
+pub struct PyRecordData(fastq::encode::RecordData);
 
-impl From<fq_encode::RecordData> for PyRecordData {
-    fn from(data: fq_encode::RecordData) -> Self {
+impl From<fastq::encode::RecordData> for PyRecordData {
+    fn from(data: fastq::encode::RecordData) -> Self {
         Self(data)
     }
 }
@@ -43,7 +39,7 @@ impl<'py> FromPyObject<'py> for PyRecordData {
     fn extract_bound(ob: &Bound<'py, PyAny>) -> PyResult<Self> {
         // Assuming Python objects are tuples of (id, seq, qual)
         let (id, seq, qual): (String, String, String) = ob.extract()?;
-        Ok(PyRecordData(fq_encode::RecordData {
+        Ok(PyRecordData(fastq::encode::RecordData {
             id: id.into(),
             seq: seq.into(),
             qual: qual.into(),
@@ -55,7 +51,7 @@ impl<'py> FromPyObject<'py> for PyRecordData {
 impl PyRecordData {
     #[new]
     fn new(id: String, seq: String, qual: String) -> Self {
-        Self(fq_encode::RecordData {
+        Self(fastq::encode::RecordData {
             id: id.into(),
             seq: seq.into(),
             qual: qual.into(),
@@ -94,11 +90,11 @@ impl PyRecordData {
 
 #[pyfunction]
 fn write_fq(records_data: Vec<PyRecordData>, file_path: Option<PathBuf>) -> Result<()> {
-    let records: Vec<fq_encode::RecordData> = records_data
+    let records: Vec<fastq::encode::RecordData> = records_data
         .into_par_iter()
         .map(|py_record| py_record.0)
         .collect();
-    fq_io::write_fq(&records, file_path)
+    fastq::io::write_fq(&records, file_path)
 }
 
 #[pyfunction]
@@ -107,18 +103,18 @@ fn write_fq_parallel(
     file_path: PathBuf,
     threads: usize,
 ) -> Result<()> {
-    let records: Vec<fq_encode::RecordData> = records_data
+    let records: Vec<fastq::encode::RecordData> = records_data
         .into_par_iter()
         .map(|py_record| py_record.0)
         .collect();
 
-    fq_io::write_zip_fq_parallel(&records, file_path, Some(threads))
+    fastq::io::write_zip_fq_parallel(&records, file_path, Some(threads))
 }
 
 #[pyfunction]
 fn seq_to_kmers(seq: String, k: usize, overlap: bool) -> Vec<String> {
     let normalized_seq = seq.as_bytes().normalize(false);
-    kmer::seq_to_kmers(&normalized_seq, k, overlap)
+    fastq::kmer::seq_to_kmers(&normalized_seq, k, overlap)
         .par_iter()
         .map(|s| String::from_utf8_lossy(s).to_string())
         .collect()
@@ -127,19 +123,19 @@ fn seq_to_kmers(seq: String, k: usize, overlap: bool) -> Vec<String> {
 #[pyfunction]
 fn kmers_to_seq(kmers: Vec<String>) -> Result<String> {
     let kmers_as_bytes: Vec<&[u8]> = kmers.par_iter().map(|s| s.as_bytes()).collect();
-    Ok(String::from_utf8_lossy(&kmer::kmers_to_seq(kmers_as_bytes)?).to_string())
+    Ok(String::from_utf8_lossy(&fastq::kmer::kmers_to_seq(kmers_as_bytes)?).to_string())
 }
 
 #[pyfunction]
-fn generate_kmers_table(base: String, k: usize) -> Kmer2IdTable {
+fn generate_kmers_table(base: String, k: usize) -> fastq::types::Kmer2IdTable {
     let base = base.as_bytes();
-    kmer::generate_kmers_table(base, k as u8)
+    fastq::kmer::generate_kmers_table(base, k as u8)
 }
 
 #[pyfunction]
 fn generate_kmers(base: String, k: usize) -> Vec<String> {
     let base = base.as_bytes();
-    kmer::generate_kmers(base, k as u8)
+    fastq::kmer::generate_kmers(base, k as u8)
         .into_iter()
         .map(|s| String::from_utf8_lossy(&s).to_string())
         .collect()
@@ -168,14 +164,14 @@ fn encode_fq_paths_to_tensor(
     Bound<'_, PyArray2<Element>>,
     HashMap<String, Element>,
 )> {
-    let option = fq_encode::FqEncoderOptionBuilder::default()
+    let option = fastq::encode::FqEncoderOptionBuilder::default()
         .kmer_size(k as u8)
         .bases(bases.as_bytes().to_vec())
         .qual_offset(qual_offset as u8)
         .vectorized_target(vectorized_target)
         .build()?;
 
-    let mut fq_encoder = fq_encode::TensorEncoderBuilder::default()
+    let mut fq_encoder = fastq::encode::TensorEncoderBuilder::default()
         .option(option)
         .tensor_max_width(max_width.unwrap_or(0))
         .tensor_max_seq_len(max_seq_len.unwrap_or(0))
@@ -183,7 +179,7 @@ fn encode_fq_paths_to_tensor(
 
     let ((input, target), qual) = fq_encoder.encode_multiple(&fq_paths, parallel_for_files)?;
 
-    let kmer2id: HashMap<String, Element> = fq_encoder
+    let kmer2id: HashMap<String, fastq::types::Element> = fq_encoder
         .kmer2id_table
         .par_iter()
         .map(|(k, v)| (String::from_utf8_lossy(k).to_string(), *v))
@@ -213,14 +209,14 @@ fn encode_fq_path_to_tensor(
     Bound<'_, PyArray2<Element>>,
     HashMap<String, Element>,
 )> {
-    let option = fq_encode::FqEncoderOptionBuilder::default()
+    let option = fastq::encode::FqEncoderOptionBuilder::default()
         .kmer_size(k as u8)
         .bases(bases.as_bytes().to_vec())
         .qual_offset(qual_offset as u8)
         .vectorized_target(vectorized_target)
         .build()?;
 
-    let mut fq_encoder = fq_encode::TensorEncoderBuilder::default()
+    let mut fq_encoder = fastq::encode::TensorEncoderBuilder::default()
         .option(option)
         .tensor_max_width(max_width.unwrap_or(0))
         .tensor_max_seq_len(max_seq_len.unwrap_or(0))
@@ -251,14 +247,14 @@ fn encode_fq_path_to_json(
     vectorized_target: bool,
     result_path: Option<PathBuf>,
 ) -> Result<()> {
-    let option = fq_encode::FqEncoderOptionBuilder::default()
+    let option = fastq::encode::FqEncoderOptionBuilder::default()
         .kmer_size(k as u8)
         .bases(bases.as_bytes().to_vec())
         .qual_offset(qual_offset as u8)
         .vectorized_target(vectorized_target)
         .build()?;
 
-    let mut fq_encoder = fq_encode::JsonEncoderBuilder::default()
+    let mut fq_encoder = fastq::encode::JsonEncoderBuilder::default()
         .option(option)
         .build()?;
 
@@ -273,7 +269,7 @@ fn encode_fq_path_to_json(
     } else {
         fq_path.with_extension("json")
     };
-    fq_io::write_json(json_path, result)?;
+    fastq::io::write_json(json_path, result)?;
     Ok(())
 }
 
@@ -286,14 +282,14 @@ fn encode_fq_path_to_parquet_chunk(
     qual_offset: usize,
     vectorized_target: bool,
 ) -> Result<()> {
-    let option = fq_encode::FqEncoderOptionBuilder::default()
+    let option = fastq::encode::FqEncoderOptionBuilder::default()
         .kmer_size(0)
         .bases(bases.as_bytes().to_vec())
         .qual_offset(qual_offset as u8)
         .vectorized_target(vectorized_target)
         .build()?;
 
-    let mut fq_encoder = fq_encode::ParquetEncoderBuilder::default()
+    let mut fq_encoder = fastq::encode::ParquetEncoderBuilder::default()
         .option(option)
         .build()?;
     fq_encoder.encode_chunk(&fq_path, chunk_size, parallel)?;
@@ -308,14 +304,14 @@ fn encode_fq_path_to_parquet(
     vectorized_target: bool,
     result_path: Option<PathBuf>,
 ) -> Result<()> {
-    let option = fq_encode::FqEncoderOptionBuilder::default()
+    let option = fastq::encode::FqEncoderOptionBuilder::default()
         .kmer_size(0)
         .bases(bases.as_bytes().to_vec())
         .qual_offset(qual_offset as u8)
         .vectorized_target(vectorized_target)
         .build()?;
 
-    let mut fq_encoder = fq_encode::ParquetEncoderBuilder::default()
+    let mut fq_encoder = fastq::encode::ParquetEncoderBuilder::default()
         .option(option)
         .build()?;
     let (record_batch, schema) = fq_encoder.encode(&fq_path)?;
@@ -329,7 +325,7 @@ fn encode_fq_path_to_parquet(
     } else {
         fq_path.with_extension("parquet")
     };
-    fq_io::write_parquet(parquet_path, record_batch, schema)?;
+    fastq::io::write_parquet(parquet_path, record_batch, schema)?;
     Ok(())
 }
 
@@ -355,7 +351,7 @@ fn encode_fq_paths_to_parquet(
 
 #[pyfunction]
 fn get_label_region(labels: Vec<i8>) -> Vec<(usize, usize)> {
-    fq_utils::get_label_region(&labels)
+    fastq::utils::get_label_region(&labels)
         .par_iter()
         .map(|r| (r.start, r.end))
         .collect()
@@ -374,9 +370,9 @@ fn convert_multiple_fqs_to_one_fq(
     let is_zip = paths[0].extension().unwrap() == "gz";
 
     if is_zip {
-        fq_io::convert_multiple_fqs_to_one_zip_fq(&paths, result_path, parallel)?;
+        fastq::io::convert_multiple_fqs_to_one_zip_fq(&paths, result_path, parallel)?;
     } else {
-        fq_io::convert_multiple_zip_fqs_to_one_zip_fq(&paths, result_path, parallel)?;
+        fastq::io::convert_multiple_zip_fqs_to_one_zip_fq(&paths, result_path, parallel)?;
     }
 
     Ok(())
@@ -406,10 +402,10 @@ pub fn register_fq_module(parent_module: &Bound<'_, PyModule>) -> PyResult<()> {
     let child_module = PyModule::new_bound(parent_module.py(), "fq")?;
 
     child_module.add_class::<PyRecordData>()?;
-    child_module.add_class::<fq_encode::FqEncoderOption>()?;
-    child_module.add_class::<fq_encode::TensorEncoder>()?;
-    child_module.add_class::<fq_encode::JsonEncoder>()?;
-    child_module.add_class::<fq_encode::ParquetEncoder>()?;
+    child_module.add_class::<fastq::encode::FqEncoderOption>()?;
+    child_module.add_class::<fastq::encode::TensorEncoder>()?;
+    child_module.add_class::<fastq::encode::JsonEncoder>()?;
+    child_module.add_class::<fastq::encode::ParquetEncoder>()?;
 
     child_module.add_function(wrap_pyfunction!(get_label_region, &child_module)?)?;
     child_module.add_function(wrap_pyfunction!(encode_qual, &child_module)?)?;
@@ -444,6 +440,15 @@ pub fn register_fq_module(parent_module: &Bound<'_, PyModule>) -> PyResult<()> {
         convert_multiple_fqs_to_one_fq,
         &child_module
     )?)?;
+
+    parent_module.add_submodule(&child_module)?;
+    Ok(())
+}
+
+// register bam sub module
+pub fn register_bam_module(parent_module: &Bound<'_, PyModule>) -> PyResult<()> {
+    let child_module = PyModule::new_bound(parent_module.py(), "bam")?;
+    child_module.add_function(wrap_pyfunction!(bam::left_right_soft_clip, &child_module)?)?;
 
     parent_module.add_submodule(&child_module)?;
     Ok(())
