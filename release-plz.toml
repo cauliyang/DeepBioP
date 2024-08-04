@@ -37,5 +37,13 @@ release = false      # don't process this package
 name = "deepbiop-fq"
 release = false      # don't process this package
 
+[[package]]
+name = "deepbiop-bam"
+release = false
+
+[[package]]
+name = "deepbiop-utils"
+release = false
+
 [changelog]
 protect_breaking_commits = true # always include commits with breaking changes in the changelog
