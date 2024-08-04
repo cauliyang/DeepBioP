@@ -24,6 +24,7 @@ pub trait Encoder {
 
     fn encode_record(&self, id: &[u8], seq: &[u8], qual: &[u8]) -> Self::RecordOutput;
 
+    #[allow(clippy::single_range_in_vec_init)]
     fn parse_target_from_id(src: &[u8]) -> Result<Vec<Range<usize>>> {
         // check empty input
         if src.is_empty() {
