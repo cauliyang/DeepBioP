@@ -1,16 +1,17 @@
-use std::ops::Range;
 use std::path::PathBuf;
 
 use ahash::HashMap;
-use deepbiop_fq::encode;
-use deepbiop_fq::encode::Encoder;
-use deepbiop_fq::io;
+
+use deepbiop_fq::encode as fq_encode;
+use deepbiop_fq::encode::Encoder as FQ_ENCODER;
+use deepbiop_fq::io as fq_io;
 use deepbiop_fq::kmer;
 use deepbiop_fq::types::Element;
 use deepbiop_fq::types::Kmer2IdTable;
+use deepbiop_fq::utils as fq_utils;
 
 use anyhow::Result;
-use log::{debug, error, info, warn};
+use log::warn;
 use needletail::Sequence;
 use numpy::{IntoPyArray, PyArray2, PyArray3};
 use pyo3::prelude::*;
@@ -29,10 +30,10 @@ pub fn encode_qual(qual: String, qual_offset: u8) -> Vec<u8> {
 }
 
 #[pyclass(name = "RecordData")]
-pub struct PyRecordData(encode::RecordData);
+pub struct PyRecordData(fq_encode::RecordData);
 
-impl From<encode::RecordData> for PyRecordData {
-    fn from(data: encode::RecordData) -> Self {
+impl From<fq_encode::RecordData> for PyRecordData {
+    fn from(data: fq_encode::RecordData) -> Self {
         Self(data)
     }
 }
@@ -42,7 +43,7 @@ impl<'py> FromPyObject<'py> for PyRecordData {
     fn extract_bound(ob: &Bound<'py, PyAny>) -> PyResult<Self> {
         // Assuming Python objects are tuples of (id, seq, qual)
         let (id, seq, qual): (String, String, String) = ob.extract()?;
-        Ok(PyRecordData(encode::RecordData {
+        Ok(PyRecordData(fq_encode::RecordData {
             id: id.into(),
             seq: seq.into(),
             qual: qual.into(),
@@ -54,7 +55,7 @@ impl<'py> FromPyObject<'py> for PyRecordData {
 impl PyRecordData {
     #[new]
     fn new(id: String, seq: String, qual: String) -> Self {
-        Self(encode::RecordData {
+        Self(fq_encode::RecordData {
             id: id.into(),
             seq: seq.into(),
             qual: qual.into(),
@@ -93,11 +94,11 @@ impl PyRecordData {
 
 #[pyfunction]
 fn write_fq(records_data: Vec<PyRecordData>, file_path: Option<PathBuf>) -> Result<()> {
-    let records: Vec<encode::RecordData> = records_data
+    let records: Vec<fq_encode::RecordData> = records_data
         .into_par_iter()
         .map(|py_record| py_record.0)
         .collect();
-    io::write_fq(&records, file_path)
+    fq_io::write_fq(&records, file_path)
 }
 
 #[pyfunction]
@@ -106,12 +107,12 @@ fn write_fq_parallel(
     file_path: PathBuf,
     threads: usize,
 ) -> Result<()> {
-    let records: Vec<encode::RecordData> = records_data
+    let records: Vec<fq_encode::RecordData> = records_data
         .into_par_iter()
         .map(|py_record| py_record.0)
         .collect();
 
-    io::write_zip_fq_parallel(&records, file_path, Some(threads))
+    fq_io::write_zip_fq_parallel(&records, file_path, Some(threads))
 }
 
 #[pyfunction]
@@ -149,7 +150,7 @@ fn normalize_seq(seq: String, iupac: bool) -> String {
     String::from_utf8_lossy(&seq.as_bytes().normalize(iupac)).to_string()
 }
 
-#[allow(clippy::too_many_arguments)]
+#[allow(clippy::too_many_arguments, clippy::type_complexity)]
 #[pyfunction]
 fn encode_fq_paths_to_tensor(
     py: Python,
@@ -167,22 +168,22 @@ fn encode_fq_paths_to_tensor(
     Bound<'_, PyArray2<Element>>,
     HashMap<String, Element>,
 )> {
-    let option = encode::FqEncoderOptionBuilder::default()
+    let option = fq_encode::FqEncoderOptionBuilder::default()
         .kmer_size(k as u8)
         .bases(bases.as_bytes().to_vec())
         .qual_offset(qual_offset as u8)
         .vectorized_target(vectorized_target)
         .build()?;
 
-    let mut encoder = encode::TensorEncoderBuilder::default()
+    let mut fq_encoder = fq_encode::TensorEncoderBuilder::default()
         .option(option)
         .tensor_max_width(max_width.unwrap_or(0))
         .tensor_max_seq_len(max_seq_len.unwrap_or(0))
         .build()?;
 
-    let ((input, target), qual) = encoder.encode_multiple(&fq_paths, parallel_for_files)?;
+    let ((input, target), qual) = fq_encoder.encode_multiple(&fq_paths, parallel_for_files)?;
 
-    let kmer2id: HashMap<String, Element> = encoder
+    let kmer2id: HashMap<String, Element> = fq_encoder
         .kmer2id_table
         .par_iter()
         .map(|(k, v)| (String::from_utf8_lossy(k).to_string(), *v))
@@ -213,22 +214,22 @@ fn encode_fq_path_to_tensor(
     Bound<'_, PyArray2<Element>>,
     HashMap<String, Element>,
 )> {
-    let option = encode::FqEncoderOptionBuilder::default()
+    let option = fq_encode::FqEncoderOptionBuilder::default()
         .kmer_size(k as u8)
         .bases(bases.as_bytes().to_vec())
         .qual_offset(qual_offset as u8)
         .vectorized_target(vectorized_target)
         .build()?;
 
-    let mut encoder = encode::TensorEncoderBuilder::default()
+    let mut fq_encoder = fq_encode::TensorEncoderBuilder::default()
         .option(option)
         .tensor_max_width(max_width.unwrap_or(0))
         .tensor_max_seq_len(max_seq_len.unwrap_or(0))
         .build()?;
 
-    let ((input, target), qual) = encoder.encode(fq_path)?;
+    let ((input, target), qual) = fq_encoder.encode(fq_path)?;
 
-    let kmer2id: HashMap<String, Element> = encoder
+    let kmer2id: HashMap<String, Element> = fq_encoder
         .kmer2id_table
         .par_iter()
         .map(|(k, v)| (String::from_utf8_lossy(k).to_string(), *v))
@@ -251,18 +252,18 @@ fn encode_fq_path_to_json(
     vectorized_target: bool,
     result_path: Option<PathBuf>,
 ) -> Result<()> {
-    let option = encode::FqEncoderOptionBuilder::default()
+    let option = fq_encode::FqEncoderOptionBuilder::default()
         .kmer_size(k as u8)
         .bases(bases.as_bytes().to_vec())
         .qual_offset(qual_offset as u8)
         .vectorized_target(vectorized_target)
         .build()?;
 
-    let mut encoder = encode::JsonEncoderBuilder::default()
+    let mut fq_encoder = fq_encode::JsonEncoderBuilder::default()
         .option(option)
         .build()?;
 
-    let result = encoder.encode(&fq_path)?;
+    let result = fq_encoder.encode(&fq_path)?;
 
     // result file is fq_path with .parquet extension
     let json_path = if let Some(path) = result_path {
@@ -273,7 +274,7 @@ fn encode_fq_path_to_json(
     } else {
         fq_path.with_extension("json")
     };
-    io::write_json(json_path, result)?;
+    fq_io::write_json(json_path, result)?;
     Ok(())
 }
 
@@ -286,17 +287,17 @@ fn encode_fq_path_to_parquet_chunk(
     qual_offset: usize,
     vectorized_target: bool,
 ) -> Result<()> {
-    let option = encode::FqEncoderOptionBuilder::default()
+    let option = fq_encode::FqEncoderOptionBuilder::default()
         .kmer_size(0)
         .bases(bases.as_bytes().to_vec())
         .qual_offset(qual_offset as u8)
         .vectorized_target(vectorized_target)
         .build()?;
 
-    let mut encoder = encode::ParquetEncoderBuilder::default()
+    let mut fq_encoder = fq_encode::ParquetEncoderBuilder::default()
         .option(option)
         .build()?;
-    encoder.encode_chunk(&fq_path, chunk_size, parallel)?;
+    fq_encoder.encode_chunk(&fq_path, chunk_size, parallel)?;
     Ok(())
 }
 
@@ -308,17 +309,17 @@ fn encode_fq_path_to_parquet(
     vectorized_target: bool,
     result_path: Option<PathBuf>,
 ) -> Result<()> {
-    let option = encode::FqEncoderOptionBuilder::default()
+    let option = fq_encode::FqEncoderOptionBuilder::default()
         .kmer_size(0)
         .bases(bases.as_bytes().to_vec())
         .qual_offset(qual_offset as u8)
         .vectorized_target(vectorized_target)
         .build()?;
 
-    let mut encoder = encode::ParquetEncoderBuilder::default()
+    let mut fq_encoder = fq_encode::ParquetEncoderBuilder::default()
         .option(option)
         .build()?;
-    let (record_batch, schema) = encoder.encode(&fq_path)?;
+    let (record_batch, schema) = fq_encoder.encode(&fq_path)?;
 
     // result file is fq_path with .parquet extension
     let parquet_path = if let Some(path) = result_path {
@@ -329,7 +330,7 @@ fn encode_fq_path_to_parquet(
     } else {
         fq_path.with_extension("parquet")
     };
-    io::write_parquet(parquet_path, record_batch, schema)?;
+    fq_io::write_parquet(parquet_path, record_batch, schema)?;
     Ok(())
 }
 
@@ -353,31 +354,12 @@ fn encode_fq_paths_to_parquet(
     Ok(())
 }
 
-/// find 1s regions in the labels e.g. 00110011100
-pub fn get_label_region(labels: &[i8]) -> Vec<Range<usize>> {
-    let mut regions = vec![];
-
-    let mut start = 0;
-    let mut end = 0;
-
-    for (i, label) in labels.iter().enumerate() {
-        if *label == 1 {
-            if start == 0 {
-                start = i;
-            }
-            end = i;
-        } else if start != 0 {
-            regions.push(start..end + 1);
-            start = 0;
-            end = 0;
-        }
-    }
-
-    if start != 0 {
-        regions.push(start..end + 1);
-    }
-
-    regions
+#[pyfunction]
+fn get_label_region(labels: Vec<i8>) -> Vec<(usize, usize)> {
+    fq_utils::get_label_region(&labels)
+        .par_iter()
+        .map(|r| (r.start, r.end))
+        .collect()
 }
 
 #[pyfunction]
@@ -393,9 +375,9 @@ fn convert_multiple_fqs_to_one_fq(
     let is_zip = paths[0].extension().unwrap() == "gz";
 
     if is_zip {
-        io::convert_multiple_fqs_to_one_zip_fq(&paths, result_path, parallel)?;
+        fq_io::convert_multiple_fqs_to_one_zip_fq(&paths, result_path, parallel)?;
     } else {
-        io::convert_multiple_zip_fqs_to_one_zip_fq(&paths, result_path, parallel)?;
+        fq_io::convert_multiple_zip_fqs_to_one_zip_fq(&paths, result_path, parallel)?;
     }
 
     Ok(())
@@ -406,7 +388,7 @@ fn reverse_complement(seq: String) -> String {
     String::from_utf8(seq.as_bytes().reverse_complement()).unwrap()
 }
 
-// regiester sub_module
+// regiester default sub_module
 pub fn register_default_module(parent_module: &Bound<'_, PyModule>) -> PyResult<()> {
     let child_module = PyModule::new_bound(parent_module.py(), "default")?;
     child_module.add("QUAL_OFFSET", deepbiop_fq::default::QUAL_OFFSET)?;
@@ -420,15 +402,17 @@ pub fn register_default_module(parent_module: &Bound<'_, PyModule>) -> PyResult<
     Ok(())
 }
 
+// regiester fq sub_module
 pub fn regiester_fq_mododule(parent_module: &Bound<'_, PyModule>) -> PyResult<()> {
     let child_module = PyModule::new_bound(parent_module.py(), "fq")?;
 
     child_module.add_class::<PyRecordData>()?;
-    child_module.add_class::<encode::FqEncoderOption>()?;
-    child_module.add_class::<encode::TensorEncoder>()?;
-    child_module.add_class::<encode::JsonEncoder>()?;
-    child_module.add_class::<encode::ParquetEncoder>()?;
+    child_module.add_class::<fq_encode::FqEncoderOption>()?;
+    child_module.add_class::<fq_encode::TensorEncoder>()?;
+    child_module.add_class::<fq_encode::JsonEncoder>()?;
+    child_module.add_class::<fq_encode::ParquetEncoder>()?;
 
+    child_module.add_function(wrap_pyfunction!(get_label_region, &child_module)?)?;
     child_module.add_function(wrap_pyfunction!(encode_qual, &child_module)?)?;
     child_module.add_function(wrap_pyfunction!(write_fq, &child_module)?)?;
 

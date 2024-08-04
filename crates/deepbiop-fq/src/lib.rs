@@ -4,6 +4,7 @@ pub mod error;
 pub mod io;
 pub mod kmer;
 pub mod types;
+pub mod utils;
 
 #[cfg(feature = "python")]
 pub mod python;
