@@ -15,12 +15,12 @@ fn add(a: usize, b: usize) -> usize {
 fn deepbiop(m: &Bound<'_, PyModule>) -> PyResult<()> {
     pyo3_log::init();
 
+    m.add_function(wrap_pyfunction!(add, m)?)?;
+
     python_module::register_default_module(m)?;
     register_fq_module(m)?;
     register_bam_module(m)?;
     register_utils_module(m)?;
-
-    m.add_function(wrap_pyfunction!(add, m)?)?;
 
     Ok(())
 }

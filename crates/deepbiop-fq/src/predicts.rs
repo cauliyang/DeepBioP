@@ -332,7 +332,7 @@ mod tests {
 
     #[test]
     fn test_load_predict() {
-        let data_path = PathBuf::from("./tests/data/eval/chunk0/0.pt");
+        let data_path = PathBuf::from("./tests/data/chunk0/0.pt");
 
         let mut id_table: HashMap<i64, char> = HashMap::new();
         id_table.insert(7, 'A');
