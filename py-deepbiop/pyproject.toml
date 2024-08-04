@@ -5,6 +5,7 @@ build-backend = "maturin"
 [tool.maturin]
 # "extension-module" tells pyo3 we want to build an extension module (skips linking against libpython.so)
 features = ["pyo3/extension-module"]
+include = [{ path = "rust-toolchain.toml", format = "sdist" }]
 
 [project]
 name = "deepbiop"
