@@ -1,6 +1,6 @@
 # DeepBioP
 
-Deep Learning Preprocessing Library for Biological Data
+Deep Learning Processing Library for Biological Data
 
 # Minimum Supported Rust Version (MSRV)
 

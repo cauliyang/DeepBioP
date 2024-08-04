@@ -1,4 +1,3 @@
-import pytest
 
 import deepbiop as db
 
