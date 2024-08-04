@@ -30,8 +30,8 @@ classifiers = [
     "Topic :: Scientific/Engineering",
 ]
 
-[project.urls]
-Homepage = ""
+# [project.urls]
+# Homepage = ""
 
 
 [tool.mypy]
