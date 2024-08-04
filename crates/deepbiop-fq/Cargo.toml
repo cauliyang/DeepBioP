@@ -28,10 +28,13 @@ itertools = { workspace = true }
 lexical = { workspace = true }
 flate2 = { workspace = true }
 bstr = { workspace = true }
+walkdir = { workspace = true }
 
 parquet = { workspace = true }
 arrow = { workspace = true }
 candle-core = { workspace = true }
+
+deepbiop-utils = { workspace = true }
 
 [dev-dependencies]
 bio = { workspace = true }

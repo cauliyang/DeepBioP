@@ -26,7 +26,5 @@ log = { workspace = true }
 serde = { workspace = true }
 tempfile = { workspace = true }
 
-deepbiop-fq = { workspace = true }
-
 [features]
 python = []

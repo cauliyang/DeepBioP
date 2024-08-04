@@ -1,6 +1,7 @@
-use anyhow::{Error, Result};
+use anyhow::anyhow;
+use anyhow::Result;
 use bstr::BStr;
-use deepbiop_fq::error::EncodingError;
+
 use rayon::prelude::*;
 use std::ops::Range;
 
@@ -55,10 +56,7 @@ pub fn remove_intervals_and_keep_left<'a>(
                 // Add the segment before the current interval
                 Ok(seq[interval.start..interval.end].as_ref())
             } else {
-                Err(Error::new(EncodingError::InvalidInterval(format!(
-                    "{:?}",
-                    interval
-                ))))
+                Err(anyhow!(format!("invalid {:?}", interval)))
             }
         })
         .collect::<Result<Vec<_>>>()?;

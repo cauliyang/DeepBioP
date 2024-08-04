@@ -1,11 +1,12 @@
 use std::path::PathBuf;
 
-use crate::encode;
-use crate::encode::Encoder;
-use crate::io;
-use crate::kmer;
-use crate::types::{Element, Kmer2IdTable};
-use crate::utils;
+use crate::{
+    encode::{self, Encoder},
+    io, kmer,
+    predicts::{self, Predict},
+    types::{Element, Kmer2IdTable},
+    utils,
+};
 
 use ahash::HashMap;
 use anyhow::Result;
@@ -408,6 +409,35 @@ pub fn encode_qual(qual: String, qual_offset: u8) -> Vec<u8> {
         .collect()
 }
 
+#[pyfunction]
+pub fn test_predicts(predicts: Vec<PyRef<predicts::Predict>>) {
+    predicts.iter().for_each(|predict| {
+        println!("id: {}", predict.id);
+        println!("seq: {}", predict.seq);
+        println!("prediction: {:?}", predict.prediction);
+        println!("is_truncated: {}", predict.is_truncated);
+    });
+}
+
+#[pyfunction]
+pub fn load_predicts_from_batch_pt(
+    pt_path: PathBuf,
+    ignore_label: i64,
+    id_table: HashMap<i64, char>,
+) -> Result<HashMap<String, Predict>> {
+    predicts::load_predicts_from_batch_pt(pt_path, ignore_label, &id_table)
+}
+
+#[pyfunction]
+pub fn load_predicts_from_batch_pts(
+    pt_path: PathBuf,
+    ignore_label: i64,
+    id_table: HashMap<i64, char>,
+    max_predicts: Option<usize>,
+) -> Result<HashMap<String, Predict>> {
+    predicts::load_predicts_from_batch_pts(pt_path, ignore_label, &id_table, max_predicts)
+}
+
 // register fq sub_module
 pub fn register_fq_module(parent_module: &Bound<'_, PyModule>) -> PyResult<()> {
     let child_module = PyModule::new_bound(parent_module.py(), "fq")?;
@@ -417,6 +447,7 @@ pub fn register_fq_module(parent_module: &Bound<'_, PyModule>) -> PyResult<()> {
     child_module.add_class::<encode::TensorEncoder>()?;
     child_module.add_class::<encode::JsonEncoder>()?;
     child_module.add_class::<encode::ParquetEncoder>()?;
+    child_module.add_class::<predicts::Predict>()?;
 
     child_module.add_function(wrap_pyfunction!(get_label_region, &child_module)?)?;
     child_module.add_function(wrap_pyfunction!(encode_qual, &child_module)?)?;
@@ -445,6 +476,16 @@ pub fn register_fq_module(parent_module: &Bound<'_, PyModule>) -> PyResult<()> {
 
     child_module.add_function(wrap_pyfunction!(
         convert_multiple_fqs_to_one_fq,
+        &child_module
+    )?)?;
+
+    child_module.add_function(wrap_pyfunction!(test_predicts, &child_module)?)?;
+    child_module.add_function(wrap_pyfunction!(
+        load_predicts_from_batch_pt,
+        &child_module
+    )?)?;
+    child_module.add_function(wrap_pyfunction!(
+        load_predicts_from_batch_pts,
         &child_module
     )?)?;
 
