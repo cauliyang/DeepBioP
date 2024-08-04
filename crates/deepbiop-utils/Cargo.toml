@@ -1,0 +1,19 @@
+[package]
+name = "deepbiop-utils"
+version = { workspace = true }
+authors = { workspace = true }
+edition = { workspace = true }
+homepage = { workspace = true }
+repository = { workspace = true }
+keywords = ["deep learning", "utils"]
+license = { workspace = true }
+readme = "../../README.md"
+description = "Deep Learning Preprocessing Library for Biological Data"
+
+[dependencies]
+pyo3 = { workspace = true }
+colored = { workspace = true }
+textwrap = { workspace = true }
+
+[features]
+python = []

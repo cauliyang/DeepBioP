@@ -47,9 +47,11 @@ If you run into problems, please contact us.
 
 !!! note
 
-    If you are a Windows user, the steps below might not work as expected.
-    Try developing using [WSL](https://learn.microsoft.com/en-us/windows/wsl/install).
-    Under native Windows, you may have to manually copy the contents of `toolchain.toml` to `py-polars/toolchain.toml`, as Git for Windows may not correctly handle symbolic links.
+```
+If you are a Windows user, the steps below might not work as expected.
+Try developing using [WSL](https://learn.microsoft.com/en-us/windows/wsl/install).
+Under native Windows, you may have to manually copy the contents of `toolchain.toml` to `py-polars/toolchain.toml`, as Git for Windows may not correctly handle symbolic links.
+```
 
 #### Configuring Git
 
@@ -104,9 +106,11 @@ This will do a number of things:
 
 !!! note
 
-    There are a small number of specialized dependencies that are not installed by default.
-    If you are running specific tests and encounter an error message about a missing dependency,
-    try running `make requirements-all` to install _all_ known dependencies).
+```
+There are a small number of specialized dependencies that are not installed by default.
+If you are running specific tests and encounter an error message about a missing dependency,
+try running `make requirements-all` to install _all_ known dependencies).
+```
 
 Check if linting also works correctly by running:
 
@@ -186,7 +190,7 @@ Please adhere to the following guidelines:
     This text will end up in the [changelog](https://github.com/pola-rs/polars/releases), so make sure the text is meaningful to the user.
     Use single backticks to annotate code snippets.
     Use active language and do not end your title with punctuation.
-  - Example: ``fix(python): Fix `DataFrame.top_k` not handling nulls correctly``
+  - Example: `` fix(python): Fix `DataFrame.top_k` not handling nulls correctly ``
 - Description
   - In the pull request description, [link](https://docs.github.com/en/issues/tracking-your-work-with-issues/linking-a-pull-request-to-an-issue) to the issue you were working on.
   - Add any relevant information to the description that you think may help the maintainers review your code.

@@ -76,8 +76,10 @@ Such changes will not be warned for, but _will_ be included in the changelog and
 
 !!! warning Rust users only
 
-    Breaking changes to the Rust API are not deprecated first, but _will_ be listed in the changelog.
-    Supporting deprecated functionality would slow down development too much at this point in time.
+```
+Breaking changes to the Rust API are not deprecated first, but _will_ be listed in the changelog.
+Supporting deprecated functionality would slow down development too much at this point in time.
+```
 
 ### Deprecation period
 

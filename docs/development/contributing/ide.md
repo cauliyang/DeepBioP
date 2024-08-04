@@ -92,12 +92,14 @@ See the [official VSCode documentation](https://code.visualstudio.com/docs/edito
 
 !!! info
 
-    On some systems, the LLDB debugger will not attach unless [ptrace protection](https://linux-audit.com/protect-ptrace-processes-kernel-yama-ptrace_scope) is disabled.
-    To disable, run the following command:
+````
+On some systems, the LLDB debugger will not attach unless [ptrace protection](https://linux-audit.com/protect-ptrace-processes-kernel-yama-ptrace_scope) is disabled.
+To disable, run the following command:
 
-    ```shell
-    echo 0 | sudo tee /proc/sys/kernel/yama/ptrace_scope
-    ```
+```shell
+echo 0 | sudo tee /proc/sys/kernel/yama/ptrace_scope
+```
+````
 
 #### Running the debugger
 
@@ -122,4 +124,6 @@ Breakpoints in the Python code will stop on the Python debugger and breakpoints 
 
 !!! info
 
-    More information needed.
+```
+More information needed.
+```

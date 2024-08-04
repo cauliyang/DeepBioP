@@ -2,7 +2,9 @@
 
 !!! info
 
-    Additional information on the Rust test suite will be added to this page later.
+```
+Additional information on the Rust test suite will be added to this page later.
+```
 
 The `py-polars/tests` folder contains the main Polars test suite.
 This page contains some information on the various components of the test suite, as well as guidelines for writing new tests.

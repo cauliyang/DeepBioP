@@ -5,6 +5,7 @@ use ahash::HashMap;
 use deepbiop_bam as bam;
 
 use deepbiop_fq::{self as fastq, encode::Encoder, types::Element};
+use deepbiop_utils as utils;
 
 use anyhow::Result;
 use log::warn;
@@ -449,6 +450,16 @@ pub fn register_fq_module(parent_module: &Bound<'_, PyModule>) -> PyResult<()> {
 pub fn register_bam_module(parent_module: &Bound<'_, PyModule>) -> PyResult<()> {
     let child_module = PyModule::new_bound(parent_module.py(), "bam")?;
     child_module.add_function(wrap_pyfunction!(bam::left_right_soft_clip, &child_module)?)?;
+
+    parent_module.add_submodule(&child_module)?;
+    Ok(())
+}
+
+// register utils module
+pub fn register_utils_module(parent_module: &Bound<'_, PyModule>) -> PyResult<()> {
+    let child_module = PyModule::new_bound(parent_module.py(), "utils")?;
+
+    child_module.add_function(wrap_pyfunction!(utils::highlight_targets, &child_module)?)?;
 
     parent_module.add_submodule(&child_module)?;
     Ok(())

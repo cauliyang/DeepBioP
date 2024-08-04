@@ -4,7 +4,9 @@ This page contains some guidance on code style.
 
 !!! info
 
-    Additional information will be added to this page later.
+```
+Additional information will be added to this page later.
+```
 
 ## Rust
 
