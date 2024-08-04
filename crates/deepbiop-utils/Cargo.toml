@@ -16,12 +16,17 @@ colored = { workspace = true }
 textwrap = { workspace = true }
 ahash = { workspace = true }
 anyhow = { workspace = true }
+rayon = { workspace = true }
+bstr = { workspace = true }
 
+needletail = { workspace = true }
 derive_builder = { workspace = true }
 lexical = { workspace = true }
 log = { workspace = true }
 serde = { workspace = true }
 tempfile = { workspace = true }
+
+deepbiop-fq = { workspace = true }
 
 [features]
 python = []

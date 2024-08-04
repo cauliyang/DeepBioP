@@ -1,4 +1,6 @@
 pub mod blat;
+pub mod interval;
+pub mod predicts;
 
 #[cfg(feature = "python")]
 pub mod python;

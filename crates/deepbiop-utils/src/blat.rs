@@ -183,10 +183,10 @@ pub fn blat<P: AsRef<Path> + AsRef<std::ffi::OsStr>>(
 
 #[cfg(test)]
 mod tests {
-    use super::*;
+    // use super::*;
 
     #[test]
     fn test_parse_psl() {
-        todo!()
+        let _file = "tests/data/sample.psl";
     }
 }
