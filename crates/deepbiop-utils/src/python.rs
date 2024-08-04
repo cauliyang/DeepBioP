@@ -1,5 +1,6 @@
 use crate::blat;
 use crate::interval;
+use crate::strategy;
 
 use ahash::HashMap;
 use anyhow::Result;
@@ -9,6 +10,11 @@ use std::ops::Range;
 use std::path::PathBuf;
 
 use needletail::Sequence;
+
+#[pyfunction]
+fn majority_voting(labels: Vec<i8>, window_size: usize) -> Vec<i8> {
+    strategy::majority_voting(&labels, window_size)
+}
 
 #[pyfunction]
 pub fn parse_psl_by_qname(file_path: PathBuf) -> Result<HashMap<String, Vec<blat::PslAlignment>>> {
@@ -56,6 +62,7 @@ pub fn register_utils_module(parent_module: &Bound<'_, PyModule>) -> PyResult<()
 
     child_module.add_class::<blat::PslAlignment>()?;
 
+    child_module.add_function(wrap_pyfunction!(majority_voting, &child_module)?)?;
     child_module.add_function(wrap_pyfunction!(reverse_complement, &child_module)?)?;
     child_module.add_function(wrap_pyfunction!(crate::highlight_targets, &child_module)?)?;
     child_module.add_function(wrap_pyfunction!(parse_psl_by_qname, &child_module)?)?;
