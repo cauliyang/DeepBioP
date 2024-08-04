@@ -20,11 +20,13 @@ description = "Deep Learning Processing Library for Biological Data"
 [dependencies]
 deepbiop-fq = { path = "../crates/deepbiop-fq", version = "0.1", optional = true }
 deepbiop-bam = { path = "../crates/deepbiop-bam", version = "0.1", optional = true }
+deepbiop-utils = { path = "../crates/deepbiop-utils", version = "0.1", optional = true }
 
 [features]
 default = []
 fastq = ["dep:deepbiop-fq"]
 bam = ["dep:deepbiop-bam"]
+utils = ["dep:deepbiop-utils"]
 
 
 [package.metadata.docs.rs]

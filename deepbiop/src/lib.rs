@@ -10,3 +10,7 @@ pub use deepbiop_fq as fastq;
 #[cfg(feature = "bam")]
 #[doc(incline)]
 pub use deepbiop_bam as bam;
+
+#[cfg(feature = "utils")]
+#[doc(inline)]
+pub use deepbiop_utils as utils;
