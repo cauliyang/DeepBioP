@@ -24,8 +24,8 @@ pyo3 = { version = "0.21.0", features = [
 
 ctrlc = "3.4"
 log = "0.4"
-pyo3-log = "0.11"
-noodles = { version = "0.78.0", features = [
+pyo3-log = "0.10"
+noodles = { version = "0.79.0", features = [
     "bgzf",
     "core",
     "csi",
