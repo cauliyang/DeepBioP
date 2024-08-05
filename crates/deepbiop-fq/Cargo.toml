@@ -34,7 +34,7 @@ parquet = { workspace = true }
 arrow = { workspace = true }
 candle-core = { workspace = true }
 
-deepbiop-utils = { workspace = true }
+deepbiop-utils = { workspace = true, version = "0.1" }
 
 [dev-dependencies]
 bio = { workspace = true }
