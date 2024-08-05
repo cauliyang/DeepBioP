@@ -7,13 +7,13 @@ homepage = { workspace = true }
 repository = { workspace = true }
 keywords = ["deep-learning", "bioinformatics", "biological-data"]
 license = { workspace = true }
-readme = "../README.md"
+readme = "../../README.md"
 description = "Deep Learning Processing Library for Biological Data"
 
 [dependencies]
-deepbiop-fq = { path = "../crates/deepbiop-fq", version = "0.1", optional = true }
-deepbiop-bam = { path = "../crates/deepbiop-bam", version = "0.1", optional = true }
-deepbiop-utils = { path = "../crates/deepbiop-utils", version = "0.1", optional = true }
+deepbiop-fq = { workspace = true, optional = true }
+deepbiop-bam = { workspace = true, optional = true }
+deepbiop-utils = { workspace = true, optional = true }
 
 [features]
 default = []
