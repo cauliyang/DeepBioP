@@ -1,5 +1,14 @@
 # DeepBioP
 
+<div align="center">
+  <a href="https://crates.io/crates/deepbiop">
+    <img src="https://img.shields.io/crates/v/polars.svg" alt="crates.io Latest Release"/>
+  </a>
+  <a href="https://pypi.org/project/deepbiop/">
+    <img src="https://img.shields.io/pypi/v/deepbiop.svg" alt="PyPi Latest Release"/>
+  </a>
+</div>
+
 Deep Learning Processing Library for Biological Data
 
 # Minimum Supported Rust Version (MSRV)
