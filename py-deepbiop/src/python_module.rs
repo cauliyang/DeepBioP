@@ -1,3 +1,5 @@
+//! Python module for deepbiop
+
 use pyo3::prelude::*;
 
 // register default sub_module
