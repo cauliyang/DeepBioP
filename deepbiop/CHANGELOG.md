@@ -1,14 +1,16 @@
 # Changelog
+
 All notable changes to this project will be documented in this file.
 
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
-## [Unreleased]
+## \[Unreleased\]
 
 ## [0.1.3](https://github.com/cauliyang/DeepBioP/compare/deepbiop-v0.1.2...deepbiop-v0.1.3) - 2024-08-05
 
 ### Added
+
 - Add deepbiop-utils crate and Python module
 - Add support for processing BAM format in DeepBiop
 - Add utils module and get_label_region function
@@ -18,6 +20,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Add initial project files and configurations
 
 ### Other
+
 - update keywords in Cargo.toml
 - update keywords for deep learning libraries
 - Delete unused CHANGELOG.md file
