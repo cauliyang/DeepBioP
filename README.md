@@ -11,6 +11,30 @@
 
 Deep Learning Processing Library for Biological Data
 
+# Setup
+
+## Python
+
+install the latest deepbiop version with:
+
+```bash
+pip install deepbiop
+```
+
+## Rust
+
+You can take latest release from `crates.io`, or if you want to use the latest features / performance improvements point to the `main` branch of this repo.
+
+```bash
+cargo add deepbiop --features fq
+```
+
+Each enabled feature can then be imported by its re-exported name, e.g.,
+
+```rust
+use deepbiop::fastq;
+```
+
 # Minimum Supported Rust Version (MSRV)
 
 This project adheres to a Minimum Supported Rust Version (MSRV) policy. The Minimum Supported Rust Version (MSRV) is 1.70.0. We ensure that all code within the project is compatible with this version or newer to maintain stability and compatibility.
