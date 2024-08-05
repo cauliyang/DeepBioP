@@ -3,7 +3,7 @@
 #
 #    maturin generate-ci github -m py-deepbiop/Cargo.toml --pytest
 #
-name: CI
+name: Release-Python
 
 on:
   push:

@@ -10,8 +10,11 @@ features = ["pyo3/extension-module"]
 name = "deepbiop"
 description = "Deep Learning Preprocessing Library for Biological Data"
 readme = "README.md"
+authors = [{ name = "Yangyang Li", email = "sunlifeliz5@gmail.com" }]
+license = { file = "LICENSE" }
 requires-python = ">=3.9"
-keywords = ["deep learning", "bioinformatics", "biological data"]
+
+keywords = ["deep-learning", "bioinformatics", "biological-data"]
 classifiers = [
     "Development Status :: 5 - Production/Stable",
     "Environment :: Console",
@@ -29,8 +32,11 @@ classifiers = [
     "Topic :: Scientific/Engineering",
 ]
 
-# [project.urls]
-# Homepage = ""
+[project.urls]
+Homepage = "https://github.com/cauliyang/DeepBioP"
+Documentation = "https://github.com/cauliyang/DeepBioP"
+Repository = "https://github.com/cauliyang/DeepBioP"
+Changelog = "https://github.com/cauliyang/DeepBioP/releases"
 
 
 [tool.mypy]
