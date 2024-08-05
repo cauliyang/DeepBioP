@@ -16,6 +16,8 @@ noodles = { workspace = true }
 pyo3 = { workspace = true }
 flate2 = { workspace = true }
 bstr = { workspace = true }
+rayon = { workspace = true }
+ahash = { workspace = true }
 
 [dev-dependencies]
 bio = { workspace = true }

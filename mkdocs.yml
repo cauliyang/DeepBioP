@@ -22,7 +22,7 @@ nav:
 theme:
   name: material
   locale: en
-  custom_dir: docs/_build/overrides
+  # custom_dir: docs/_build/overrides
   font:
   code: Roboto Mono
   palette:
