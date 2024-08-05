@@ -31,7 +31,7 @@ release_commits = "^feat:"  # prepare release only if at least one commit matche
 
 [[package]]
 name = "py-deepbiop"
-release = false           # don't process this package
+release = true            # don't process this package
 publish = false
 changelog_update = true
 git_release_enable = true
