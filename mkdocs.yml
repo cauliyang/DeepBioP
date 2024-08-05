@@ -24,7 +24,7 @@ theme:
   locale: en
   # custom_dir: docs/_build/overrides
   font:
-  code: Roboto Mono
+    code: Roboto Mono
   palette:
     # Palette toggle for light mode
     - media: "(prefers-color-scheme: light)"
