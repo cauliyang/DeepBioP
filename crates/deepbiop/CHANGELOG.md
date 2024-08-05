@@ -5,6 +5,21 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [0.1.5](https://github.com/cauliyang/DeepBioP/releases/tag/deepbiop-v0.1.5) - 2024-08-05
+
+### Added
+- Add support for processing BAM format in DeepBiop
+- Add initial project files and configurations
+
+### Fixed
+- Update badge URL for deepbiop crate
+
+### Other
+- Update README.md formatting
+- Update workspace dependencies in Cargo.toml
+- Add tests for bam and fq modules
+- Initial commit
+
 ## \[Unreleased\]
 
 ## [0.1.3](https://github.com/cauliyang/DeepBioP/compare/deepbiop-v0.1.2...deepbiop-v0.1.3) - 2024-08-05
