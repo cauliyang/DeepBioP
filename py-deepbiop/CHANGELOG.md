@@ -67,8 +67,6 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - add lock file
 - add fastq module
 
-## [0.1.0](https://github.com/cauliyang/DeepBioP/releases/tag/py-deepbiop-v0.1.0) - 2024-08-03
-
 ### Added
 
 - Add Rye configuration with new dev dependencies
