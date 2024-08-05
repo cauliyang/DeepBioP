@@ -36,7 +36,7 @@ classifiers = [
 Homepage = "https://github.com/cauliyang/DeepBioP"
 Documentation = "https://github.com/cauliyang/DeepBioP"
 Repository = "https://github.com/cauliyang/DeepBioP"
-Changelog = "https://github.com/cauliyang/DeepBioP/releases"
+Changelog = "https://github.com/cauliyang/DeepBioP/CHANGELOG.md"
 
 
 [tool.mypy]
