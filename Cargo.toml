@@ -1,6 +1,7 @@
 [workspace]
 resolver = "2"
 members = ["crates/*", "deepbiop", "py-deepbiop"]
+default-members = ["crates/*", "deepbiop"]
 
 [workspace.package]
 version = "0.1.4"
@@ -61,9 +62,9 @@ flate2 = { version = "1.0.30", features = [
     "zlib-ng",
 ], default-features = false }
 
-deepbiop-fq = { version = "*", path = "crates/deepbiop-fq" }
-deepbiop-bam = { version = "*", path = "crates/deepbiop-bam" }
-deepbiop-utils = { version = "*", path = "crates/deepbiop-utils" }
+deepbiop-fq = { version = "0.1.4", path = "crates/deepbiop-fq" }
+deepbiop-bam = { version = "0.1.4", path = "crates/deepbiop-bam" }
+deepbiop-utils = { version = "0.1.4", path = "crates/deepbiop-utils" }
 
 [profile.opt-dev]
 inherits = "dev"
