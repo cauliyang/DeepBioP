@@ -5,14 +5,7 @@ authors = { workspace = true }
 edition = { workspace = true }
 homepage = { workspace = true }
 repository = { workspace = true }
-keywords = [
-    "deep-learning",
-    "bioinformatics",
-    "fastq",
-    "bam",
-    "arrow",
-    "parquet",
-]
+keywords = ["deep-learning", "bioinformatics", "biological-data"]
 license = { workspace = true }
 readme = "../README.md"
 description = "Deep Learning Processing Library for Biological Data"
