@@ -5,7 +5,7 @@ authors = { workspace = true }
 edition = { workspace = true }
 homepage = { workspace = true }
 repository = { workspace = true }
-keywords = ["bam"]
+keywords = ["bam", "deep-learning"]
 license = { workspace = true }
 readme = "../../README.md"
 description = "Deep Learning Processing Library for Bam Format"

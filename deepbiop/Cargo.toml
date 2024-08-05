@@ -6,7 +6,7 @@ edition = { workspace = true }
 homepage = { workspace = true }
 repository = { workspace = true }
 keywords = [
-    "deep learning",
+    "deep-learning",
     "bioinformatics",
     "fastq",
     "bam",
