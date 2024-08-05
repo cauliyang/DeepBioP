@@ -1,6 +1,4 @@
-mod cigar;
-
-pub use cigar::*;
+pub mod cigar;
 
 #[cfg(feature = "python")]
 pub mod python;
