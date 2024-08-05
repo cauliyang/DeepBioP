@@ -31,7 +31,8 @@ release_commits = "^feat:"  # prepare release only if at least one commit matche
 
 [[package]]
 name = "py-deepbiop"
-release = false      # don't process this package
+release = true       # don't process this package
+publish = false
 
 [changelog]
 protect_breaking_commits = true # always include commits with breaking changes in the changelog
