@@ -3,7 +3,7 @@ resolver = "2"
 members = ["crates/*", "deepbiop", "py-deepbiop"]
 
 [workspace.package]
-version = "0.1.1"
+version = "0.1.2"
 edition = "2021"
 authors = ["Yangyang Li <sunlifeliz5@gmail.com>"]
 homepage = "https://github.com/cauliyang/DeepBioP"
