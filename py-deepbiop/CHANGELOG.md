@@ -8,6 +8,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ## [0.1.4](https://github.com/cauliyang/DeepBioP/compare/py-deepbiop-v0.1.3...py-deepbiop-v0.1.4) - 2024-08-05
 
 ### Added
+
 - Add test_fq function
 - Add ahash, anyhow, derive_builder, lexical, log
 - Add deepbiop-utils crate and Python module
@@ -19,10 +20,12 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Add new module 'deepbiop' and 'add' function
 
 ### Fixed
+
 - Update maturin version requirement to 1.6.0
 - Update Cargo.toml for edition 2021 and dependency versions
 
 ### Other
+
 - Update version history in CHANGELOG.md
 - Update changelog for version 0.1.3
 - Update project URLs in pyproject.toml
