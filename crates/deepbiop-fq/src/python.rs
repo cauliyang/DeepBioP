@@ -12,6 +12,7 @@ use ahash::HashMap;
 use anyhow::Result;
 use log::warn;
 use needletail::Sequence;
+use noodles::fasta;
 use numpy::{IntoPyArray, PyArray2, PyArray3};
 use pyo3::prelude::*;
 use rayon::prelude::*;
@@ -438,6 +439,17 @@ pub fn load_predicts_from_batch_pts(
     predicts::load_predicts_from_batch_pts(pt_path, ignore_label, &id_table, max_predicts)
 }
 
+#[pyfunction]
+pub fn fastq_to_fasta(fastq_path: PathBuf, fasta_path: PathBuf) -> Result<()> {
+    let fa_records = io::fastq_to_fasta(&fastq_path)?;
+    let handle = std::fs::File::create(fasta_path)?;
+    let mut writer = fasta::Writer::new(handle);
+    for record in fa_records {
+        writer.write_record(&record)?;
+    }
+    Ok(())
+}
+
 // register fq sub_module
 pub fn register_fq_module(parent_module: &Bound<'_, PyModule>) -> PyResult<()> {
     let child_module = PyModule::new_bound(parent_module.py(), "fq")?;
@@ -449,6 +461,7 @@ pub fn register_fq_module(parent_module: &Bound<'_, PyModule>) -> PyResult<()> {
     child_module.add_class::<encode::ParquetEncoder>()?;
     child_module.add_class::<predicts::Predict>()?;
 
+    child_module.add_function(wrap_pyfunction!(fastq_to_fasta, &child_module)?)?;
     child_module.add_function(wrap_pyfunction!(get_label_region, &child_module)?)?;
     child_module.add_function(wrap_pyfunction!(encode_qual, &child_module)?)?;
     child_module.add_function(wrap_pyfunction!(write_fq, &child_module)?)?;

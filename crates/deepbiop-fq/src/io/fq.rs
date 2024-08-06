@@ -5,9 +5,11 @@ use std::path::{Path, PathBuf};
 use std::{io, thread};
 
 use anyhow::Result;
+use arrow::datatypes::ToByteSlice;
 use noodles::fastq::{self as fastq, record::Definition};
 
 use noodles::bgzf;
+use noodles::fasta;
 use noodles::fastq::record::Record as FastqRecord;
 use rayon::prelude::*;
 
@@ -195,6 +197,23 @@ pub fn convert_multiple_fqs_to_one_zip_fq<P: AsRef<Path>>(
     };
     write_fq_parallel_for_noodle_record(&records, result_path.as_ref().to_path_buf(), None)?;
     Ok(())
+}
+
+pub fn fastq_to_fasta<P: AsRef<Path>>(fq: P) -> Result<Vec<fasta::Record>> {
+    let fq_records = read_noodel_records_from_fq_or_zip_fq(&fq)?;
+    log::info!("converting {} records", fq_records.len());
+
+    let fa_records: Vec<fasta::Record> = fq_records
+        .par_iter()
+        .map(|fq_record| {
+            let definition =
+                fasta::record::Definition::new(fq_record.definition().name().to_byte_slice(), None);
+            let seq = fasta::record::Sequence::from(fq_record.sequence().to_vec());
+            fasta::Record::new(definition, seq)
+        })
+        .collect();
+
+    Ok(fa_records)
 }
 
 #[cfg(test)]
