@@ -1,6 +1,7 @@
 site_name: DeepBioP User Guide
-repo_url: https://github.com/cauliyang/DeepBioP.git
-repo_name: cauliyang/DeepBioP.git
+repo_url: https://github.com/cauliyang/DeepBioP
+repo_name: cauliyang/DeepBioP
+copyright: Copyright &copy; 2023 - 2024 Yangyang Li
 
 nav:
   - User guide:
@@ -22,7 +23,6 @@ nav:
 theme:
   name: material
   locale: en
-  # custom_dir: docs/_build/overrides
   font:
     code: Roboto Mono
   palette:
@@ -48,10 +48,24 @@ theme:
     - navigation.indexes
     - content.tabs.link
   icon:
-    repo: fontawesome/brands/github
-# extra_css:
-# - _build/css/extra.css
+    repo: fontawesome/brands/git-alt
 
+plugins:
+  - social
+  - search:
+      lang: en
+  - git-committers:
+      repository: cauliyang/DeepBioP
+      branch: main
+  - git-revision-date-localized:
+      enable_creation_date: true
+
+extra:
+  social:
+    - icon: fontawesome/brands/github
+      link: https://github.com/cauliyang/DeepBioP
+    - icon: fontawesome/solid/paper-plane
+      link: mailto:yangyang.li@northwestern.edu
 # extra:
 #   analytics:
 #     provider: plausible
