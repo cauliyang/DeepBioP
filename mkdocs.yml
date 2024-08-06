@@ -66,28 +66,23 @@ extra:
       link: https://github.com/cauliyang/DeepBioP
     - icon: fontawesome/solid/paper-plane
       link: mailto:yangyang.li@northwestern.edu
-# extra:
-#   analytics:
-#     provider: plausible
-#     domain: guide.pola.rs,combined.pola.rs
 
 # Formatting options
-# markdown_extensions:
-#   - admonition
-#   - pymdownx.details
-#   - attr_list
-#   - pymdownx.emoji:
-#       emoji_index: !!python/name:material.extensions.emoji.twemoji
-#       emoji_generator: !!python/name:material.extensions.emoji.to_svg
-#   - pymdownx.superfences
-#   - pymdownx.tabbed:
-#       alternate_style: true
-#   - pymdownx.snippets:
-#       base_path: [".", "docs/src/"]
-#       check_paths: true
-#       dedent_subsections: true
-#   - footnotes
-
+markdown_extensions:
+  - admonition
+  - pymdownx.details
+  - attr_list
+  - pymdownx.emoji:
+      emoji_index: !!python/name:material.extensions.emoji.twemoji
+      emoji_generator: !!python/name:material.extensions.emoji.to_svg
+  - pymdownx.superfences
+  - pymdownx.tabbed:
+      alternate_style: true
+  - pymdownx.snippets:
+      base_path: [".", "docs/src/"]
+      check_paths: true
+      dedent_subsections: true
+  - footnotes
 # plugins:
 #   - search:
 #       lang: en
@@ -98,3 +93,8 @@ extra:
 #   - redirects:
 #       redirect_maps:
 #         "user-guide/index.md": "index.md"
+
+# extra:
+#   analytics:
+#     provider: plausible
+#     domain: guide.pola.rs,combined.pola.rs
