@@ -88,7 +88,7 @@ pub fn register_utils_module(parent_module: &Bound<'_, PyModule>) -> PyResult<()
     let child_module = PyModule::new_bound(parent_module.py(), "utils")?;
 
     child_module.add_class::<blat::PslAlignment>()?;
-    child_module.add_class::<interval::Segment>()?;
+    child_module.add_class::<Segment>()?;
 
     child_module.add_function(wrap_pyfunction!(majority_voting, &child_module)?)?;
     child_module.add_function(wrap_pyfunction!(reverse_complement, &child_module)?)?;
