@@ -31,8 +31,13 @@ deepbiop = { version = "x", features = ["fastq", ...]}
 <!-- {{code_block('user-guide/getting-started/expressions','select',\['select'\])}} -->
 
 <!-- ```python exec="on" result="text" session="getting-started/expressions" -->
+
 <!-- --8<-- "python/user-guide/getting-started/expressions.py:setup" -->
+
 <!-- print( -->
+
 <!--     --8<-- "python/user-guide/getting-started/expressions.py:select" -->
+
 <!-- ) -->
+
 <!-- ``` -->
