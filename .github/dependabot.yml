@@ -15,14 +15,11 @@ updates:
       # accepted as a conventional commit and trigger release-please
       prefix: "deps"
 
-  - package-ecosystem: github-actions
-    directory: "/"
-    schedule:
-      interval: daily
   - package-ecosystem: pip
     directory: "/docs"
     schedule:
       interval: daily
+
   - package-ecosystem: pip
     directory: "/py-deepbiop"
     schedule:
