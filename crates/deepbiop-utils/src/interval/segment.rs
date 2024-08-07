@@ -11,8 +11,11 @@ use super::traits::Overlap;
 #[derive(Debug, Builder, Clone, Deserialize, Serialize, PartialEq)]
 #[builder(build_fn(validate = "Self::validate"))]
 pub struct Segment {
+    #[pyo3(get, set)]
     pub chr: String,
+    #[pyo3(get, set)]
     pub start: usize,
+    #[pyo3(get, set)]
     pub end: usize,
 }
 
@@ -89,5 +92,8 @@ mod tests {
             .build();
 
         assert!(segment3.is_err());
+        let segment4 = Segment::new("chr2", 100, 200).unwrap();
+
+        assert!(!segment.overlap(&segment4));
     }
 }

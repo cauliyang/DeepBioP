@@ -1,6 +1,9 @@
 use crate::blat;
-use crate::interval;
-use crate::strategy;
+
+use crate::{
+    interval::{self, Overlap, Segment},
+    strategy,
+};
 
 use ahash::HashMap;
 use anyhow::Result;
@@ -10,6 +13,30 @@ use std::ops::Range;
 use std::path::PathBuf;
 
 use needletail::Sequence;
+
+#[pymethods]
+impl Segment {
+    #[new]
+    fn py_new(chr: &str, start: usize, end: usize) -> Self {
+        Segment {
+            chr: chr.to_string(),
+            start,
+            end,
+        }
+    }
+
+    #[pyo3(name = "overlap")]
+    fn py_overlap(&self, other: &Segment) -> bool {
+        self.overlap(other)
+    }
+
+    fn __repr__(&self) -> String {
+        format!(
+            "Segment(chr={}, start={}, end={})",
+            self.chr, self.start, self.end
+        )
+    }
+}
 
 #[pyfunction]
 fn majority_voting(labels: Vec<i8>, window_size: usize) -> Vec<i8> {
@@ -61,6 +88,7 @@ pub fn register_utils_module(parent_module: &Bound<'_, PyModule>) -> PyResult<()
     let child_module = PyModule::new_bound(parent_module.py(), "utils")?;
 
     child_module.add_class::<blat::PslAlignment>()?;
+    child_module.add_class::<interval::Segment>()?;
 
     child_module.add_function(wrap_pyfunction!(majority_voting, &child_module)?)?;
     child_module.add_function(wrap_pyfunction!(reverse_complement, &child_module)?)?;
