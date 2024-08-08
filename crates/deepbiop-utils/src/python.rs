@@ -1,7 +1,7 @@
 use crate::blat;
 
 use crate::{
-    interval::{self, Overlap, Segment},
+    interval::{self},
     strategy,
 };
 
@@ -64,8 +64,8 @@ pub fn register_utils_module(parent_module: &Bound<'_, PyModule>) -> PyResult<()
     let sub_module_name = "deepbiop.utils";
     let child_module = PyModule::new_bound(parent_module.py(), sub_module_name)?;
 
+    child_module.add_class::<interval::Segment>()?;
     child_module.add_class::<blat::PslAlignment>()?;
-    child_module.add_class::<Segment>()?;
 
     child_module.add_function(wrap_pyfunction!(majority_voting, &child_module)?)?;
     child_module.add_function(wrap_pyfunction!(reverse_complement, &child_module)?)?;
