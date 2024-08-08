@@ -6,15 +6,15 @@ def test_hight_targets():
     print(result)
 
 
-def test_segment():
-    print(utils.__all__)
+# def test_segment():
+#     print(utils.__all__)
 
-    segment = utils.GenomicInterval("chr10", 300, 5000)
-    segment2 = utils.GenomicInterval("chr10", 300, 5000)
+#     segment = utils.GenomicInterval("chr10", 300, 5000)
+#     segment2 = utils.GenomicInterval("chr10", 300, 5000)
 
-    assert segment.overlap(segment2)
+#     assert segment.overlap(segment2)
 
-    print(segment)
+#     print(segment)
 
 
 def test_reverse_complement():

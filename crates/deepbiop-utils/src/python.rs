@@ -1,6 +1,7 @@
 use crate::blat;
 
 use crate::{
+    blat::PslAlignment,
     interval::{self, GenomicInterval, Overlap},
     strategy,
 };
@@ -13,6 +14,16 @@ use std::ops::Range;
 use std::path::PathBuf;
 
 use needletail::Sequence;
+
+#[pymethods]
+impl PslAlignment {
+    fn __repr__(&self) -> PyResult<String> {
+        Ok(format!(
+            "PslAlignment(qname={}, qsize={}, qstart={}, qend={}, qmatch={}, tname={}, tsize={}, tstart={}, tend={}, identity={})",
+            self.qname, self.qsize, self.qstart, self.qend, self.qmatch, self.tname, self.tsize, self.tstart, self.tend, self.identity
+        ))
+    }
+}
 
 #[pymethods]
 impl GenomicInterval {
@@ -88,8 +99,8 @@ pub fn register_utils_module(parent_module: &Bound<'_, PyModule>) -> PyResult<()
     let sub_module_name = "deepbiop.utils";
     let child_module = PyModule::new_bound(parent_module.py(), sub_module_name)?;
 
-    child_module.add_class::<interval::GenomicInterval>()?;
-    child_module.add_class::<blat::PslAlignment>()?;
+    child_module.add_class::<GenomicInterval>()?;
+    child_module.add_class::<PslAlignment>()?;
 
     child_module.add_function(wrap_pyfunction!(majority_voting, &child_module)?)?;
     child_module.add_function(wrap_pyfunction!(reverse_complement, &child_module)?)?;
