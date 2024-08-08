@@ -22,6 +22,5 @@ pub fn register_default_module(parent_module: &Bound<'_, PyModule>) -> PyResult<
         .import_bound("sys")?
         .getattr("modules")?
         .set_item(sub_module_name, &child_module)?;
-
     Ok(())
 }
