@@ -1,7 +1,7 @@
+mod genomics;
 mod op;
-mod segment;
 mod traits;
 
+pub use genomics::*;
 pub use op::*;
-pub use segment::*;
 pub use traits::*;
