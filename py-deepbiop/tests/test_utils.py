@@ -9,9 +9,6 @@ def test_hight_targets():
 def test_segment():
     print(utils.__all__)
 
-    segment3 = utils.GenomicInterval2("chr1", 400, 5000)
-    print(segment3)
-
     segment = utils.GenomicInterval("chr10", 300, 5000)
     segment2 = utils.GenomicInterval("chr10", 300, 5000)
 
