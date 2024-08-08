@@ -85,8 +85,8 @@ fn reverse_complement(seq: String) -> String {
 
 // register utils module
 pub fn register_utils_module(parent_module: &Bound<'_, PyModule>) -> PyResult<()> {
-    let sub_module_anme = "utils";
-    let child_module = PyModule::new_bound(parent_module.py(), &sub_module_anme)?;
+    let sub_module_name = "deepbiop.utils";
+    let child_module = PyModule::new_bound(parent_module.py(), sub_module_name)?;
 
     child_module.add_class::<blat::PslAlignment>()?;
     child_module.add_class::<Segment>()?;
@@ -105,7 +105,7 @@ pub fn register_utils_module(parent_module: &Bound<'_, PyModule>) -> PyResult<()
         .py()
         .import_bound("sys")?
         .getattr("modules")?
-        .set_item(format!("deepbiop.{}", sub_module_anme), &child_module)?;
+        .set_item(sub_module_name, &child_module)?;
 
     parent_module.add_submodule(&child_module)?;
     Ok(())
