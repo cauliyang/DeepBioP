@@ -28,7 +28,7 @@ impl PslAlignment {
 #[pymethods]
 impl GenomicInterval {
     #[new]
-    pub fn py_new(chr: &str, start: usize, end: usize) -> Self {
+    fn py_new(chr: &str, start: usize, end: usize) -> Self {
         GenomicInterval {
             chr: chr.to_string(),
             start,
@@ -37,11 +37,11 @@ impl GenomicInterval {
     }
 
     #[pyo3(name = "overlap")]
-    pub fn py_overlap(&self, other: &GenomicInterval) -> bool {
+    fn py_overlap(&self, other: &GenomicInterval) -> bool {
         self.overlap(other)
     }
 
-    pub fn __repr__(&self) -> String {
+    fn __repr__(&self) -> String {
         format!(
             "Segment(chr={}, start={}, end={})",
             self.chr, self.start, self.end
