@@ -15,3 +15,8 @@ def test_segment():
     assert segment.overlap(segment2)
 
     print(segment)
+
+
+def test_reverse_complement():
+    result = utils.reverse_complement("ACTGAACCGAGATCGAGTG")
+    print(result)
