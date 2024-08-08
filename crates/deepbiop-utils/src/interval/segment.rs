@@ -9,7 +9,6 @@ use super::traits::Overlap;
 /// The start position is inclusive and the end position is exclusive.
 #[pyclass]
 #[derive(Debug, Builder, Clone, Deserialize, Serialize, PartialEq)]
-#[builder(build_fn(validate = "Self::validate"))]
 pub struct Segment {
     #[pyo3(get, set)]
     pub chr: String,
@@ -19,15 +18,15 @@ pub struct Segment {
     pub end: usize,
 }
 
-impl SegmentBuilder {
-    fn validate(&self) -> Result<(), String> {
-        if self.start > self.end {
-            Err("start must be less than end".to_string())
-        } else {
-            Ok(())
-        }
-    }
-}
+// impl SegmentBuilder {
+//     fn validate(&self) -> Result<(), String> {
+//         if self.start > self.end {
+//             Err("start must be less than end".to_string())
+//         } else {
+//             Ok(())
+//         }
+//     }
+// }
 
 impl Segment {
     pub fn new(chr: &str, start: usize, end: usize) -> Result<Self> {
@@ -85,13 +84,13 @@ mod tests {
 
         assert!(segment.overlap(&segment2));
 
-        let segment3 = SegmentBuilder::default()
-            .chr("chr2".to_string())
-            .start(350)
-            .end(250)
-            .build();
+        // let segment3 = SegmentBuilder::default()
+        //     .chr("chr2".to_string())
+        //     .start(350)
+        //     .end(250)
+        //     .build();
+        // assert!(segment3.is_err());
 
-        assert!(segment3.is_err());
         let segment4 = Segment::new("chr2", 100, 200).unwrap();
 
         assert!(!segment.overlap(&segment4));
