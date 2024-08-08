@@ -9,6 +9,7 @@ use super::traits::Overlap;
 /// The start position is inclusive and the end position is exclusive.
 #[pyclass]
 #[derive(Debug, Builder, Clone, Deserialize, Serialize, PartialEq)]
+#[builder(build_fn(validate = "Self::validate"))]
 pub struct GenomicInterval {
     #[pyo3(get, set)]
     pub chr: String,
@@ -16,6 +17,16 @@ pub struct GenomicInterval {
     pub start: usize,
     #[pyo3(get, set)]
     pub end: usize,
+}
+
+impl GenomicIntervalBuilder {
+    fn validate(&self) -> Result<(), String> {
+        if self.start > self.end {
+            Err("start must be less than end".to_string())
+        } else {
+            Ok(())
+        }
+    }
 }
 
 impl GenomicInterval {
@@ -74,7 +85,7 @@ mod tests {
 
         assert!(segment.overlap(&segment2));
 
-        let segment3 = SegmentBuilder::default()
+        let segment3 = GenomicIntervalBuilder::default()
             .chr("chr2".to_string())
             .start(350)
             .end(250)
