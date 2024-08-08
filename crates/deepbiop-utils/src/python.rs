@@ -14,6 +14,25 @@ use std::path::PathBuf;
 
 use needletail::Sequence;
 
+#[pyclass]
+#[derive(Debug)]
+pub struct GenomicInterval2 {
+    #[pyo3(get, set)]
+    pub chr: String,
+    #[pyo3(get, set)]
+    pub start: usize,
+    #[pyo3(get, set)]
+    pub end: usize,
+}
+
+#[pymethods]
+impl GenomicInterval2 {
+    #[new]
+    fn new(chr: String, start: usize, end: usize) -> Self {
+        GenomicInterval2 { chr, start, end }
+    }
+}
+
 #[pyfunction]
 fn majority_voting(labels: Vec<i8>, window_size: usize) -> Vec<i8> {
     strategy::majority_voting(&labels, window_size)
@@ -66,6 +85,7 @@ pub fn register_utils_module(parent_module: &Bound<'_, PyModule>) -> PyResult<()
 
     child_module.add_class::<interval::GenomicInterval>()?;
     child_module.add_class::<blat::PslAlignment>()?;
+    child_module.add_class::<GenomicInterval2>()?;
 
     child_module.add_function(wrap_pyfunction!(majority_voting, &child_module)?)?;
     child_module.add_function(wrap_pyfunction!(reverse_complement, &child_module)?)?;
