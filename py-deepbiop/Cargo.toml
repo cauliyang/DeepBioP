@@ -12,12 +12,7 @@ deepbiop-fq = { workspace = true, features = ['python'] }
 deepbiop-bam = { workspace = true, features = ['python'] }
 deepbiop-utils = { workspace = true, features = ['python'] }
 
-pyo3 = { workspace = true, features = [
-    "abi3-py39",
-    "extension-module",
-    "anyhow",
-    "multiple-pymethods",
-] }
+pyo3 = { workspace = true, features = ["multiple-pymethods"] }
 log = { workspace = true }
 ahash = { workspace = true }
 rayon = { workspace = true }
