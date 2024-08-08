@@ -29,7 +29,9 @@ fn left_right_soft_clip(cigar_string: &str) -> Result<(usize, usize)> {
 
 // register bam sub module
 pub fn register_bam_module(parent_module: &Bound<'_, PyModule>) -> PyResult<()> {
-    let child_module = PyModule::new_bound(parent_module.py(), "bam")?;
+    let sub_module_name = "deepbiop.bam";
+    let child_module = PyModule::new_bound(parent_module.py(), sub_module_name)?;
+
     child_module.add_function(wrap_pyfunction!(left_right_soft_clip, &child_module)?)?;
     child_module.add_function(wrap_pyfunction!(
         count_chimeric_reads_for_path,
@@ -39,6 +41,12 @@ pub fn register_bam_module(parent_module: &Bound<'_, PyModule>) -> PyResult<()> 
         count_chimeric_reads_for_paths,
         &child_module
     )?)?;
+
+    parent_module
+        .py()
+        .import_bound("sys")?
+        .getattr("modules")?
+        .set_item(sub_module_name, &child_module)?;
 
     parent_module.add_submodule(&child_module)?;
     Ok(())

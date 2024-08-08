@@ -452,7 +452,8 @@ pub fn fastq_to_fasta(fastq_path: PathBuf, fasta_path: PathBuf) -> Result<()> {
 
 // register fq sub_module
 pub fn register_fq_module(parent_module: &Bound<'_, PyModule>) -> PyResult<()> {
-    let child_module = PyModule::new_bound(parent_module.py(), "fq")?;
+    let sub_module_name = "deepbiop.fq";
+    let child_module = PyModule::new_bound(parent_module.py(), sub_module_name)?;
 
     child_module.add_class::<PyRecordData>()?;
     child_module.add_class::<encode::FqEncoderOption>()?;
@@ -501,6 +502,12 @@ pub fn register_fq_module(parent_module: &Bound<'_, PyModule>) -> PyResult<()> {
         load_predicts_from_batch_pts,
         &child_module
     )?)?;
+
+    parent_module
+        .py()
+        .import_bound("sys")?
+        .getattr("modules")?
+        .set_item(sub_module_name, &child_module)?;
 
     parent_module.add_submodule(&child_module)?;
     Ok(())
