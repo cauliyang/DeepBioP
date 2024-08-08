@@ -18,40 +18,6 @@ pub struct GenomicInterval {
     pub end: usize,
 }
 
-// impl SegmentBuilder {
-//     fn validate(&self) -> Result<(), String> {
-//         if self.start > self.end {
-//             Err("start must be less than end".to_string())
-//         } else {
-//             Ok(())
-//         }
-//     }
-// }
-
-#[pymethods]
-impl GenomicInterval {
-    #[new]
-    pub fn py_new(chr: &str, start: usize, end: usize) -> Self {
-        GenomicInterval {
-            chr: chr.to_string(),
-            start,
-            end,
-        }
-    }
-
-    #[pyo3(name = "overlap")]
-    pub fn py_overlap(&self, other: &GenomicInterval) -> bool {
-        self.overlap(other)
-    }
-
-    pub fn __repr__(&self) -> String {
-        format!(
-            "Segment(chr={}, start={}, end={})",
-            self.chr, self.start, self.end
-        )
-    }
-}
-
 impl GenomicInterval {
     pub fn new(chr: &str, start: usize, end: usize) -> Result<Self> {
         if start > end {
@@ -108,12 +74,12 @@ mod tests {
 
         assert!(segment.overlap(&segment2));
 
-        // let segment3 = SegmentBuilder::default()
-        //     .chr("chr2".to_string())
-        //     .start(350)
-        //     .end(250)
-        //     .build();
-        // assert!(segment3.is_err());
+        let segment3 = SegmentBuilder::default()
+            .chr("chr2".to_string())
+            .start(350)
+            .end(250)
+            .build();
+        assert!(segment3.is_err());
 
         let segment4 = GenomicInterval::new("chr2", 100, 200).unwrap();
 

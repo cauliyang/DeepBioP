@@ -1,7 +1,7 @@
 use crate::blat;
 
 use crate::{
-    interval::{self},
+    interval::{self, GenomicInterval, Overlap},
     strategy,
 };
 
@@ -13,6 +13,30 @@ use std::ops::Range;
 use std::path::PathBuf;
 
 use needletail::Sequence;
+
+#[pymethods]
+impl GenomicInterval {
+    #[new]
+    pub fn py_new(chr: &str, start: usize, end: usize) -> Self {
+        GenomicInterval {
+            chr: chr.to_string(),
+            start,
+            end,
+        }
+    }
+
+    #[pyo3(name = "overlap")]
+    pub fn py_overlap(&self, other: &GenomicInterval) -> bool {
+        self.overlap(other)
+    }
+
+    pub fn __repr__(&self) -> String {
+        format!(
+            "Segment(chr={}, start={}, end={})",
+            self.chr, self.start, self.end
+        )
+    }
+}
 
 #[pyclass]
 #[derive(Debug)]
@@ -85,7 +109,6 @@ pub fn register_utils_module(parent_module: &Bound<'_, PyModule>) -> PyResult<()
 
     child_module.add_class::<interval::GenomicInterval>()?;
     child_module.add_class::<blat::PslAlignment>()?;
-    child_module.add_class::<GenomicInterval2>()?;
 
     child_module.add_function(wrap_pyfunction!(majority_voting, &child_module)?)?;
     child_module.add_function(wrap_pyfunction!(reverse_complement, &child_module)?)?;
