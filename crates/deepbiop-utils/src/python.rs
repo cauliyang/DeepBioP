@@ -28,7 +28,7 @@ pub struct GenomicInterval2 {
 #[pymethods]
 impl GenomicInterval2 {
     #[new]
-    pub fn new(chr: String, start: usize, end: usize) -> Self {
+    fn new(chr: String, start: usize, end: usize) -> Self {
         Self { chr, start, end }
     }
 }
@@ -99,10 +99,13 @@ pub fn register_utils_module(parent_module: &Bound<'_, PyModule>) -> PyResult<()
 
     parent_module.add_submodule(&child_module)?;
 
-    parent_module
-        .py()
-        .import_bound("sys")?
-        .getattr("modules")?
-        .set_item(sub_module_name, &child_module)?;
+    // parent_module
+    // .py()
+    // .import_bound("sys")?
+    // .getattr("modules")?
+    // .set_item(sub_module_name, &child_module)?;
+    let sys_modules = parent_module.py().import_bound("sys")?.getattr("modules")?;
+    sys_modules.set_item(sub_module_name, child_module)?;
+
     Ok(())
 }
