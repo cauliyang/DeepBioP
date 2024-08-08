@@ -46,7 +46,7 @@ pub fn register_bam_module(parent_module: &Bound<'_, PyModule>) -> PyResult<()> 
         .py()
         .import_bound("sys")?
         .getattr("modules")?
-        .set_item(sub_module_name, &child_module)?;
+        .set_item(sub_module_name.split('.').last().unwrap(), &child_module)?;
 
     parent_module.add_submodule(&child_module)?;
     Ok(())
