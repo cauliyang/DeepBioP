@@ -31,7 +31,7 @@ pub struct GenomicInterval {
 #[pymethods]
 impl GenomicInterval {
     #[new]
-    fn py_new(chr: &str, start: usize, end: usize) -> Self {
+    pub fn py_new(chr: &str, start: usize, end: usize) -> Self {
         GenomicInterval {
             chr: chr.to_string(),
             start,
@@ -40,11 +40,11 @@ impl GenomicInterval {
     }
 
     #[pyo3(name = "overlap")]
-    fn py_overlap(&self, other: &GenomicInterval) -> bool {
+    pub fn py_overlap(&self, other: &GenomicInterval) -> bool {
         self.overlap(other)
     }
 
-    fn __repr__(&self) -> String {
+    pub fn __repr__(&self) -> String {
         format!(
             "Segment(chr={}, start={}, end={})",
             self.chr, self.start, self.end

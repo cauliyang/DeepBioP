@@ -28,8 +28,8 @@ pub struct GenomicInterval2 {
 #[pymethods]
 impl GenomicInterval2 {
     #[new]
-    fn new(chr: String, start: usize, end: usize) -> Self {
-        GenomicInterval2 { chr, start, end }
+    pub fn new(chr: String, start: usize, end: usize) -> Self {
+        Self { chr, start, end }
     }
 }
 
