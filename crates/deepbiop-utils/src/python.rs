@@ -38,25 +38,6 @@ impl GenomicInterval {
     }
 }
 
-#[pyclass]
-#[derive(Debug)]
-pub struct GenomicInterval2 {
-    #[pyo3(get, set)]
-    pub chr: String,
-    #[pyo3(get, set)]
-    pub start: usize,
-    #[pyo3(get, set)]
-    pub end: usize,
-}
-
-#[pymethods]
-impl GenomicInterval2 {
-    #[new]
-    fn new(chr: String, start: usize, end: usize) -> Self {
-        Self { chr, start, end }
-    }
-}
-
 #[pyfunction]
 fn majority_voting(labels: Vec<i8>, window_size: usize) -> Vec<i8> {
     strategy::majority_voting(&labels, window_size)
