@@ -100,6 +100,12 @@ pub fn register_utils_module(parent_module: &Bound<'_, PyModule>) -> PyResult<()
     )?)?;
     child_module.add_function(wrap_pyfunction!(generate_unmaped_intervals, &child_module)?)?;
 
+    parent_module
+        .py()
+        .import_bound("sys")?
+        .getattr("modules")?
+        .set_item("deepbiop.utils", &child_module)?;
+
     parent_module.add_submodule(&child_module)?;
     Ok(())
 }

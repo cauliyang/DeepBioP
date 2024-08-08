@@ -7,5 +7,11 @@ def test_hight_targets():
 
 
 def test_segment():
-    segment = utils.Segment("chr10", 300, 5000)
+    from deepbiop.utils import Segment
+
+    segment = Segment("chr10", 300, 5000)
+    segment2 = utils.Segment("chr10", 300, 5000)
+
+    assert segment.overlap(segment2)
+
     print(segment)
