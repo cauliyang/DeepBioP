@@ -12,7 +12,11 @@ repository = "https://github.com/cauliyang/DeepBioP"
 license = "Apache-2.0"
 
 [workspace.dependencies]
-pyo3 = { version = "0.21.0" }
+pyo3 = { version = "0.21.0", features = [
+    "abi3-py39",
+    "extension-module",
+    "anyhow",
+] }
 thiserror = "1.0"
 anyhow = "1.0"
 walkdir = { version = "2.4" }
