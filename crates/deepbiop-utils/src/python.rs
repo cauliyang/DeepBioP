@@ -14,30 +14,6 @@ use std::path::PathBuf;
 
 use needletail::Sequence;
 
-#[pymethods]
-impl Segment {
-    #[new]
-    fn py_new(chr: &str, start: usize, end: usize) -> Self {
-        Segment {
-            chr: chr.to_string(),
-            start,
-            end,
-        }
-    }
-
-    #[pyo3(name = "overlap")]
-    fn py_overlap(&self, other: &Segment) -> bool {
-        self.overlap(other)
-    }
-
-    fn __repr__(&self) -> String {
-        format!(
-            "Segment(chr={}, start={}, end={})",
-            self.chr, self.start, self.end
-        )
-    }
-}
-
 #[pyfunction]
 fn majority_voting(labels: Vec<i8>, window_size: usize) -> Vec<i8> {
     strategy::majority_voting(&labels, window_size)
