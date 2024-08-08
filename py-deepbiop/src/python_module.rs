@@ -15,12 +15,13 @@ pub fn register_default_module(parent_module: &Bound<'_, PyModule>) -> PyResult<
     child_module.add("KMER_SIZE", deepbiop_fq::default::KMER_SIZE)?;
     child_module.add("VECTORIZED_TARGET", deepbiop_fq::default::VECTORIZED_TARGET)?;
 
+    parent_module.add_submodule(&child_module)?;
+
     parent_module
         .py()
         .import_bound("sys")?
         .getattr("modules")?
-        .set_item(sub_module_name.split('.').last().unwrap(), &child_module)?;
+        .set_item(sub_module_name, &child_module)?;
 
-    parent_module.add_submodule(&child_module)?;
     Ok(())
 }

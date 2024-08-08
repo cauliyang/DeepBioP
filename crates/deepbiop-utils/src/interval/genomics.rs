@@ -9,7 +9,7 @@ use super::traits::Overlap;
 /// The start position is inclusive and the end position is exclusive.
 #[pyclass]
 #[derive(Debug, Builder, Clone, Deserialize, Serialize, PartialEq)]
-pub struct Segment {
+pub struct GenomicInterval {
     #[pyo3(get, set)]
     pub chr: String,
     #[pyo3(get, set)]
@@ -29,10 +29,10 @@ pub struct Segment {
 // }
 
 #[pymethods]
-impl Segment {
+impl GenomicInterval {
     #[new]
     fn py_new(chr: &str, start: usize, end: usize) -> Self {
-        Segment {
+        GenomicInterval {
             chr: chr.to_string(),
             start,
             end,
@@ -40,7 +40,7 @@ impl Segment {
     }
 
     #[pyo3(name = "overlap")]
-    fn py_overlap(&self, other: &Segment) -> bool {
+    fn py_overlap(&self, other: &GenomicInterval) -> bool {
         self.overlap(other)
     }
 
@@ -52,7 +52,7 @@ impl Segment {
     }
 }
 
-impl Segment {
+impl GenomicInterval {
     pub fn new(chr: &str, start: usize, end: usize) -> Result<Self> {
         if start > end {
             Err(anyhow::anyhow!("start must be less than end"))
@@ -66,13 +66,13 @@ impl Segment {
     }
 }
 
-impl Overlap for Segment {
+impl Overlap for GenomicInterval {
     fn overlap(&self, other: &Self) -> bool {
         self.chr == other.chr && self.start < other.end && self.end > other.start
     }
 }
 
-impl PartialOrd for Segment {
+impl PartialOrd for GenomicInterval {
     fn partial_cmp(&self, other: &Self) -> Option<std::cmp::Ordering> {
         if self.chr == other.chr {
             if self.start == other.start {
@@ -92,14 +92,14 @@ mod tests {
 
     #[test]
     fn test_segment() {
-        let segment = SegmentBuilder::default()
+        let segment = GenomicIntervalBuilder::default()
             .chr("chr1".to_string())
             .start(100)
             .end(200)
             .build()
             .unwrap();
 
-        let segment2 = SegmentBuilder::default()
+        let segment2 = GenomicIntervalBuilder::default()
             .chr("chr1".to_string())
             .start(150)
             .end(250)
@@ -115,7 +115,7 @@ mod tests {
         //     .build();
         // assert!(segment3.is_err());
 
-        let segment4 = Segment::new("chr2", 100, 200).unwrap();
+        let segment4 = GenomicInterval::new("chr2", 100, 200).unwrap();
 
         assert!(!segment.overlap(&segment4));
     }
