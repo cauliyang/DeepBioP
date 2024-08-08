@@ -44,13 +44,13 @@ fn majority_voting(labels: Vec<i8>, window_size: usize) -> Vec<i8> {
 }
 
 #[pyfunction]
-pub fn parse_psl_by_qname(file_path: PathBuf) -> Result<HashMap<String, Vec<blat::PslAlignment>>> {
+fn parse_psl_by_qname(file_path: PathBuf) -> Result<HashMap<String, Vec<blat::PslAlignment>>> {
     blat::parse_psl_by_qname(file_path)
 }
 
 #[allow(clippy::type_complexity)]
 #[pyfunction]
-pub fn remove_intervals_and_keep_left(
+fn remove_intervals_and_keep_left(
     seq: String,
     intervals: Vec<(usize, usize)>,
 ) -> Result<(Vec<String>, Vec<(usize, usize)>)> {
@@ -67,7 +67,7 @@ pub fn remove_intervals_and_keep_left(
 }
 
 #[pyfunction]
-pub fn generate_unmaped_intervals(
+fn generate_unmaped_intervals(
     input: Vec<(usize, usize)>,
     total_length: usize,
 ) -> Vec<(usize, usize)> {
@@ -94,12 +94,10 @@ pub fn register_utils_module(parent_module: &Bound<'_, PyModule>) -> PyResult<()
     child_module.add_function(wrap_pyfunction!(reverse_complement, &child_module)?)?;
     child_module.add_function(wrap_pyfunction!(crate::highlight_targets, &child_module)?)?;
     child_module.add_function(wrap_pyfunction!(parse_psl_by_qname, &child_module)?)?;
-
     child_module.add_function(wrap_pyfunction!(
         remove_intervals_and_keep_left,
         &child_module
     )?)?;
-
     child_module.add_function(wrap_pyfunction!(generate_unmaped_intervals, &child_module)?)?;
 
     parent_module.add_submodule(&child_module)?;

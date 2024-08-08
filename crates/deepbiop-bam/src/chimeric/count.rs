@@ -28,12 +28,11 @@ pub fn count_chimeric_reads_for_paths(
         .collect()
 }
 
-pub fn count_chimeric_reads_for_path<P: AsRef<Path>>(
+pub fn chimeric_reads_for_path<P: AsRef<Path>>(
     bam: P,
     threads: Option<usize>,
-) -> Result<usize> {
+) -> Result<Vec<bam::Record>> {
     let file = File::open(bam)?;
-
     let worker_count = if let Some(threads) = threads {
         NonZeroUsize::new(threads)
             .unwrap()
@@ -66,6 +65,13 @@ pub fn count_chimeric_reads_for_path<P: AsRef<Path>>(
                 None
             }
         })
-        .count();
+        .collect::<Vec<bam::Record>>();
     Ok(res)
+}
+
+pub fn count_chimeric_reads_for_path<P: AsRef<Path>>(
+    bam: P,
+    threads: Option<usize>,
+) -> Result<usize> {
+    Ok(chimeric_reads_for_path(bam, threads)?.par_iter().count())
 }

@@ -9,12 +9,12 @@ use crate::chimeric;
 use crate::cigar::calc_softclips;
 
 #[pyfunction]
-pub fn count_chimeric_reads_for_path(bam: PathBuf, threads: Option<usize>) -> Result<usize> {
+fn count_chimeric_reads_for_path(bam: PathBuf, threads: Option<usize>) -> Result<usize> {
     chimeric::count_chimeric_reads_for_path(bam, threads)
 }
 
 #[pyfunction]
-pub fn count_chimeric_reads_for_paths(
+fn count_chimeric_reads_for_paths(
     bams: Vec<PathBuf>,
     threads: Option<usize>,
 ) -> Result<HashMap<PathBuf, usize>> {
@@ -22,7 +22,7 @@ pub fn count_chimeric_reads_for_paths(
 }
 
 #[pyfunction]
-pub fn left_right_soft_clip(cigar_string: &str) -> Result<(usize, usize)> {
+fn left_right_soft_clip(cigar_string: &str) -> Result<(usize, usize)> {
     let cigar = Cigar::new(cigar_string.as_bytes());
     calc_softclips(&cigar)
 }
