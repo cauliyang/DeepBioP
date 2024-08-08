@@ -8,23 +8,19 @@ If you're already an advanced user or familiar with Dataframes, feel free to ski
 
 === ":fontawesome-brands-python: Python"
 
-````
-``` bash
-pip install deepbiop
-```
-````
+    ```bash
+    pip install deepbiop
+    ```
 
 === ":fontawesome-brands-rust: Rust"
 
-````
-``` shell
-cargo add deepbiop -F fastq
+    ```shell
+    cargo add deepbiop -F fastq
 
-# Or Cargo.toml
-[dependencies]
-deepbiop = { version = "x", features = ["fastq", ...]}
-```
-````
+    # Or Cargo.toml
+    [dependencies]
+    deepbiop = { version = "x", features = ["fastq", ...]}
+    ```
 
 <!-- In the example below you see that we select `col('*')`. The asterisk stands for all columns. -->
 

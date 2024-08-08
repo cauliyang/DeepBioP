@@ -69,32 +69,33 @@ extra:
 
 # Formatting options
 markdown_extensions:
+  - footnotes
   - admonition
+  - pymdownx.superfences
+  - pymdownx.tabbed:
+      alternate_style: true
   - pymdownx.details
   - attr_list
   - pymdownx.emoji:
       emoji_index: !!python/name:material.extensions.emoji.twemoji
       emoji_generator: !!python/name:material.extensions.emoji.to_svg
-  - pymdownx.superfences
-  - pymdownx.tabbed:
-      alternate_style: true
-  - pymdownx.snippets:
-      base_path: [".", "docs/src/"]
-      check_paths: true
-      dedent_subsections: true
-  - footnotes
-# plugins:
-#   - search:
-#       lang: en
-#   - markdown-exec
-#   - material-plausible
-#   # - macros:
-#   # module_name: docs/_build/scripts/macro
-#   - redirects:
-#       redirect_maps:
-#         "user-guide/index.md": "index.md"
+        # - pymdownx.snippets:
+        #     base_path: [".", "docs/src/"]
+        #     check_paths: true
+        #     dedent_subsections: true
 
-# extra:
-#   analytics:
-#     provider: plausible
-#     domain: guide.pola.rs,combined.pola.rs
+        # plugins:
+        #   - search:
+        #       lang: en
+        #   - markdown-exec
+        #   - material-plausible
+        #   # - macros:
+        #   # module_name: docs/_build/scripts/macro
+        #   - redirects:
+        #       redirect_maps:
+        #         "user-guide/index.md": "index.md"
+
+        # extra:
+        #   analytics:
+        #     provider: plausible
+        #     domain: guide.pola.rs,combined.pola.rs
