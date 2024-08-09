@@ -5,7 +5,7 @@ use std::{fs::File, num::NonZeroUsize, thread};
 
 use anyhow::Result;
 use bstr::BString;
-use noodles::{bam, bgzf};
+use noodles::{bam, bgzf, sam};
 use rayon::prelude::*;
 
 use noodles::sam::alignment::record::data::field::Tag;
@@ -17,6 +17,8 @@ use deepbiop_utils::interval::GenomicIntervalBuilder;
 use derive_builder::Builder;
 use pyo3::prelude::*;
 use std::str::FromStr;
+
+use super::filter_reads;
 
 #[pyclass]
 #[derive(Debug, Builder)]
@@ -30,7 +32,8 @@ impl ChimericEvent {
     /// The string should be formatted as `rname,pos,strand,CIGAR,mapQ,NM;`
     /// # Example
     /// ```
-    /// use deepbiop_bam::chimeric::ChimericEvent;
+    /// use deepbiop_bam as bam;
+    /// use bam::chimeric::ChimericEvent;
     /// let  value =  "chr1,100,+,100M,60,0;chr2,200,+,100M,60,0";
     /// let chimeric_event: ChimericEvent = value.parse().unwrap();
     /// ```
@@ -64,6 +67,37 @@ impl ChimericEvent {
             .build()
             .unwrap())
     }
+
+    pub fn parse_noodle_bam_record(
+        record: &bam::Record,
+        references: &sam::header::ReferenceSequences,
+    ) -> Result<Self> {
+        let reference_id = record.reference_sequence_id().unwrap().unwrap();
+        // get the reference name
+        let reference_name = references.get_index(reference_id).unwrap().0;
+        let reference_start = usize::from(record.alignment_start().unwrap().unwrap());
+        let reference_end = reference_start + record.cigar().alignment_span().unwrap();
+
+        let interval = GenomicIntervalBuilder::default()
+            .chr(reference_name.clone())
+            .start(reference_start)
+            .end(reference_end)
+            .build()?;
+
+        let mut chimeric_event = ChimericEventBuilder::default()
+            .name(reference_name.clone())
+            .intervals(vec![interval])
+            .build()?;
+
+        if let Some(Ok(Value::String(sa_string))) = record.data().get(&Tag::OTHER_ALIGNMENTS) {
+            // has sa tag
+            let sa_string = sa_string.to_string();
+            let sa_chimeric_event: ChimericEvent = sa_string.as_str().parse()?;
+            chimeric_event.intervals.extend(sa_chimeric_event.intervals)
+        }
+
+        Ok(chimeric_event)
+    }
 }
 
 impl FromStr for ChimericEvent {
@@ -92,48 +126,16 @@ pub fn create_chimeric_events_from_chimeric_reads<P: AsRef<Path>>(
     let header = reader.read_header()?;
     let references = header.reference_sequences();
 
-    let res: Result<Vec<ChimericEvent>> = reader
+    reader
         .records()
         .par_bridge()
         .filter_map(|result| {
             let record = result.unwrap();
-            let is_mapped = !record.flags().is_unmapped();
-            let is_not_secondary = !record.flags().is_secondary();
-            let is_primary = !record.flags().is_supplementary();
-
-            if is_primary && is_mapped && is_not_secondary {
+            if filter_reads(&record) {
                 return Some(record);
             }
             None
         })
-        .map(|record| {
-            let reference_id = record.reference_sequence_id().unwrap().unwrap();
-            // get the reference name
-            let reference_name = references.get_index(reference_id).unwrap().0;
-            let reference_start = usize::from(record.alignment_start().unwrap().unwrap());
-            let reference_end = reference_start + record.cigar().alignment_span().unwrap();
-
-            let interval = GenomicIntervalBuilder::default()
-                .chr(reference_name.clone())
-                .start(reference_start)
-                .end(reference_end)
-                .build()?;
-
-            let mut chimeric_event = ChimericEventBuilder::default()
-                .name(reference_name.clone())
-                .intervals(vec![interval])
-                .build()?;
-
-            if let Some(Ok(Value::String(sa_string))) = record.data().get(&Tag::OTHER_ALIGNMENTS) {
-                // has sa tag
-                let sa_string = sa_string.to_string();
-                let sa_chimeric_event: ChimericEvent = sa_string.as_str().parse()?;
-                chimeric_event.intervals.extend(sa_chimeric_event.intervals)
-            }
-
-            Ok(chimeric_event)
-        })
-        .collect();
-
-    res
+        .map(|record| ChimericEvent::parse_noodle_bam_record(&record, references))
+        .collect()
 }

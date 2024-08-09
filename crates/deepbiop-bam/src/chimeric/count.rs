@@ -9,6 +9,21 @@ use std::{fs::File, num::NonZeroUsize, thread};
 use noodles::sam::alignment::record::data::field::Tag;
 use noodles::sam::alignment::record::data::field::Value;
 
+pub fn filter_reads(record: &bam::Record) -> bool {
+    let is_mapped = !record.flags().is_unmapped();
+    let is_not_secondary = !record.flags().is_secondary();
+    let is_primary = !record.flags().is_supplementary();
+    is_mapped && is_not_secondary && is_primary
+}
+
+pub fn is_chimeric(record: &bam::Record) -> bool {
+    filter_reads(record)
+        && matches!(
+            record.data().get(&Tag::OTHER_ALIGNMENTS),
+            Some(Ok(Value::String(_sa_string)))
+        )
+}
+
 pub fn count_chimeric_reads_for_paths(
     bams: &[PathBuf],
     threads: Option<usize>,
@@ -50,16 +65,7 @@ pub fn chimeric_reads_for_path<P: AsRef<Path>>(
         .par_bridge()
         .filter_map(|result| {
             let record = result.unwrap();
-            let is_mapped = !record.flags().is_unmapped();
-            let is_not_secondary = !record.flags().is_secondary();
-            let is_primary = !record.flags().is_supplementary();
-
-            let has_sa_tag = matches!(
-                record.data().get(&Tag::OTHER_ALIGNMENTS),
-                Some(Ok(Value::String(_sa_string)))
-            );
-
-            if is_mapped && is_not_secondary && is_primary && has_sa_tag {
+            if is_chimeric(&record) {
                 Some(record)
             } else {
                 None
