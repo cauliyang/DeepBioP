@@ -19,6 +19,9 @@ bstr = { workspace = true }
 rayon = { workspace = true }
 ahash = { workspace = true }
 
+derive_builder = { workspace = true }
+deepbiop-utils = { workspace = true }
+
 [dev-dependencies]
 bio = { workspace = true }
 tempfile = { workspace = true }

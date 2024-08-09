@@ -1,22 +1,48 @@
 use anyhow::Result;
 use derive_builder::Builder;
 use pyo3::prelude::*;
-use serde::{Deserialize, Serialize};
 
 use super::traits::Overlap;
+
+use bstr::BString;
+use std::str::FromStr;
 
 /// A segment is a genomic interval defined by a chromosome, a start position and an end position.
 /// The start position is inclusive and the end position is exclusive.
 #[pyclass]
-#[derive(Debug, Builder, Clone, Deserialize, Serialize, PartialEq)]
+#[derive(Debug, Builder, Clone, PartialEq)]
 #[builder(build_fn(validate = "Self::validate"))]
 pub struct GenomicInterval {
-    #[pyo3(get, set)]
-    pub chr: String,
+    pub chr: BString,
     #[pyo3(get, set)]
     pub start: usize,
     #[pyo3(get, set)]
     pub end: usize,
+}
+
+impl FromStr for GenomicInterval {
+    type Err = anyhow::Error;
+
+    /// Parse a string into a GenomicInterval. The string should be formatted as
+    /// # Example
+    /// ```
+    /// use deepbiop_utils::interval::GenomicInterval;
+    /// let  value =  "chr1:100-200";
+    /// let interval: GenomicInterval = value.parse().unwrap();
+    /// ```
+    fn from_str(s: &str) -> std::result::Result<Self, Self::Err> {
+        let parts: Vec<&str> = s.split(':').collect();
+        let chr = parts[0];
+        let positions: Vec<&str> = parts[1].split('-').collect();
+        let start: usize = positions[0].parse()?;
+        let end: usize = positions[1].parse()?;
+
+        Ok(Self {
+            chr: chr.into(),
+            start,
+            end,
+        })
+    }
 }
 
 impl GenomicIntervalBuilder {
@@ -35,7 +61,7 @@ impl GenomicInterval {
             Err(anyhow::anyhow!("start must be less than end"))
         } else {
             Ok(Self {
-                chr: chr.to_string(),
+                chr: chr.into(),
                 start,
                 end,
             })
@@ -70,14 +96,14 @@ mod tests {
     #[test]
     fn test_segment() {
         let segment = GenomicIntervalBuilder::default()
-            .chr("chr1".to_string())
+            .chr("chr1".into())
             .start(100)
             .end(200)
             .build()
             .unwrap();
 
         let segment2 = GenomicIntervalBuilder::default()
-            .chr("chr1".to_string())
+            .chr("chr1".into())
             .start(150)
             .end(250)
             .build()
@@ -86,7 +112,7 @@ mod tests {
         assert!(segment.overlap(&segment2));
 
         let segment3 = GenomicIntervalBuilder::default()
-            .chr("chr2".to_string())
+            .chr("chr2".into())
             .start(350)
             .end(250)
             .build();

@@ -30,10 +30,19 @@ impl GenomicInterval {
     #[new]
     fn py_new(chr: &str, start: usize, end: usize) -> Self {
         GenomicInterval {
-            chr: chr.to_string(),
+            chr: chr.into(),
             start,
             end,
         }
+    }
+
+    #[getter]
+    fn get_chr(&self) -> String {
+        self.chr.to_string()
+    }
+    #[setter]
+    fn set_chr(&mut self, chr: &str) {
+        self.chr = chr.into();
     }
 
     #[pyo3(name = "overlap")]
@@ -114,13 +123,11 @@ pub fn register_utils_module(parent_module: &Bound<'_, PyModule>) -> PyResult<()
 
     parent_module.add_submodule(&child_module)?;
 
-    // parent_module
-    // .py()
-    // .import_bound("sys")?
-    // .getattr("modules")?
-    // .set_item(sub_module_name, &child_module)?;
-    let sys_modules = parent_module.py().import_bound("sys")?.getattr("modules")?;
-    sys_modules.set_item(sub_module_name, child_module)?;
+    parent_module
+        .py()
+        .import_bound("sys")?
+        .getattr("modules")?
+        .set_item(sub_module_name, &child_module)?;
 
     Ok(())
 }
