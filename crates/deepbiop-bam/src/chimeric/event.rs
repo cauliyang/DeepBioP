@@ -18,7 +18,7 @@ use derive_builder::Builder;
 use pyo3::prelude::*;
 use std::str::FromStr;
 
-use super::filter_reads;
+use super::keep_reads;
 
 #[pyclass]
 #[derive(Debug, Builder)]
@@ -108,10 +108,15 @@ impl FromStr for ChimericEvent {
     }
 }
 
-pub fn create_chimeric_events_from_chimeric_reads<P: AsRef<Path>>(
+pub fn create_chimeric_events_from_chimeric_reads<P, F>(
     bam: P,
     threads: Option<usize>,
-) -> Result<Vec<ChimericEvent>> {
+    filter_function: Option<F>,
+) -> Result<Vec<ChimericEvent>>
+where
+    F: Fn(&bam::Record) -> bool + std::marker::Sync,
+    P: AsRef<Path>,
+{
     let worker_count = if let Some(threads) = threads {
         std::num::NonZeroUsize::new(threads)
             .unwrap()
@@ -131,10 +136,19 @@ pub fn create_chimeric_events_from_chimeric_reads<P: AsRef<Path>>(
         .par_bridge()
         .filter_map(|result| {
             let record = result.unwrap();
-            if filter_reads(&record) {
-                return Some(record);
+            if keep_reads(&record) {
+                if let Some(filter_function) = &filter_function {
+                    if filter_function(&record) {
+                        Some(record)
+                    } else {
+                        None
+                    }
+                } else {
+                    Some(record)
+                }
+            } else {
+                None
             }
-            None
         })
         .map(|record| ChimericEvent::parse_noodle_bam_record(&record, references))
         .collect()

@@ -9,7 +9,7 @@ use std::{fs::File, num::NonZeroUsize, thread};
 use noodles::sam::alignment::record::data::field::Tag;
 use noodles::sam::alignment::record::data::field::Value;
 
-pub fn filter_reads(record: &bam::Record) -> bool {
+pub fn keep_reads(record: &bam::Record) -> bool {
     let is_mapped = !record.flags().is_unmapped();
     let is_not_secondary = !record.flags().is_secondary();
     let is_primary = !record.flags().is_supplementary();
@@ -17,7 +17,7 @@ pub fn filter_reads(record: &bam::Record) -> bool {
 }
 
 pub fn is_chimeric(record: &bam::Record) -> bool {
-    filter_reads(record)
+    keep_reads(record)
         && matches!(
             record.data().get(&Tag::OTHER_ALIGNMENTS),
             Some(Ok(Value::String(_sa_string)))
