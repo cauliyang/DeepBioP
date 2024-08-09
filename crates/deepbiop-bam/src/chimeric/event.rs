@@ -18,7 +18,7 @@ use derive_builder::Builder;
 use pyo3::prelude::*;
 use std::str::FromStr;
 
-use super::keep_reads;
+use super::is_retain_record;
 
 #[pyclass]
 #[derive(Debug, Builder)]
@@ -28,6 +28,17 @@ pub struct ChimericEvent {
 }
 
 impl ChimericEvent {
+    /// Get the length of the chimeric event.
+    pub fn len(&self) -> usize {
+        self.intervals.len()
+    }
+
+    /// Check if the chimeric event is empty
+    #[must_use]
+    pub fn is_empty(&self) -> bool {
+        self.len() == 0
+    }
+
     /// Parse sa tag string into a ChimericEvent.
     /// The string should be formatted as `rname,pos,strand,CIGAR,mapQ,NM;`
     /// # Example
@@ -108,10 +119,10 @@ impl FromStr for ChimericEvent {
     }
 }
 
-pub fn create_chimeric_events_from_chimeric_reads<P, F>(
+pub fn create_chimeric_events_from_bam<P, F>(
     bam: P,
     threads: Option<usize>,
-    filter_function: Option<F>,
+    predict: Option<F>,
 ) -> Result<Vec<ChimericEvent>>
 where
     F: Fn(&bam::Record) -> bool + std::marker::Sync,
@@ -136,9 +147,9 @@ where
         .par_bridge()
         .filter_map(|result| {
             let record = result.unwrap();
-            if keep_reads(&record) {
-                if let Some(filter_function) = &filter_function {
-                    if filter_function(&record) {
+            if is_retain_record(&record) {
+                if let Some(predict_function) = &predict {
+                    if predict_function(&record) {
                         Some(record)
                     } else {
                         None

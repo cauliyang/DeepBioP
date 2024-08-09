@@ -9,19 +9,18 @@ use std::{fs::File, num::NonZeroUsize, thread};
 use noodles::sam::alignment::record::data::field::Tag;
 use noodles::sam::alignment::record::data::field::Value;
 
-pub fn keep_reads(record: &bam::Record) -> bool {
+pub fn is_retain_record(record: &bam::Record) -> bool {
     let is_mapped = !record.flags().is_unmapped();
     let is_not_secondary = !record.flags().is_secondary();
     let is_primary = !record.flags().is_supplementary();
     is_mapped && is_not_secondary && is_primary
 }
 
-pub fn is_chimeric(record: &bam::Record) -> bool {
-    keep_reads(record)
-        && matches!(
-            record.data().get(&Tag::OTHER_ALIGNMENTS),
-            Some(Ok(Value::String(_sa_string)))
-        )
+pub fn is_chimeric_record(record: &bam::Record) -> bool {
+    matches!(
+        record.data().get(&Tag::OTHER_ALIGNMENTS),
+        Some(Ok(Value::String(_sa_string)))
+    )
 }
 
 pub fn count_chimeric_reads_for_paths(
@@ -65,7 +64,7 @@ pub fn chimeric_reads_for_path<P: AsRef<Path>>(
         .par_bridge()
         .filter_map(|result| {
             let record = result.unwrap();
-            if is_chimeric(&record) {
+            if is_retain_record(&record) && is_chimeric_record(&record) {
                 Some(record)
             } else {
                 None
