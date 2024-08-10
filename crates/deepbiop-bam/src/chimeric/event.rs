@@ -15,7 +15,7 @@ use deepbiop_utils::interval::GenomicInterval;
 use deepbiop_utils::interval::GenomicIntervalBuilder;
 
 use derive_builder::Builder;
-use info::debug;
+use log::debug;
 use pyo3::prelude::*;
 use std::str::FromStr;
 
