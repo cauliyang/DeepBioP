@@ -42,7 +42,7 @@ pub fn count_chimeric_reads_for_paths(
         .collect()
 }
 
-pub fn chimeric_reads_for_path<P: AsRef<Path>>(
+pub fn chimeric_reads_for_bam<P: AsRef<Path>>(
     bam: P,
     threads: Option<usize>,
 ) -> Result<Vec<bam::Record>> {
@@ -78,5 +78,5 @@ pub fn count_chimeric_reads_for_path<P: AsRef<Path>>(
     bam: P,
     threads: Option<usize>,
 ) -> Result<usize> {
-    Ok(chimeric_reads_for_path(bam, threads)?.par_iter().count())
+    Ok(chimeric_reads_for_bam(bam, threads)?.par_iter().count())
 }
