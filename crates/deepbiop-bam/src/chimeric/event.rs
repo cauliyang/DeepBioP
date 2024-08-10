@@ -15,6 +15,7 @@ use deepbiop_utils::interval::GenomicInterval;
 use deepbiop_utils::interval::GenomicIntervalBuilder;
 
 use derive_builder::Builder;
+use info::debug;
 use pyo3::prelude::*;
 use std::str::FromStr;
 
@@ -49,6 +50,8 @@ impl ChimericEvent {
     /// let chimeric_event: ChimericEvent = value.parse().unwrap();
     /// ```
     pub fn parse_sa_tag(sa_tag: &str) -> Result<Self> {
+        debug!("Parsing sa tag: {}", sa_tag);
+
         let mut res = vec![];
         let mut name = "";
 
