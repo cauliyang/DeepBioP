@@ -19,6 +19,7 @@ bstr = { workspace = true }
 rayon = { workspace = true }
 ahash = { workspace = true }
 log = { workspace = true }
+lexical = { workspace = true }
 
 derive_builder = { workspace = true }
 deepbiop-utils = { workspace = true }

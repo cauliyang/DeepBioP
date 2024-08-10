@@ -48,6 +48,8 @@ impl ChimericEvent {
     /// use bam::chimeric::ChimericEvent;
     /// let  value =  "chr1,100,+,100M,60,0;chr2,200,+,100M,60,0";
     /// let chimeric_event: ChimericEvent = value.parse().unwrap();
+    /// let value2 = "chr8,109336127,+,155S308M7054D449S,60,3;";
+    /// let chimeric_event2: ChimericEvent = value2.parse().unwrap();
     /// ```
     pub fn parse_sa_tag(sa_tag: &str) -> Result<Self> {
         debug!("Parsing sa tag: {}", sa_tag);
@@ -55,10 +57,11 @@ impl ChimericEvent {
         let mut res = vec![];
         let mut name = "";
 
-        for sa in sa_tag.split(';') {
+        for sa in sa_tag.split_terminator(';') {
             let mut splits = sa.split(',');
+
             let sa_reference_name = splits.next().unwrap();
-            let sa_start = splits.next().unwrap().parse::<usize>()?;
+            let sa_start: usize = lexical::parse(splits.next().unwrap()).unwrap();
             let _sa_strand = splits.next().unwrap();
             let sa_cigar = splits.next().unwrap();
             let _sa_mapq = splits.next().unwrap();
