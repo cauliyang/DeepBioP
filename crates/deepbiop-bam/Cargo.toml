@@ -18,7 +18,7 @@ flate2 = { workspace = true }
 bstr = { workspace = true }
 rayon = { workspace = true }
 ahash = { workspace = true }
-info = { workspace = true }
+log = { workspace = true }
 
 derive_builder = { workspace = true }
 deepbiop-utils = { workspace = true }
