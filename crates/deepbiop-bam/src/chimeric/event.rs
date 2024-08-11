@@ -24,7 +24,7 @@ use super::is_retain_record;
 #[pyclass]
 #[derive(Debug, Builder)]
 pub struct ChimericEvent {
-    pub name: BString,
+    pub name: Option<BString>,
     pub intervals: Vec<GenomicInterval>,
 }
 
@@ -47,15 +47,15 @@ impl ChimericEvent {
     /// use deepbiop_bam as bam;
     /// use bam::chimeric::ChimericEvent;
     /// let  value =  "chr1,100,+,100M,60,0;chr2,200,+,100M,60,0";
-    /// let chimeric_event: ChimericEvent = value.parse().unwrap();
+    /// let chimeric_event: ChimericEvent = ChimericEvent::parse_sa_tag(value, None).unwrap();
     /// let value2 = "chr8,109336127,+,155S308M7054D449S,60,3;";
-    /// let chimeric_event2: ChimericEvent = value2.parse().unwrap();
+    /// let chimeric_event2: ChimericEvent = ChimericEvent::parse_sa_tag(value2, Some("value2")).unwrap();
+    /// assert_eq!(chimeric_event.len(),2);
     /// ```
-    pub fn parse_sa_tag(sa_tag: &str) -> Result<Self> {
+    pub fn parse_sa_tag(sa_tag: &str, name: Option<&str>) -> Result<Self> {
         debug!("Parsing sa tag: {}", sa_tag);
 
         let mut res = vec![];
-        let mut name = "";
 
         for sa in sa_tag.split_terminator(';') {
             let mut splits = sa.split(',');
@@ -67,7 +67,6 @@ impl ChimericEvent {
             let _sa_mapq = splits.next().unwrap();
             let _sa_nm = splits.next().unwrap();
 
-            name = sa_reference_name;
             let sa_end = sa_start + Cigar::new(sa_cigar.as_bytes()).alignment_span().unwrap();
 
             let sa_interval = GenomicIntervalBuilder::default()
@@ -79,7 +78,7 @@ impl ChimericEvent {
         }
 
         Ok(ChimericEventBuilder::default()
-            .name(name.into())
+            .name(name.as_ref().map(|&x| x.into()))
             .intervals(res)
             .build()
             .unwrap())
@@ -95,6 +94,8 @@ impl ChimericEvent {
         let reference_start = usize::from(record.alignment_start().unwrap().unwrap());
         let reference_end = reference_start + record.cigar().alignment_span().unwrap();
 
+        let record_name = record.name().unwrap();
+
         let interval = GenomicIntervalBuilder::default()
             .chr(reference_name.clone())
             .start(reference_start)
@@ -102,7 +103,7 @@ impl ChimericEvent {
             .build()?;
 
         let mut chimeric_event = ChimericEventBuilder::default()
-            .name(reference_name.clone())
+            .name(Some(record_name.into()))
             .intervals(vec![interval])
             .build()?;
 
@@ -120,8 +121,17 @@ impl ChimericEvent {
 impl FromStr for ChimericEvent {
     type Err = anyhow::Error;
 
+    /// # Example
+    /// ```
+    /// use deepbiop_bam as bam;
+    /// use bam::chimeric::ChimericEvent;
+    /// let  value =  "chr1,100,+,100M,60,0;chr2,200,+,100M,60,0";
+    /// let chimeric_event: ChimericEvent = value.parse().unwrap();
+    /// let value2 = "chr8,109336127,+,155S308M7054D449S,60,3;";
+    /// let chimeric_event2: ChimericEvent = value2.parse().unwrap();
+    /// ```
     fn from_str(s: &str) -> std::result::Result<Self, Self::Err> {
-        ChimericEvent::parse_sa_tag(s)
+        ChimericEvent::parse_sa_tag(s, None)
     }
 }
 
