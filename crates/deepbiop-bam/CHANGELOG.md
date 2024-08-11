@@ -6,6 +6,22 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.1.7](https://github.com/cauliyang/DeepBioP/compare/deepbiop-bam-v0.1.6...deepbiop-bam-v0.1.7) - 2024-08-11
+
+### Added
+- Add new chimeric event example in documentation
+- Add debug log for parsing SA tag
+- Add chimeric read filtering and checking functions
+- Add derive_builder and deepbiop-utils dependencies
+
+### Fixed
+- Update import statement for logging module
+
+### Other
+- Change name field in ChimericEvent to be an Option
+- Rename functions for clarity and consistency
+- Rename function filter_reads to keep_reads
+
 ## [0.1.6](https://github.com/cauliyang/DeepBioP/compare/deepbiop-bam-v0.1.5...deepbiop-bam-v0.1.6) - 2024-08-08
 
 ### Added
