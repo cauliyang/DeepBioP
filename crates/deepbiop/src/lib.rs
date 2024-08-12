@@ -8,7 +8,7 @@
 pub use deepbiop_fq as fastq;
 
 #[cfg(feature = "bam")]
-#[doc(incline)]
+#[doc(inline)]
 pub use deepbiop_bam as bam;
 
 #[cfg(feature = "utils")]
