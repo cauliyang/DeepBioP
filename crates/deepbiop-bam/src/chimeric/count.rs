@@ -9,6 +9,7 @@ use std::{fs::File, num::NonZeroUsize, thread};
 use noodles::sam::alignment::record::data::field::Tag;
 use noodles::sam::alignment::record::data::field::Value;
 
+/// Check if the record is a primary, mapped, and non-secondary record.
 pub fn is_retain_record(record: &bam::Record) -> bool {
     let is_mapped = !record.flags().is_unmapped();
     let is_not_secondary = !record.flags().is_secondary();
@@ -16,6 +17,7 @@ pub fn is_retain_record(record: &bam::Record) -> bool {
     is_mapped && is_not_secondary && is_primary
 }
 
+/// Check if the record is a chimeric record.
 pub fn is_chimeric_record(record: &bam::Record) -> bool {
     matches!(
         record.data().get(&Tag::OTHER_ALIGNMENTS),
@@ -23,6 +25,7 @@ pub fn is_chimeric_record(record: &bam::Record) -> bool {
     )
 }
 
+/// Count the number of chimeric reads for multiple BAM file.
 pub fn count_chimeric_reads_for_paths(
     bams: &[PathBuf],
     threads: Option<usize>,
@@ -42,6 +45,7 @@ pub fn count_chimeric_reads_for_paths(
         .collect()
 }
 
+/// Get the chimeric reads from a BAM file.
 pub fn chimeric_reads_for_bam<P: AsRef<Path>>(
     bam: P,
     threads: Option<usize>,
@@ -74,6 +78,7 @@ pub fn chimeric_reads_for_bam<P: AsRef<Path>>(
     Ok(res)
 }
 
+/// Count the number of chimeric reads in a BAM file.
 pub fn count_chimeric_reads_for_path<P: AsRef<Path>>(
     bam: P,
     threads: Option<usize>,

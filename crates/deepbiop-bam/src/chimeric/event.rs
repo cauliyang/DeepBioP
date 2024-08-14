@@ -84,6 +84,7 @@ impl ChimericEvent {
             .unwrap())
     }
 
+    /// Construct a ChimericEvent from a noodle bam record.
     pub fn parse_noodle_bam_record(
         record: &bam::Record,
         references: &sam::header::ReferenceSequences,
@@ -135,6 +136,7 @@ impl FromStr for ChimericEvent {
     }
 }
 
+/// Create a list of chimeric events from a bam file.
 pub fn create_chimeric_events_from_bam<P, F>(
     bam: P,
     threads: Option<usize>,
