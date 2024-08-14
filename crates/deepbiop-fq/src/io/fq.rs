@@ -8,6 +8,8 @@ use anyhow::Result;
 use arrow::datatypes::ToByteSlice;
 use noodles::fastq::{self as fastq, record::Definition};
 
+use ahash::HashSet;
+use bstr::BString;
 use noodles::bgzf;
 use noodles::fasta;
 use noodles::fastq::record::Record as FastqRecord;
@@ -214,6 +216,21 @@ pub fn fastq_to_fasta<P: AsRef<Path>>(fq: P) -> Result<Vec<fasta::Record>> {
         .collect();
 
     Ok(fa_records)
+}
+
+pub fn select_record_from_fq<P: AsRef<Path>>(
+    fq: P,
+    selected_records: &HashSet<BString>,
+) -> Result<Vec<FastqRecord>> {
+    let fq_records = read_noodel_records_from_fq_or_zip_fq(&fq)?;
+
+    Ok(fq_records
+        .into_par_iter()
+        .filter(|record| {
+            let id: BString = record.name().into();
+            selected_records.contains(&id)
+        })
+        .collect())
 }
 
 #[cfg(test)]
