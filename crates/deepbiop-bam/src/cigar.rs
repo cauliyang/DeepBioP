@@ -3,7 +3,6 @@ use anyhow::Result;
 use noodles::sam::alignment::record::cigar::op::{Kind, Op};
 use noodles::sam::record::Cigar;
 
-/// Convert a list of cigar operators to a string.
 pub fn cigar_to_string(cigar: &[Op]) -> Result<String> {
     let mut cigar_str = String::new();
 

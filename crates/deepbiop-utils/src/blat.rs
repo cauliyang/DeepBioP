@@ -46,6 +46,7 @@ pub struct PslAlignment {
     #[pyo3(get, set)]
     pub identity: f32,
 }
+
 pub fn parse_psl_by_qname<P: AsRef<Path>>(file: P) -> Result<HashMap<String, Vec<PslAlignment>>> {
     let result = parse_psl(file)?;
     Ok(result.into_iter().fold(HashMap::new(), |mut acc, al| {
