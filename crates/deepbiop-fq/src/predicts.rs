@@ -43,6 +43,7 @@ pub fn summary_predict_generic<D: PartialEq + Send + Sync + Copy>(
         .unzip()
 }
 
+/// A struct to store the prediction result
 #[pyclass]
 #[derive(Debug, Default, FromPyObject, Deserialize, Serialize)]
 pub struct Predict {
@@ -84,6 +85,7 @@ impl Predict {
         )
     }
 
+    /// Get the prediction region
     #[pyo3(name = "prediction_region")]
     pub fn py_prediction_region(&self) -> Vec<(usize, usize)> {
         get_label_region(&self.prediction)
@@ -92,6 +94,7 @@ impl Predict {
             .collect()
     }
 
+    /// Get the smooth prediction region
     #[pyo3(name = "smooth_prediction")]
     pub fn py_smooth_prediction(&self, window_size: usize) -> Vec<(usize, usize)> {
         get_label_region(&majority_voting(&self.prediction, window_size))
@@ -100,11 +103,13 @@ impl Predict {
             .collect()
     }
 
+    /// Get the smooth label
     #[pyo3(name = "smooth_label")]
     pub fn py_smooth_label(&self, window_size: usize) -> Vec<i8> {
         majority_voting(&self.prediction, window_size)
     }
 
+    /// Smooth and select intervals
     #[pyo3(name = "smooth_and_select_intervals")]
     pub fn py_smooth_and_slect_intervals(
         &self,
@@ -122,10 +127,12 @@ impl Predict {
         .collect()
     }
 
+    /// Get the sequence length
     pub fn seq_len(&self) -> usize {
         self.seq.len()
     }
 
+    /// Get the quality score array
     pub fn qual_array(&self) -> Vec<u8> {
         if let Some(qual) = &self.qual {
             qual.chars()
@@ -136,6 +143,7 @@ impl Predict {
         }
     }
 
+    /// Show the information of the prediction
     pub fn show_info(
         &self,
         smooth_interval: Vec<(usize, usize)>,
@@ -182,14 +190,17 @@ impl Predict {
 }
 
 impl Predict {
+    /// Get the prediction region
     pub fn prediction_region(&self) -> Vec<Range<usize>> {
         get_label_region(&self.prediction)
     }
 
+    /// Get the smooth prediction region
     pub fn smooth_prediction(&self, window_size: usize) -> Vec<Range<usize>> {
         get_label_region(&majority_voting(&self.prediction, window_size))
     }
 
+    /// Get the smooth label
     pub fn smooth_label(&self, window_size: usize) -> Vec<i8> {
         majority_voting(&self.prediction, window_size)
     }

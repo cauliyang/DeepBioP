@@ -3,6 +3,7 @@ use anyhow::Result;
 use noodles::sam::alignment::record::cigar::op::{Kind, Op};
 use noodles::sam::record::Cigar;
 
+/// Convert a list of cigar operators to a string.
 pub fn cigar_to_string(cigar: &[Op]) -> Result<String> {
     let mut cigar_str = String::new();
 
@@ -51,6 +52,7 @@ pub fn _calc_softclips(cigars: &[Op]) -> Result<(usize, usize)> {
     Ok((left_softclips, right_softclips))
 }
 
+/// Calculate the number of leading and trailing soft clips in a cigar string.
 pub fn calc_softclips(cigar: &Cigar) -> Result<(usize, usize)> {
     let ops: Vec<Op> = cigar.iter().collect::<Result<Vec<_>, _>>()?;
     _calc_softclips(&ops)
