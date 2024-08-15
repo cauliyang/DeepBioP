@@ -29,7 +29,7 @@ fn left_right_soft_clip(cigar_string: &str) -> Result<(usize, usize)> {
 
 // register bam sub module
 pub fn register_bam_module(parent_module: &Bound<'_, PyModule>) -> PyResult<()> {
-    let sub_module_name = "deepbiop.bam";
+    let sub_module_name = "bam";
     let child_module = PyModule::new_bound(parent_module.py(), sub_module_name)?;
 
     child_module.add_function(wrap_pyfunction!(left_right_soft_clip, &child_module)?)?;
@@ -43,11 +43,5 @@ pub fn register_bam_module(parent_module: &Bound<'_, PyModule>) -> PyResult<()> 
     )?)?;
 
     parent_module.add_submodule(&child_module)?;
-    parent_module
-        .py()
-        .import_bound("sys")?
-        .getattr("modules")?
-        .set_item(sub_module_name, &child_module)?;
-
     Ok(())
 }
