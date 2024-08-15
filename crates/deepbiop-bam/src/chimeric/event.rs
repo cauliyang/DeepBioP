@@ -21,6 +21,7 @@ use std::str::FromStr;
 
 use super::is_retain_record;
 
+/// A chimeric event.
 #[pyclass]
 #[derive(Debug, Builder)]
 pub struct ChimericEvent {
