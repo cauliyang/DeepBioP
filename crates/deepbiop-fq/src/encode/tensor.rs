@@ -375,7 +375,7 @@ mod tests {
 
     use crate::{
         encode::FqEncoderOptionBuilder,
-        kmer::{kmerids_to_seq, to_original_targtet_region},
+        kmer::{kmerids_to_seq, to_original_target_region},
     };
 
     use super::*;
@@ -397,7 +397,7 @@ mod tests {
         let actual = 462..528;
 
         let kmer_target = to_kmer_target_region(&actual, k, None).unwrap();
-        let expected_target = to_original_targtet_region(&kmer_target, k);
+        let expected_target = to_original_target_region(&kmer_target, k);
 
         assert_eq!(expected_target, actual);
 
@@ -425,7 +425,7 @@ mod tests {
         // let actual_target_seq = _input.slice(s![0, 0, actual.clone()]);
 
         let kmer_target = to_kmer_target_region(&actual, k, None).unwrap();
-        let expected_target = to_original_targtet_region(&kmer_target, k);
+        let expected_target = to_original_target_region(&kmer_target, k);
 
         assert_eq!(expected_target, actual);
 
