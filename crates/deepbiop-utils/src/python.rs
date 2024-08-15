@@ -105,7 +105,7 @@ fn reverse_complement(seq: String) -> String {
 
 // register utils module
 pub fn register_utils_module(parent_module: &Bound<'_, PyModule>) -> PyResult<()> {
-    let sub_module_name = "deepbiop.utils";
+    let sub_module_name = "utils";
     let child_module = PyModule::new_bound(parent_module.py(), sub_module_name)?;
 
     child_module.add_class::<GenomicInterval>()?;
@@ -122,12 +122,5 @@ pub fn register_utils_module(parent_module: &Bound<'_, PyModule>) -> PyResult<()
     child_module.add_function(wrap_pyfunction!(generate_unmaped_intervals, &child_module)?)?;
 
     parent_module.add_submodule(&child_module)?;
-
-    parent_module
-        .py()
-        .import_bound("sys")?
-        .getattr("modules")?
-        .set_item(sub_module_name, &child_module)?;
-
     Ok(())
 }
