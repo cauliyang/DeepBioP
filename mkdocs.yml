@@ -16,6 +16,8 @@ nav:
               - development/contributing/ci.md
               - development/contributing/code-style.md
           - development/versioning.md
+  - API reference:
+      - api/index.md
   - About:
       - License: license.md
 
@@ -99,5 +101,3 @@ markdown_extensions:
         #   analytics:
         #     provider: plausible
         #     domain: guide.pola.rs,combined.pola.rs
-
-

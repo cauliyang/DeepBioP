@@ -17,5 +17,3 @@ It's available in [our docs](https://yangyangli.top/DeepBioP/api/python/stable/r
 
 The Rust API reference is built using Cargo.
 It's available on [docs.rs](https://docs.rs/deepbiop/0.1.7/deepbiop/).
-
-## Python API
