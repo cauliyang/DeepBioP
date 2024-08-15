@@ -1,9 +1,9 @@
 # DeepBioP
 
 [![crates](https://img.shields.io/crates/v/deepbiop.svg)](https://crates.io/crates/deepbiop)
-[![pypi](https://img.shields.io/pypi/v/deepbiop.svg)](https://pypi.python.org/pypi/deepbiop)
+[![PyPi](https://img.shields.io/pypi/v/deepbiop.svg)](https://pypi.python.org/pypi/deepbiop)
 [![license](https://img.shields.io/pypi/l/deepbiop.svg)](https://github.com/cauliyang/DeepBioP/blob/main/LICENSE)
-[![pypi version](https://img.shields.io/pypi/pyversions/deepbiop.svg)](https://pypi.python.org/pypi/deepbiop)
+[![PyPi version](https://img.shields.io/pypi/pyversions/deepbiop.svg)](https://pypi.python.org/pypi/deepbiop)
 [![Actions status](https://github.com/cauliyang/DeepBioP/workflows/CI/badge.svg)](https://github.com/cauliyang/DeepBioP/actions)
 
 Deep Learning Processing Library for Biological Data
@@ -20,7 +20,7 @@ pip install deepbiop
 
 ## Rust
 
-You can take latest release from `crates.io`, or if you want to use the latest features / performance improvements point to the `main` branch of this repo.
+You can take the latest release from `crates.io`, or if you want to use the latest features / performance improvements point to the `main` branch of this repo.
 
 ```bash
 cargo add deepbiop --features fq
@@ -70,9 +70,7 @@ Whether you are a researcher, developer, or student, your contributions can help
 
 **Join Us:**
 
-If you are interested in participating, please visit our GitHub repository at [Github](---) to explore the project and get started.
-
-<!-- You can also join our community forum at [Forum Link] for discussions, updates, and collaboration opportunities. -->
+If you are interested in participating, please visit our GitHub repository at [GitHub](https://github.com/cauliyang/DeepBioP) to explore the project and get started.
 
 **Contact Us:**
 

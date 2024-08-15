@@ -26,71 +26,174 @@ let data_type: ArrowDataType = ...
 ### Code example
 
 ```rust
-use std::ops::Add;
+use std::{
+    fmt::Display,
+    path::{Path, PathBuf},
+    sync::Arc,
+};
 
-use polars::export::arrow::array::*;
-use polars::export::arrow::compute::arity::binary;
-use polars::export::arrow::types::NativeType;
-use polars::prelude::*;
-use polars_core::utils::{align_chunks_binary, combine_validities_or};
-use polars_core::with_match_physical_numeric_polars_type;
+use arrow::array::{Array, Int32Builder, ListBuilder, RecordBatch, StringBuilder};
+use arrow::datatypes::{DataType, Field, Schema};
 
-// Prefer to do the compute closest to the arrow arrays.
-// this will tend to be faster as iterators can work directly on slices and don't have
-// to go through boxed traits
-fn compute_kernel<T>(arr_1: &PrimitiveArray<T>, arr_2: &PrimitiveArray<T>) -> PrimitiveArray<T>
-where
-    T: Add<Output = T> + NativeType,
-{
-    // process the null data separately
-    // this saves an expensive branch and bitoperation when iterating
-    let validity_1 = arr_1.validity();
-    let validity_2 = arr_2.validity();
+use bstr::BString;
+use derive_builder::Builder;
+use log::info;
+use serde::{Deserialize, Serialize};
 
-    let validity = combine_validities_or(validity_1, validity_2);
+use crate::{io::write_parquet, types::Element};
 
-    // process the numerical data as if there were no validities
-    let values_1: &[T] = arr_1.values().as_slice();
-    let values_2: &[T] = arr_2.values().as_slice();
+use super::{triat::Encoder, FqEncoderOption, RecordData};
+use anyhow::{Context, Result};
+use pyo3::prelude::*;
+use rayon::prelude::*;
 
-    let values = values_1
-        .iter()
-        .zip(values_2)
-        .map(|(a, b)| *a + *b)
-        .collect::<Vec<_>>();
-
-    PrimitiveArray::from_data_default(values.into(), validity)
+#[derive(Debug, Builder, Default)]
+pub struct ParquetData {
+    pub id: BString,          // id
+    pub seq: BString,         // kmer_seq
+    pub qual: Vec<Element>,   // kmer_qual
+    pub target: Vec<Element>, // kmer_target
 }
 
-// Same kernel as above, but uses the `binary` abstraction. Prefer this,
-#[allow(dead_code)]
-fn compute_kernel2<T>(arr_1: &PrimitiveArray<T>, arr_2: &PrimitiveArray<T>) -> PrimitiveArray<T>
-where
-    T: Add<Output = T> + NativeType,
-{
-    binary(arr_1, arr_2, arr_1.data_type().clone(), |a, b| a + b)
+#[pyclass]
+#[derive(Debug, Builder, Default, Clone, Serialize, Deserialize)]
+pub struct ParquetEncoder {
+    pub option: FqEncoderOption,
 }
 
-fn compute_chunked_array_2_args<T: PolarsNumericType>(
-    ca_1: &ChunkedArray<T>,
-    ca_2: &ChunkedArray<T>,
-) -> ChunkedArray<T> {
-    // This ensures both ChunkedArrays have the same number of chunks with the
-    // same offset and the same length.
-    let (ca_1, ca_2) = align_chunks_binary(ca_1, ca_2);
-    let chunks = ca_1
-        .downcast_iter()
-        .zip(ca_2.downcast_iter())
-        .map(|(arr_1, arr_2)| compute_kernel(arr_1, arr_2));
-    ChunkedArray::from_chunk_iter(ca_1.name(), chunks)
-}
+impl ParquetEncoder {
+    pub fn new(option: FqEncoderOption) -> Self {
+        Self { option }
+    }
 
-pub fn compute_expr_2_args(arg_1: &Series, arg_2: &Series) -> Series {
-    // Dispatch the numerical series to `compute_chunked_array_2_args`.
-    with_match_physical_numeric_polars_type!(arg_1.dtype(), |$T| {
-        let ca_1: &ChunkedArray<$T> = arg_1.as_ref().as_ref().as_ref();
-        let ca_2: &ChunkedArray<$T> = arg_2.as_ref().as_ref().as_ref();
-        compute_chunked_array_2_args(ca_1, ca_2).into_series()
-    })
+    fn generate_schema(&self) -> Arc<Schema> {
+        Arc::new(Schema::new(vec![
+            Field::new("id", DataType::Utf8, false),
+            Field::new("seq", DataType::Utf8, false),
+            Field::new(
+                "qual",
+                DataType::List(Box::new(Field::new("item", DataType::Int32, true)).into()),
+                false,
+            ),
+            Field::new(
+                "target",
+                DataType::List(Box::new(Field::new("item", DataType::Int32, true)).into()),
+                false,
+            ),
+        ]))
+    }
+
+    fn generate_batch(&self, records: &[RecordData], schema: &Arc<Schema>) -> Result<RecordBatch> {
+        let data: Vec<ParquetData> = records
+            .into_par_iter()
+            .filter_map(|data| {
+                let id = data.id.as_ref();
+                let seq = data.seq.as_ref();
+                let qual = data.qual.as_ref();
+                match self.encode_record(id, seq, qual).context(format!(
+                    "encode fq read id {} error",
+                    String::from_utf8_lossy(id)
+                )) {
+                    Ok(result) => Some(result),
+                    Err(_e) => None,
+                }
+            })
+            .collect();
+
+        // Create builders for each field
+        let mut id_builder = StringBuilder::new();
+        let mut seq_builder = StringBuilder::new();
+        let mut qual_builder = ListBuilder::new(Int32Builder::new());
+        let mut target_builder = ListBuilder::new(Int32Builder::new());
+
+        // Populate builders
+        data.into_iter().for_each(|parquet_record| {
+            id_builder.append_value(parquet_record.id.to_string());
+            seq_builder.append_value(parquet_record.seq.to_string());
+
+            parquet_record.qual.into_iter().for_each(|qual| {
+                qual_builder.values().append_value(qual);
+            });
+            qual_builder.append(true);
+
+            parquet_record.target.into_iter().for_each(|target| {
+                target_builder.values().append_value(target);
+            });
+            target_builder.append(true);
+        });
+
+        // Build arrays
+        let id_array = Arc::new(id_builder.finish());
+        let seq_array = Arc::new(seq_builder.finish());
+        let qual_array = Arc::new(qual_builder.finish());
+        let target_array = Arc::new(target_builder.finish());
+
+        // Create a RecordBatch
+        let record_batch = RecordBatch::try_new(
+            schema.clone(),
+            vec![
+                id_array as Arc<dyn Array>,
+                seq_array as Arc<dyn Array>,
+                qual_array as Arc<dyn Array>,
+                target_array as Arc<dyn Array>,
+            ],
+        )?;
+        Ok(record_batch)
+    }
+
+    pub fn encode_chunk<P: AsRef<Path>>(
+        &mut self,
+        path: P,
+        chunk_size: usize,
+        parallel: bool,
+    ) -> Result<()> {
+        let schema = self.generate_schema();
+        let records = self.fetch_records(&path, self.option.kmer_size)?;
+        info!("Encoding records with chunk size {} ", chunk_size);
+
+        // create a folder for the chunk parquet files
+        let file_name = path.as_ref().file_name().unwrap().to_str().unwrap();
+        let chunks_folder = path
+            .as_ref()
+            .parent()
+            .unwrap()
+            .join(format!("{}_{}", file_name, "chunks"))
+            .to_path_buf();
+        // create the folder
+        std::fs::create_dir_all(&chunks_folder).context("Failed to create folder for chunks")?;
+
+        if parallel {
+            records
+                // .chunks(chunk_size)
+                .par_chunks(chunk_size)
+                .enumerate()
+                .for_each(|(idx, record)| {
+                    let record_batch = self
+                        .generate_batch(record, &schema)
+                        .context(format!("Failed to generate record batch for chunk {}", idx))
+                        .unwrap();
+                    let parquet_path = chunks_folder.join(format!("{}_{}.parquet", file_name, idx));
+                    write_parquet(parquet_path, record_batch, schema.clone())
+                        .context(format!("Failed to write parquet file for chunk {}", idx))
+                        .unwrap();
+                });
+        } else {
+            records
+                .chunks(chunk_size)
+                .enumerate()
+                .for_each(|(idx, record)| {
+                    let record_batch = self
+                        .generate_batch(record, &schema)
+                        .context(format!("Failed to generate record batch for chunk {}", idx))
+                        .unwrap();
+                    let parquet_path = chunks_folder.join(format!("{}_{}.parquet", file_name, idx));
+                    write_parquet(parquet_path, record_batch, schema.clone())
+                        .context(format!("Failed to write parquet file for chunk {}", idx))
+                        .unwrap();
+                });
+        }
+
+        Ok(())
+    }
 }
 ```
