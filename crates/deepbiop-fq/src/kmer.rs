@@ -12,19 +12,6 @@ use anyhow::Result;
 use pyo3::prelude::*;
 
 /// Split the quality scores by offsets.
-///
-/// # Arguments
-///
-/// * `target`: &[usize]
-/// * `offsets`:
-///
-/// returns: Result<Vec<usize, Global>, Error>
-///
-/// # Examples
-///
-/// ```
-///
-/// ```
 pub fn split_qual_by_offsets(target: &[usize], offsets: &[(usize, usize)]) -> Result<Vec<usize>> {
     let res: Vec<usize> = offsets
         .par_iter()
@@ -41,20 +28,6 @@ pub fn split_qual_by_offsets(target: &[usize], offsets: &[(usize, usize)]) -> Re
 }
 
 /// Vertorize the target region.
-///
-/// # Arguments
-///
-/// * `start`:
-/// * `end`:
-/// * `length`:
-///
-/// returns: Result<Vec<usize, Global>, Error>
-///
-/// # Examples
-///
-/// ```
-///
-/// ```
 #[pyfunction]
 pub fn vertorize_target(start: usize, end: usize, length: usize) -> Result<Vec<usize>> {
     if start > end || end > length {
@@ -70,20 +43,7 @@ pub fn vertorize_target(start: usize, end: usize, length: usize) -> Result<Vec<u
     Ok(result)
 }
 
-///
-///
-/// # Arguments
-///
-/// * `kmer_ids`:
-/// * `id2kmer_table`:
-///
-/// returns: Result<Vec<u8, Global>, Error>
-///
-/// # Examples
-///
-/// ```
-///
-/// ```
+/// Kmer ids to sequence.
 pub fn kmerids_to_seq(kmer_ids: &[Element], id2kmer_table: Id2KmerTable) -> Result<Vec<u8>> {
     let result = kmer_ids
         .par_iter()
@@ -98,20 +58,6 @@ pub fn kmerids_to_seq(kmer_ids: &[Element], id2kmer_table: Id2KmerTable) -> Resu
     kmers_to_seq(result)
 }
 
-///
-///
-/// # Arguments
-///
-/// * `kmer_target`:
-/// * `k`:
-///
-/// returns: Range<usize>
-///
-/// # Examples
-///
-/// ```
-///
-/// ```
 pub fn to_original_target_region(kmer_target: &Range<usize>, k: usize) -> Range<usize> {
     // The start of the target region remains the same
     let original_start = kmer_target.start;
@@ -178,21 +124,7 @@ pub fn to_kmer_target_region(
     Ok(new_start..new_end)
 }
 
-///
-///
-/// # Arguments
-///
-/// * `seq`:
-/// * `k`:
-/// * `overlap`:
-///
-/// returns: Vec<&[u8], Global>
-///
-/// # Examples
-///
-/// ```
-///
-/// ```
+/// Convert a sequence to k-mers.
 pub fn seq_to_kmers(seq: &[u8], k: usize, overlap: bool) -> Vec<&[u8]> {
     if overlap {
         seq.par_windows(k).collect()
@@ -201,19 +133,7 @@ pub fn seq_to_kmers(seq: &[u8], k: usize, overlap: bool) -> Vec<&[u8]> {
     }
 }
 
-///
-///
-/// # Arguments
-///
-/// * `kmers`:
-///
-/// returns: Result<Vec<u8, Global>, Error>
-///
-/// # Examples
-///
-/// ```
-///
-/// ```
+/// Convert k-mers to a sequence.
 pub fn kmers_to_seq(kmers: Vec<&[u8]>) -> Result<Vec<u8>> {
     if kmers.is_empty() {
         return Ok(Vec::new());
@@ -236,21 +156,6 @@ pub fn kmers_to_seq(kmers: Vec<&[u8]>) -> Result<Vec<u8>> {
     Ok(res)
 }
 
-///
-///
-/// # Arguments
-///
-/// * `seq`:
-/// * `kmer_size`:
-/// * `overlap`:
-///
-/// returns: Result<Vec<(&[u8], (usize, usize)), Global>, Error>
-///
-/// # Examples
-///
-/// ```
-///
-/// ```
 #[allow(clippy::type_complexity)]
 pub fn seq_to_kmers_and_offset(
     seq: &[u8],
@@ -290,20 +195,6 @@ pub fn seq_to_kmers_and_offset(
     }
 }
 
-///
-///
-/// # Arguments
-///
-/// * `base`:
-/// * `k`:
-///
-/// returns: HashMap<Vec<u8, Global>, i32, RandomState>
-///
-/// # Examples
-///
-/// ```
-///
-/// ```
 pub fn generate_kmers_table(base: &[u8], k: u8) -> Kmer2IdTable {
     generate_kmers(base, k)
         .into_par_iter()
@@ -312,20 +203,6 @@ pub fn generate_kmers_table(base: &[u8], k: u8) -> Kmer2IdTable {
         .collect()
 }
 
-///
-///
-/// # Arguments
-///
-/// * `bases`:
-/// * `k`:
-///
-/// returns: Vec<Vec<u8, Global>, Global>
-///
-/// # Examples
-///
-/// ```
-///
-/// ```
 pub fn generate_kmers(bases: &[u8], k: u8) -> Vec<Vec<u8>> {
     // Convert u8 slice to char Vec directly where needed
     (0..k)
