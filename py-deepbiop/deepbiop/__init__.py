@@ -1,1 +1,1 @@
-from .deepbiop import *  # noqa: F403
+from deepbiop.deepbiop import *  # noqa: F403
