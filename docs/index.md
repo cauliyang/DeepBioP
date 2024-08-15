@@ -1,13 +1,10 @@
 # DeepBioP
 
-<div align="center">
-  <a href="https://crates.io/crates/deepbiop">
-    <img src="https://img.shields.io/crates/v/deepbiop.svg" alt="crates.io Latest Release"/>
-  </a>
-  <a href="https://pypi.org/project/deepbiop/">
-    <img src="https://img.shields.io/pypi/v/deepbiop.svg" alt="PyPi Latest Release"/>
-  </a>
-</div>
+[![crates](https://img.shields.io/crates/v/deepbiop.svg)](https://crates.io/crates/deepbiop)
+[![pypi](https://img.shields.io/pypi/v/deepbiop.svg)](https://pypi.python.org/pypi/deepbiop)
+[![license](https://img.shields.io/pypi/l/deepbiop.svg)](https://github.com/cauliyang/DeepBioP/blob/main/LICENSE)
+[![pypi version](https://img.shields.io/pypi/pyversions/deepbiop.svg)](https://pypi.python.org/pypi/deepbiop)
+[![Actions status](https://github.com/cauliyang/DeepBioP/workflows/CI/badge.svg)](https://github.com/cauliyang/DeepBioP/actions)
 
 Deep Learning Processing Library for Biological Data
 
