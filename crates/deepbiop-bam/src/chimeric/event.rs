@@ -43,6 +43,7 @@ impl ChimericEvent {
 
     /// Parse sa tag string into a ChimericEvent.
     /// The string should be formatted as `rname,pos,strand,CIGAR,mapQ,NM;`
+    ///
     /// # Example
     /// ```
     /// use deepbiop_bam as bam;
