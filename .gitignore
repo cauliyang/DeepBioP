@@ -197,3 +197,4 @@ pyrightconfig.json
 .ltex/
 libcairo*
 uv.lock
+_build
