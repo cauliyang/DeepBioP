@@ -49,6 +49,10 @@ theme:
     - navigation.footer
     - navigation.indexes
     - content.tabs.link
+    - content.code.copy
+    - content.code.annotate
+    - toc.integrate
+    - toc.follow
   icon:
     repo: fontawesome/brands/git-alt
 
