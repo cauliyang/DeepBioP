@@ -81,23 +81,3 @@ markdown_extensions:
   - pymdownx.emoji:
       emoji_index: !!python/name:material.extensions.emoji.twemoji
       emoji_generator: !!python/name:material.extensions.emoji.to_svg
-        # - pymdownx.snippets:
-        #     base_path: [".", "docs/src/"]
-        #     check_paths: true
-        #     dedent_subsections: true
-
-        # plugins:
-        #   - search:
-        #       lang: en
-        #   - markdown-exec
-        #   - material-plausible
-        #   # - macros:
-        #   # module_name: docs/_build/scripts/macro
-        #   - redirects:
-        #       redirect_maps:
-        #         "user-guide/index.md": "index.md"
-
-        # extra:
-        #   analytics:
-        #     provider: plausible
-        #     domain: guide.pola.rs,combined.pola.rs

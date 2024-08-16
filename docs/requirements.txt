@@ -8,4 +8,3 @@ markdown-exec[ansi]==1.9.3
 pygithub==2.3.0
 mkdocs-git-committers-plugin-2
 mkdocs-git-revision-date-localized-plugin
-mkdocstrings
