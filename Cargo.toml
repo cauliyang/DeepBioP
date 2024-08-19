@@ -17,6 +17,7 @@ pyo3 = { version = "0.21.0", features = [
     "extension-module",
     "anyhow",
 ] }
+pyo3-stub-gen = "0.5"
 thiserror = "1.0"
 anyhow = "1.0"
 walkdir = { version = "2.4" }
@@ -64,6 +65,7 @@ flate2 = { version = "1.0.30", features = [
 deepbiop-fq = { version = "0.1.6", path = "crates/deepbiop-fq" }
 deepbiop-bam = { version = "0.1.7", path = "crates/deepbiop-bam" }
 deepbiop-utils = { version = "0.1.7", path = "crates/deepbiop-utils" }
+
 
 [profile.opt-dev]
 inherits = "dev"
