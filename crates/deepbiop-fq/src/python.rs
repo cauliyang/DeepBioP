@@ -135,6 +135,7 @@ fn write_fq_parallel(
     io::write_zip_fq_parallel(&records, file_path, Some(threads))
 }
 
+#[gen_stub_pyfunction(module = "deepbiop.fq")]
 #[pyfunction]
 fn seq_to_kmers(seq: String, k: usize, overlap: bool) -> Vec<String> {
     let normalized_seq = seq.as_bytes().normalize(false);
@@ -144,6 +145,7 @@ fn seq_to_kmers(seq: String, k: usize, overlap: bool) -> Vec<String> {
         .collect()
 }
 
+#[gen_stub_pyfunction(module = "deepbiop.fq")]
 #[pyfunction]
 fn kmers_to_seq(kmers: Vec<String>) -> Result<String> {
     let kmers_as_bytes: Vec<&[u8]> = kmers.par_iter().map(|s| s.as_bytes()).collect();
@@ -156,6 +158,7 @@ fn generate_kmers_table(base: String, k: usize) -> Kmer2IdTable {
     kmer::generate_kmers_table(base, k as u8)
 }
 
+#[gen_stub_pyfunction(module = "deepbiop.fq")]
 #[pyfunction]
 fn generate_kmers(base: String, k: usize) -> Vec<String> {
     let base = base.as_bytes();
@@ -165,6 +168,7 @@ fn generate_kmers(base: String, k: usize) -> Vec<String> {
         .collect()
 }
 
+#[gen_stub_pyfunction(module = "deepbiop.fq")]
 #[pyfunction]
 fn normalize_seq(seq: String, iupac: bool) -> String {
     String::from_utf8_lossy(&seq.as_bytes().normalize(iupac)).to_string()
@@ -216,6 +220,7 @@ fn encode_fq_paths_to_tensor(
         kmer2id,
     ))
 }
+
 #[allow(clippy::too_many_arguments, clippy::type_complexity)]
 #[pyfunction]
 fn encode_fq_path_to_tensor(
@@ -373,6 +378,7 @@ fn encode_fq_paths_to_parquet(
     Ok(())
 }
 
+#[gen_stub_pyfunction(module = "deepbiop.fq")]
 #[pyfunction]
 fn get_label_region(labels: Vec<i8>) -> Vec<(usize, usize)> {
     utils::get_label_region(&labels)
@@ -402,6 +408,8 @@ fn convert_multiple_fqs_to_one_fq(
     Ok(())
 }
 
+/// Convert ASCII quality to Phred score for Phred+33 encoding
+#[gen_stub_pyfunction(module = "deepbiop.fq")]
 #[pyfunction]
 pub fn encode_qual(qual: String, qual_offset: u8) -> Vec<u8> {
     let quals = qual.as_bytes();
@@ -414,6 +422,7 @@ pub fn encode_qual(qual: String, qual_offset: u8) -> Vec<u8> {
         .collect()
 }
 
+#[gen_stub_pyfunction(module = "deepbiop.fq")]
 #[pyfunction]
 pub fn test_predicts(predicts: Vec<PyRef<predicts::Predict>>) {
     predicts.iter().for_each(|predict| {

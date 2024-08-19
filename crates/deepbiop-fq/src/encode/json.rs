@@ -14,8 +14,10 @@ use serde_json::json;
 use crate::{kmer::to_kmer_target_region, types::Element};
 
 use super::{triat::Encoder, FqEncoderOption};
+use pyo3_stub_gen::derive::*;
 
-#[pyclass]
+#[gen_stub_pyclass]
+#[pyclass(module = "deepbiop.fq")]
 #[derive(Debug, Builder, Default, Clone)]
 pub struct JsonEncoder {
     pub option: FqEncoderOption,

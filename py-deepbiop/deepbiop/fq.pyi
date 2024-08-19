@@ -3,6 +3,20 @@
 
 import typing
 
+class FqEncoderOption:
+    kmer_size: int
+    qual_offset: int
+    bases: list[int]
+    vectorized_target: bool
+    threads: int
+    def __new__(cls,kmer_size:int, qual_offset:int, bases:str, vectorized_target:bool, threads:typing.Optional[int]): ...
+
+class JsonEncoder:
+    ...
+
+class ParquetEncoder:
+    ...
+
 class Predict:
     r"""
     A struct to store the prediction result
@@ -79,4 +93,28 @@ class RecordData:
     def set_qual(self, qual:str) -> None:
         ...
 
+
+def encode_qual(qual:str,qual_offset:int) -> list[int]:
+    r"""
+    Convert ASCII quality to Phred score for Phred+33 encoding
+    """
+    ...
+
+def generate_kmers(base:str,k:int) -> list[str]:
+    ...
+
+def get_label_region(labels:typing.Sequence[int]) -> list[tuple[int, int]]:
+    ...
+
+def kmers_to_seq(kmers:typing.Sequence[str]) -> str:
+    ...
+
+def normalize_seq(seq:str,iupac:bool) -> str:
+    ...
+
+def seq_to_kmers(seq:str,k:int,overlap:bool) -> list[str]:
+    ...
+
+def test_predicts(predicts:typing.Sequence[Predict]) -> None:
+    ...
 

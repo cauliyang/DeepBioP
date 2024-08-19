@@ -19,6 +19,8 @@ use anyhow::{Context, Result};
 use pyo3::prelude::*;
 use rayon::prelude::*;
 
+use pyo3_stub_gen::derive::*;
+
 #[derive(Debug, Builder, Default)]
 pub struct ParquetData {
     pub id: BString,          // id
@@ -27,7 +29,8 @@ pub struct ParquetData {
     pub target: Vec<Element>, // kmer_target
 }
 
-#[pyclass]
+#[gen_stub_pyclass]
+#[pyclass(module = "deepbiop.fq")]
 #[derive(Debug, Builder, Default, Clone, Serialize, Deserialize)]
 pub struct ParquetEncoder {
     pub option: FqEncoderOption,
