@@ -7,9 +7,12 @@ use super::traits::Overlap;
 use bstr::BString;
 use std::str::FromStr;
 
+use pyo3_stub_gen::derive::*;
+
 /// A segment is a genomic interval defined by a chromosome, a start position and an end position.
 /// The start position is inclusive and the end position is exclusive.
-#[pyclass]
+#[gen_stub_pyclass]
+#[pyclass(module = "deepbiop.utils")]
 #[derive(Debug, Builder, Clone, PartialEq)]
 #[builder(build_fn(validate = "Self::validate"))]
 pub struct GenomicInterval {

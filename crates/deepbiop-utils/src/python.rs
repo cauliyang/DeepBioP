@@ -15,6 +15,9 @@ use std::path::PathBuf;
 
 use needletail::Sequence;
 
+use pyo3_stub_gen::derive::*;
+
+#[gen_stub_pymethods]
 #[pymethods]
 impl PslAlignment {
     fn __repr__(&self) -> PyResult<String> {
@@ -25,6 +28,7 @@ impl PslAlignment {
     }
 }
 
+#[gen_stub_pymethods]
 #[pymethods]
 impl GenomicInterval {
     #[new]
@@ -58,6 +62,7 @@ impl GenomicInterval {
     }
 }
 
+#[gen_stub_pyfunction(module = "deepbiop.utils")]
 #[pyfunction]
 fn majority_voting(labels: Vec<i8>, window_size: usize) -> Vec<i8> {
     strategy::majority_voting(&labels, window_size)
@@ -68,6 +73,7 @@ fn parse_psl_by_qname(file_path: PathBuf) -> Result<HashMap<String, Vec<blat::Ps
     blat::parse_psl_by_qname(file_path)
 }
 
+#[gen_stub_pyfunction(module = "deepbiop.utils")]
 #[allow(clippy::type_complexity)]
 #[pyfunction]
 fn remove_intervals_and_keep_left(
@@ -86,6 +92,7 @@ fn remove_intervals_and_keep_left(
     ))
 }
 
+#[gen_stub_pyfunction(module = "deepbiop.utils")]
 #[pyfunction]
 fn generate_unmaped_intervals(
     input: Vec<(usize, usize)>,
@@ -98,6 +105,7 @@ fn generate_unmaped_intervals(
         .collect()
 }
 
+#[gen_stub_pyfunction(module = "deepbiop.utils")]
 #[pyfunction]
 fn reverse_complement(seq: String) -> String {
     String::from_utf8(seq.as_bytes().reverse_complement()).unwrap()

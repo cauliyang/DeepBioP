@@ -8,6 +8,9 @@ pub mod python;
 use colored::Colorize;
 use pyo3::prelude::*;
 
+use pyo3_stub_gen::derive::*;
+
+#[gen_stub_pyfunction(module = "deepbiop.utils")]
 #[pyfunction]
 pub fn highlight_targets(
     sequence: &str,

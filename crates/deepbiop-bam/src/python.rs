@@ -8,6 +8,8 @@ use pyo3::prelude::*;
 use crate::chimeric;
 use crate::cigar::calc_softclips;
 
+use pyo3_stub_gen::derive::*;
+
 #[pyfunction]
 fn count_chimeric_reads_for_path(bam: PathBuf, threads: Option<usize>) -> Result<usize> {
     chimeric::count_chimeric_reads_for_path(bam, threads)
@@ -21,6 +23,8 @@ fn count_chimeric_reads_for_paths(
     Ok(chimeric::count_chimeric_reads_for_paths(&bams, threads))
 }
 
+/// Calculate left and right soft clips from a cigar string.
+#[gen_stub_pyfunction(module = "deepbiop.bam")]
 #[pyfunction]
 fn left_right_soft_clip(cigar_string: &str) -> Result<(usize, usize)> {
     let cigar = Cigar::new(cigar_string.as_bytes());
