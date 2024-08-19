@@ -19,6 +19,8 @@ use crate::utils::{ascii_list2str, get_label_region, id_list2seq_i64};
 use deepbiop_utils::highlight_targets;
 use deepbiop_utils::strategy::majority_voting;
 
+use pyo3_stub_gen::derive::*;
+
 pub fn summary_predict_generic<D: PartialEq + Send + Sync + Copy>(
     predictions: &[Vec<D>],
     labels: &[Vec<D>],
@@ -44,7 +46,8 @@ pub fn summary_predict_generic<D: PartialEq + Send + Sync + Copy>(
 }
 
 /// A struct to store the prediction result
-#[pyclass]
+#[gen_stub_pyclass]
+#[pyclass(module = "deepbiop.fq")]
 #[derive(Debug, Default, FromPyObject, Deserialize, Serialize)]
 pub struct Predict {
     #[pyo3(get, set)]
@@ -59,6 +62,7 @@ pub struct Predict {
     pub qual: Option<String>,
 }
 
+#[gen_stub_pymethods]
 #[pymethods]
 impl Predict {
     #[new]

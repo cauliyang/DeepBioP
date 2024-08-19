@@ -17,6 +17,8 @@ use numpy::{IntoPyArray, PyArray2, PyArray3};
 use pyo3::prelude::*;
 use rayon::prelude::*;
 
+use pyo3_stub_gen::derive::*;
+
 #[pymethods]
 impl encode::TensorEncoder {
     #[new]
@@ -45,7 +47,8 @@ impl encode::ParquetEncoder {
     }
 }
 
-#[pyclass(name = "RecordData")]
+#[gen_stub_pyclass]
+#[pyclass(name = "RecordData", module = "deepbiop.fq")]
 pub struct PyRecordData(encode::RecordData);
 
 impl From<encode::RecordData> for PyRecordData {
@@ -67,6 +70,7 @@ impl<'py> FromPyObject<'py> for PyRecordData {
     }
 }
 
+#[gen_stub_pymethods]
 #[pymethods]
 impl PyRecordData {
     #[new]
