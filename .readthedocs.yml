@@ -1,0 +1,18 @@
+version: 2
+
+build:
+  os: ubuntu-20.04
+  tools:
+    python: "3.10"
+    rust: "latest"
+
+sphinx:
+  builder: html
+  configuration: py-deepbiop/docs/conf.py
+
+formats: all
+
+python:
+  install:
+    - requirements: py-deepbiop/docs/requirements.txt
+    - path: ./py-deepbiop

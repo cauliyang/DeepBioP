@@ -4,7 +4,7 @@ import sys
 from datetime import datetime
 from pathlib import Path
 
-sys.path.insert(0, (Path().resolve() / "../deepbiop").as_posix())
+# sys.path.insert(0, (Path().resolve() / "../deepbiop").as_posix())
 
 project = "deepbiop"
 author = "Yangyang Li"
