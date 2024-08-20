@@ -11,7 +11,7 @@ It's the best place to look if you need information on a specific function.
 ## Python
 
 The Python API reference is built using Sphinx.
-It's available in [our docs](https://yangyangli.top/DeepBioP/api/python/stable/reference/index.html).
+It's available in [our docs](https://deepbiop.readthedocs.io/en/latest/).
 
 ## Rust
 
