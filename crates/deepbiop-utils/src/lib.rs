@@ -1,3 +1,5 @@
+//! **deepbiop-utils** is a collection of utility functions.
+
 pub mod blat;
 pub mod interval;
 pub mod strategy;

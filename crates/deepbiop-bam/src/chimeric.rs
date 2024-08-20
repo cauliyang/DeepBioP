@@ -1,3 +1,5 @@
+//! Chimeric reads detection.
+
 mod count;
 pub use count::*;
 

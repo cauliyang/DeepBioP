@@ -72,21 +72,7 @@ pub fn to_original_target_region(kmer_target: &Range<usize>, k: usize) -> Range<
     original_start..original_end
 }
 
-///
-///
-/// # Arguments
-///
-/// * `original_target`:
-/// * `k`:
-/// * `seq_len`:
-///
-/// returns: Result<Range<usize>, Error>
-///
-/// # Examples
-///
-/// ```
-///
-/// ```
+/// Convert a target region to a k-mer target region.
 pub fn to_kmer_target_region(
     original_target: &Range<usize>,
     k: usize,

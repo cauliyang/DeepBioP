@@ -25,7 +25,9 @@ use super::is_retain_record;
 #[pyclass]
 #[derive(Debug, Builder)]
 pub struct ChimericEvent {
+    /// The name of the chimeric event.
     pub name: Option<BString>,
+    /// The intervals of the chimeric event.
     pub intervals: Vec<GenomicInterval>,
 }
 
