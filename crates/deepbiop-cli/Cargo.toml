@@ -8,7 +8,7 @@ repository = { workspace = true }
 keywords = ["deep-learning", "bioinformatics", "biological-data", "cli"]
 license = { workspace = true }
 readme = "../../README.md"
-description = "CLI tool for Processing Biological Data"
+description = "CLI tool for Processing Biological Data."
 
 [dependencies]
 deepbiop-fq = { workspace = true }
