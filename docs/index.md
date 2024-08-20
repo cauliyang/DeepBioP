@@ -1,9 +1,10 @@
 # DeepBioP
 
 [![crates](https://img.shields.io/crates/v/deepbiop.svg)](https://crates.io/crates/deepbiop)
-[![PyPi](https://img.shields.io/pypi/v/deepbiop.svg)](https://pypi.python.org/pypi/deepbiop)
+[![pypi](https://img.shields.io/pypi/v/deepbiop.svg)](https://pypi.python.org/pypi/deepbiop)
+[![cli](https://img.shields.io/crates/v/deepbiop?label=CLI)](https://crates.io/crates/deepbiop-cli)
 [![license](https://img.shields.io/pypi/l/deepbiop.svg)](https://github.com/cauliyang/DeepBioP/blob/main/LICENSE)
-[![PyPi version](https://img.shields.io/pypi/pyversions/deepbiop.svg)](https://pypi.python.org/pypi/deepbiop)
+[![pypi version](https://img.shields.io/pypi/pyversions/deepbiop.svg)](https://pypi.python.org/pypi/deepbiop)
 [![Actions status](https://github.com/cauliyang/DeepBioP/workflows/CI/badge.svg)](https://github.com/cauliyang/DeepBioP/actions)
 
 Deep Learning Processing Library for Biological Data
@@ -30,6 +31,13 @@ Each enabled feature can then be imported by its re-exported name, e.g.,
 
 ```rust
 use deepbiop::fastq;
+```
+
+### CLI
+
+```bash
+cargo install deepbiop-cli
+dbp -h
 ```
 
 # Minimum Supported Rust Version (MSRV)
