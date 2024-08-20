@@ -30,11 +30,3 @@ env_logger = "0.11"
 [[bin]]
 path = "src/main.rs"
 name = "dbp"
-
-
-[profile.release]
-debug = 0
-strip = "symbols"
-lto = true
-opt-level = 3
-codegen-units = 1
