@@ -1,7 +1,7 @@
 #![warn(missing_docs)]
 
 //! **DeepBiop** is a library for processing bilogical data (fastq, fastq, bam .etc.) to apply
-//! data for deep learning models.
+//! data for deep learning models. It is written in Rust and provides a Python and Rust interface.
 
 #[cfg(feature = "fastq")]
 #[doc(inline)]

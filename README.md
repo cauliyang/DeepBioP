@@ -4,6 +4,7 @@
 [![pypi](https://img.shields.io/pypi/v/deepbiop.svg)](https://pypi.python.org/pypi/deepbiop)
 [![license](https://img.shields.io/pypi/l/deepbiop.svg)](https://github.com/cauliyang/DeepBioP/blob/main/LICENSE)
 [![pypi version](https://img.shields.io/pypi/pyversions/deepbiop.svg)](https://pypi.python.org/pypi/deepbiop)
+[![Documentation Status](https://readthedocs.org/projects/deepbiop/badge/?version=latest)](https://deepbiop.readthedocs.io/en/latest/?badge=latest)
 [![Actions status](https://github.com/cauliyang/DeepBioP/workflows/CI/badge.svg)](https://github.com/cauliyang/DeepBioP/actions)
 
 Deep Learning Processing Library for Biological Data
