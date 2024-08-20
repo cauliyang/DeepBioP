@@ -1,0 +1,27 @@
+[package]
+name = "deepbiop-cli"
+version = { workspace = true }
+authors = { workspace = true }
+edition = { workspace = true }
+homepage = { workspace = true }
+repository = { workspace = true }
+keywords = ["deep-learning", "bioinformatics", "biological-data", "cli"]
+license = { workspace = true }
+readme = "../../README.md"
+description = "CLI tool for Processing Biological Data"
+
+[dependencies]
+deepbiop-fq = { workspace = true, optional = true }
+deepbiop-bam = { workspace = true, optional = true }
+deepbiop-utils = { workspace = true, optional = true }
+
+rayon = { workspace = true }
+log = { workspace = true }
+anyhow = { workspace = true }
+clap = { version = "4.5", features = ["derive"] }
+ctrlc = "3.4"
+
+
+[[bin]]
+path = "src/main.rs"
+name = "dbp"
