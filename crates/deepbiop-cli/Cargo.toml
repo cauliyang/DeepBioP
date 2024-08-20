@@ -18,10 +18,23 @@ deepbiop-utils = { workspace = true, optional = true }
 rayon = { workspace = true }
 log = { workspace = true }
 anyhow = { workspace = true }
-clap = { version = "4.5", features = ["derive"] }
-ctrlc = "3.4"
+ahash = { workspace = true }
 
+clap = { version = "4.5", features = ["derive"] }
+clap_complete = "4.5"
+clap-verbosity-flag = "2.2"
+ctrlc = "3.4"
+human-panic = "2.0"
+env_logger = "0.11"
 
 [[bin]]
 path = "src/main.rs"
 name = "dbp"
+
+
+[profile.release]
+debug = 0
+strip = "symbols"
+lto = true
+opt-level = 3
+codegen-units = 1
