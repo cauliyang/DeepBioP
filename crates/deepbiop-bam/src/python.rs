@@ -10,11 +10,15 @@ use crate::cigar::calc_softclips;
 
 use pyo3_stub_gen::derive::*;
 
+/// Calculate the number of chimeric reads in a BAM file.
+#[gen_stub_pyfunction(module = "deepbiop.bam")]
 #[pyfunction]
 fn count_chimeric_reads_for_path(bam: PathBuf, threads: Option<usize>) -> Result<usize> {
     chimeric::count_chimeric_reads_for_path(bam, threads)
 }
 
+/// Calculate the number of chimeric reads in multiple BAM files.
+#[gen_stub_pyfunction(module = "deepbiop.bam")]
 #[pyfunction]
 fn count_chimeric_reads_for_paths(
     bams: Vec<PathBuf>,

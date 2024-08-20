@@ -156,6 +156,7 @@ fn kmers_to_seq(kmers: Vec<String>) -> Result<String> {
     Ok(String::from_utf8_lossy(&kmer::kmers_to_seq(kmers_as_bytes)?).to_string())
 }
 
+#[gen_stub_pyfunction(module = "deepbiop.fq")]
 #[pyfunction]
 fn generate_kmers_table(base: String, k: usize) -> Kmer2IdTable {
     let base = base.as_bytes();
@@ -192,6 +193,7 @@ fn normalize_seq(seq: String, iupac: bool) -> String {
 }
 
 #[allow(clippy::too_many_arguments, clippy::type_complexity)]
+#[gen_stub_pyfunction(module = "deepbiop.fq")]
 #[pyfunction]
 fn encode_fq_paths_to_tensor(
     py: Python,
@@ -239,6 +241,7 @@ fn encode_fq_paths_to_tensor(
 }
 
 #[allow(clippy::too_many_arguments, clippy::type_complexity)]
+#[gen_stub_pyfunction(module = "deepbiop.fq")]
 #[pyfunction]
 fn encode_fq_path_to_tensor(
     py: Python,
@@ -455,6 +458,7 @@ pub fn test_predicts(predicts: Vec<PyRef<predicts::Predict>>) {
     });
 }
 
+#[gen_stub_pyfunction(module = "deepbiop.fq")]
 #[pyfunction]
 pub fn load_predicts_from_batch_pt(
     pt_path: PathBuf,
@@ -464,6 +468,7 @@ pub fn load_predicts_from_batch_pt(
     predicts::load_predicts_from_batch_pt(pt_path, ignore_label, &id_table)
 }
 
+#[gen_stub_pyfunction(module = "deepbiop.fq")]
 #[pyfunction]
 pub fn load_predicts_from_batch_pts(
     pt_path: PathBuf,

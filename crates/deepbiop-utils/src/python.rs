@@ -68,13 +68,15 @@ fn majority_voting(labels: Vec<i8>, window_size: usize) -> Vec<i8> {
     strategy::majority_voting(&labels, window_size)
 }
 
+/// Parse PSL file by query name.
+#[gen_stub_pyfunction(module = "deepbiop.utils")]
 #[pyfunction]
 fn parse_psl_by_qname(file_path: PathBuf) -> Result<HashMap<String, Vec<blat::PslAlignment>>> {
     blat::parse_psl_by_qname(file_path)
 }
 
-#[gen_stub_pyfunction(module = "deepbiop.utils")]
 #[allow(clippy::type_complexity)]
+#[gen_stub_pyfunction(module = "deepbiop.utils")]
 #[pyfunction]
 fn remove_intervals_and_keep_left(
     seq: String,

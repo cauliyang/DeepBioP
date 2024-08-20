@@ -5,6 +5,9 @@ import os
 import pathlib
 import typing
 
+import numpy
+import numpy.typing
+
 class FqEncoderOption:
     kmer_size: int
     qual_offset: int
@@ -111,12 +114,41 @@ def encode_fq_path_to_parquet_chunk(
     qual_offset: int,
     vectorized_target: bool,
 ) -> None: ...
+def encode_fq_path_to_tensor(
+    fq_path: str | os.PathLike | pathlib.Path,
+    k: int,
+    bases: str,
+    qual_offset: int,
+    vectorized_target: bool,
+    max_width: int | None,
+    max_seq_len: int | None,
+) -> tuple[
+    numpy.typing.NDArray[numpy.int32],
+    numpy.typing.NDArray[numpy.int32],
+    numpy.typing.NDArray[numpy.int32],
+    dict[str, int],
+]: ...
 def encode_fq_paths_to_parquet(
     fq_path: typing.Sequence[str | os.PathLike | pathlib.Path],
     bases: str,
     qual_offset: int,
     vectorized_target: bool,
 ) -> None: ...
+def encode_fq_paths_to_tensor(
+    fq_paths: typing.Sequence[str | os.PathLike | pathlib.Path],
+    k: int,
+    bases: str,
+    qual_offset: int,
+    vectorized_target: bool,
+    parallel_for_files: bool,
+    max_width: int | None,
+    max_seq_len: int | None,
+) -> tuple[
+    numpy.typing.NDArray[numpy.int32],
+    numpy.typing.NDArray[numpy.int32],
+    numpy.typing.NDArray[numpy.int32],
+    dict[str, int],
+]: ...
 def encode_qual(qual: str, qual_offset: int) -> list[int]:
     r"""Convert ASCII quality to Phred score for Phred+33 encoding."""
 
@@ -125,8 +157,20 @@ def fastq_to_fasta(
     fasta_path: str | os.PathLike | pathlib.Path,
 ) -> None: ...
 def generate_kmers(base: str, k: int) -> list[str]: ...
+def generate_kmers_table(base: str, k: int) -> dict[list[int], int]: ...
 def get_label_region(labels: typing.Sequence[int]) -> list[tuple[int, int]]: ...
 def kmers_to_seq(kmers: typing.Sequence[str]) -> str: ...
+def load_predicts_from_batch_pt(
+    pt_path: str | os.PathLike | pathlib.Path,
+    ignore_label: int,
+    id_table: typing.Mapping[int, str],
+) -> dict[str, Predict]: ...
+def load_predicts_from_batch_pts(
+    pt_path: str | os.PathLike | pathlib.Path,
+    ignore_label: int,
+    id_table: typing.Mapping[int, str],
+    max_predicts: int | None,
+) -> dict[str, Predict]: ...
 def normalize_seq(seq: str, iupac: bool) -> str:
     r"""
     Normalize a DNA sequence by converting any non-standard nucleotides to standard ones.
@@ -142,15 +186,6 @@ def normalize_seq(seq: str, iupac: bool) -> str:
     # Returns
 
     A normalized DNA sequence as a `String`.
-
-    # Examples
-
-    ```
-    use deepbiop_fq as fq;
-    let seq = "acGTN".to_string();
-    let normalized_seq = fq::normalize_seq(seq, false);
-    assert_eq!(normalized_seq, "ACGTN");
-    ```
     """
 
 def seq_to_kmers(seq: str, k: int, overlap: bool) -> list[str]: ...
