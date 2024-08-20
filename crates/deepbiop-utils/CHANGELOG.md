@@ -6,6 +6,16 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.1.8](https://github.com/cauliyang/DeepBioP/compare/deepbiop-utils-v0.1.7...deepbiop-utils-v0.1.8) - 2024-08-20
+
+### Added
+- Add pyo3-stub-gen dependency and stub generation
+
+### Other
+- Update deepbiop-fq crate to improve code organization and remove unused functions
+- Update deepbiop-bam crate to include chimeric event struct and functions
+- Update badges in README.md to use consistent format
+
 ## [0.1.7](https://github.com/cauliyang/DeepBioP/compare/deepbiop-utils-v0.1.6...deepbiop-utils-v0.1.7) - 2024-08-11
 
 ### Added
