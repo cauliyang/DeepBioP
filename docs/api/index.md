@@ -16,4 +16,4 @@ It's available in [our docs](https://deepbiop.readthedocs.io/en/latest/).
 ## Rust
 
 The Rust API reference is built using Cargo.
-It's available on [docs.rs](https://docs.rs/deepbiop/0.1.7/deepbiop/).
+It's available on [docs.rs](https://docs.rs/deepbiop/latest/deepbiop).
