@@ -31,6 +31,7 @@ impl encode::TensorEncoder {
     }
 }
 
+#[gen_stub_pymethods]
 #[pymethods]
 impl encode::JsonEncoder {
     #[new]
@@ -39,6 +40,7 @@ impl encode::JsonEncoder {
     }
 }
 
+#[gen_stub_pymethods]
 #[pymethods]
 impl encode::ParquetEncoder {
     #[new]
@@ -112,6 +114,7 @@ impl PyRecordData {
     }
 }
 
+#[gen_stub_pyfunction(module = "deepbiop.fq")]
 #[pyfunction]
 fn write_fq(records_data: Vec<PyRecordData>, file_path: Option<PathBuf>) -> Result<()> {
     let records: Vec<encode::RecordData> = records_data
@@ -121,6 +124,7 @@ fn write_fq(records_data: Vec<PyRecordData>, file_path: Option<PathBuf>) -> Resu
     io::write_fq(&records, file_path)
 }
 
+#[gen_stub_pyfunction(module = "deepbiop.fq")]
 #[pyfunction]
 fn write_fq_parallel(
     records_data: Vec<PyRecordData>,
@@ -168,6 +172,28 @@ fn generate_kmers(base: String, k: usize) -> Vec<String> {
         .collect()
 }
 
+/// Normalize a DNA sequence by converting any non-standard nucleotides to standard ones.
+///
+/// This function takes a DNA sequence as a `String` and a boolean flag `iupac` indicating whether to normalize using IUPAC ambiguity codes.
+/// It returns a normalized DNA sequence as a `String`.
+///
+/// # Arguments
+///
+/// * `seq` - A DNA sequence as a `String`.
+/// * `iupac` - A boolean flag indicating whether to normalize using IUPAC ambiguity codes.
+///
+/// # Returns
+///
+/// A normalized DNA sequence as a `String`.
+///
+/// # Examples
+///
+/// ```
+/// use deepbiop_fq as fq;
+/// let seq = "acGTN".to_string();
+/// let normalized_seq = fq::normalize_seq(seq, false);
+/// assert_eq!(normalized_seq, "ACGTN");
+/// ```
 #[gen_stub_pyfunction(module = "deepbiop.fq")]
 #[pyfunction]
 fn normalize_seq(seq: String, iupac: bool) -> String {
@@ -267,6 +293,7 @@ fn encode_fq_path_to_tensor(
     ))
 }
 
+#[gen_stub_pyfunction(module = "deepbiop.fq")]
 #[pyfunction]
 fn encode_fq_path_to_json(
     fq_path: PathBuf,
@@ -302,6 +329,7 @@ fn encode_fq_path_to_json(
     Ok(())
 }
 
+#[gen_stub_pyfunction(module = "deepbiop.fq")]
 #[pyfunction]
 fn encode_fq_path_to_parquet_chunk(
     fq_path: PathBuf,
@@ -325,6 +353,7 @@ fn encode_fq_path_to_parquet_chunk(
     Ok(())
 }
 
+#[gen_stub_pyfunction(module = "deepbiop.fq")]
 #[pyfunction]
 fn encode_fq_path_to_parquet(
     fq_path: PathBuf,
@@ -358,6 +387,7 @@ fn encode_fq_path_to_parquet(
     Ok(())
 }
 
+#[gen_stub_pyfunction(module = "deepbiop.fq")]
 #[pyfunction]
 fn encode_fq_paths_to_parquet(
     fq_path: Vec<PathBuf>,
@@ -387,6 +417,7 @@ fn get_label_region(labels: Vec<i8>) -> Vec<(usize, usize)> {
         .collect()
 }
 
+#[gen_stub_pyfunction(module = "deepbiop.fq")]
 #[pyfunction]
 fn convert_multiple_fqs_to_one_fq(
     paths: Vec<PathBuf>,
@@ -452,6 +483,7 @@ pub fn load_predicts_from_batch_pts(
     predicts::load_predicts_from_batch_pts(pt_path, ignore_label, &id_table, max_predicts)
 }
 
+#[gen_stub_pyfunction(module = "deepbiop.fq")]
 #[pyfunction]
 pub fn fastq_to_fasta(fastq_path: PathBuf, fasta_path: PathBuf) -> Result<()> {
     let fa_records = io::fastq_to_fasta(&fastq_path)?;
