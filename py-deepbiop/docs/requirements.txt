@@ -1,0 +1,6 @@
+furo
+sphinx
+myst_parser
+linkify-it-py
+sphinx-togglebutton
+sphinx-autoapi

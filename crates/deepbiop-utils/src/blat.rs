@@ -14,6 +14,8 @@ use pyo3::prelude::*;
 use serde::{Deserialize, Serialize};
 use tempfile::tempdir;
 
+use pyo3_stub_gen::derive::*;
+
 pub const MIN_SEQ_SIZE: usize = 20;
 // psLayout version 3
 
@@ -22,7 +24,8 @@ pub const MIN_SEQ_SIZE: usize = 20;
 // ---------------------------------------------------------------------------------------------------------------------------------------------------------------
 // 23      1       0       0       0       0       0       0       +       seq     51      3       27      chr12   133275309       11447342     11447366 1       24,     3,      11447342,
 
-#[pyclass]
+#[gen_stub_pyclass]
+#[pyclass(module = "deepbiop.utils")]
 #[derive(Debug, Default, Builder, Clone, Serialize, Deserialize)]
 pub struct PslAlignment {
     #[pyo3(get, set)]

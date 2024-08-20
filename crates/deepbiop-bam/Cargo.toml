@@ -14,6 +14,7 @@ description = "Deep Learning Processing Library for Bam Format"
 anyhow = { workspace = true }
 noodles = { workspace = true }
 pyo3 = { workspace = true }
+pyo3-stub-gen = { workspace = true }
 flate2 = { workspace = true }
 bstr = { workspace = true }
 rayon = { workspace = true }

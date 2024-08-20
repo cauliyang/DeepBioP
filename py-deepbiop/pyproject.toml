@@ -28,6 +28,7 @@ classifiers = [
     "Topic :: Scientific/Engineering",
 ]
 
+
 [project.urls]
 Homepage = "https://github.com/cauliyang/DeepBioP"
 Documentation = "https://github.com/cauliyang/DeepBioP"
@@ -190,8 +191,6 @@ filterwarnings = [
     "ignore:datetime.datetime.utcnow\\(\\) is deprecated.*:DeprecationWarning",
     # Introspection under PyCharm IDE can generate this in Python 3.12
     "ignore:.*co_lnotab is deprecated, use co_lines.*:DeprecationWarning",
-    # TODO: Excel tests lead to unclosed file warnings
-    # https://github.com/pola-rs/polars/issues/14466
     "ignore:unclosed file.*:ResourceWarning",
     # Ignore invalid warnings when running earlier versions of SQLAlchemy (we
     # know they are invalid because our standard tests run the latest version)
@@ -215,8 +214,10 @@ exclude_lines = [
     "from typing_extensions import ",
 ]
 
-[tool.rye]
+
+[tool.uv]
 dev-dependencies = [
+    "sphinx>=7.4.7",
     "interrogate>=1.7.0",
     "mkdocs>=1.6.0",
     "mkdocs-material>=9.5.31",

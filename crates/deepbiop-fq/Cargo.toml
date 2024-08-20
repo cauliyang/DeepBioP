@@ -22,7 +22,6 @@ numpy = { workspace = true }
 ndarray = { workspace = true }
 serde = { workspace = true }
 serde_json = { workspace = true }
-pyo3 = { workspace = true }
 derive_builder = { workspace = true }
 itertools = { workspace = true }
 lexical = { workspace = true }
@@ -34,8 +33,10 @@ parquet = { workspace = true }
 arrow = { workspace = true }
 candle-core = { workspace = true }
 
-deepbiop-utils = { path = "../deepbiop-utils", version = "0.1" }
+pyo3 = { workspace = true }
+pyo3-stub-gen = { workspace = true }
 
+deepbiop-utils = { path = "../deepbiop-utils", version = "0.1" }
 [dev-dependencies]
 bio = { workspace = true }
 tempfile = { workspace = true }

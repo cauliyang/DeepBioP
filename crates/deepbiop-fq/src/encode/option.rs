@@ -4,8 +4,10 @@ use serde::{Deserialize, Serialize};
 use std::fmt::{self, Display, Formatter};
 
 use pyo3::prelude::*;
+use pyo3_stub_gen::derive::*;
 
-#[pyclass]
+#[gen_stub_pyclass]
+#[pyclass(module = "deepbiop.fq")]
 #[derive(Debug, Builder, Default, Clone, Serialize, Deserialize)]
 pub struct FqEncoderOption {
     #[pyo3(get, set)]
@@ -29,6 +31,7 @@ pub struct FqEncoderOption {
     pub threads: usize,
 }
 
+#[gen_stub_pymethods]
 #[pymethods]
 impl FqEncoderOption {
     #[new]
