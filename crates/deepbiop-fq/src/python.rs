@@ -185,15 +185,6 @@ fn generate_kmers(base: String, k: usize) -> Vec<String> {
 /// # Returns
 ///
 /// A normalized DNA sequence as a `String`.
-///
-/// # Examples
-///
-/// ```
-/// use deepbiop_fq as fq;
-/// let seq = "acGTN".to_string();
-/// let normalized_seq = fq::normalize_seq(seq, false);
-/// assert_eq!(normalized_seq, "ACGTN");
-/// ```
 #[gen_stub_pyfunction(module = "deepbiop.fq")]
 #[pyfunction]
 fn normalize_seq(seq: String, iupac: bool) -> String {
