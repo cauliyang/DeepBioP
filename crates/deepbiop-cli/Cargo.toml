@@ -11,9 +11,9 @@ readme = "../../README.md"
 description = "CLI tool for Processing Biological Data"
 
 [dependencies]
-deepbiop-fq = { workspace = true, optional = true }
-deepbiop-bam = { workspace = true, optional = true }
-deepbiop-utils = { workspace = true, optional = true }
+deepbiop-fq = { workspace = true }
+deepbiop-bam = { workspace = true }
+deepbiop-utils = { workspace = true }
 
 rayon = { workspace = true }
 log = { workspace = true }
