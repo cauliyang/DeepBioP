@@ -5,21 +5,15 @@ import os
 import pathlib
 import typing
 
-def count_chimeric_reads_for_path(bam:str | os.PathLike | pathlib.Path,threads:typing.Optional[int]) -> int:
-    r"""
-    Calculate the number of chimeric reads in a BAM file.
-    """
-    ...
+def count_chimeric_reads_for_path(
+    bam: str | os.PathLike | pathlib.Path, threads: int | None
+) -> int:
+    r"""Calculate the number of chimeric reads in a BAM file."""
 
-def count_chimeric_reads_for_paths(bams:typing.Sequence[str | os.PathLike | pathlib.Path],threads:typing.Optional[int]) -> dict[str, int]:
-    r"""
-    Calculate the number of chimeric reads in multiple BAM files.
-    """
-    ...
+def count_chimeric_reads_for_paths(
+    bams: typing.Sequence[str | os.PathLike | pathlib.Path], threads: int | None
+) -> dict[str, int]:
+    r"""Calculate the number of chimeric reads in multiple BAM files."""
 
-def left_right_soft_clip(cigar_string:str) -> tuple[int, int]:
-    r"""
-    Calculate left and right soft clips from a cigar string.
-    """
-    ...
-
+def left_right_soft_clip(cigar_string: str) -> tuple[int, int]:
+    r"""Calculate left and right soft clips from a cigar string."""
