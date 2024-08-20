@@ -1,14 +1,9 @@
-```{include} ../../README.md
----
-end-before: <!-- github-only -->
----
-```
+# Python API Documentation
 
 ```{toctree}
 ---
-hidden:
-maxdepth: 1
+maxdepth: 2
 ---
 
-Changelog <https://github.com/cauliyang/DeepBioP/releases>
+
 ```
