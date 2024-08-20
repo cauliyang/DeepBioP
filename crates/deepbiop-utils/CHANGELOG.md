@@ -6,6 +6,16 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.1.9](https://github.com/cauliyang/DeepBioP/compare/deepbiop-utils-v0.1.8...deepbiop-utils-v0.1.9) - 2024-08-20
+
+### Added
+- Update function definitions and imports
+
+### Other
+- Add documentation for chimeric and cigar operations
+- Remove outdated documentation badge
+- Add documentation badge to README.md
+
 ## [0.1.8](https://github.com/cauliyang/DeepBioP/compare/deepbiop-utils-v0.1.7...deepbiop-utils-v0.1.8) - 2024-08-20
 
 ### Added
