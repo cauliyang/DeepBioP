@@ -33,6 +33,9 @@ pub enum Commands {
 
     /// BAM to fastq conversion.
     BamToFq(cli::BamToFq),
+
+    /// Fastq to fasta conversion.
+    FqToFa(cli::FqToFa),
 }
 
 impl Display for Commands {
@@ -40,6 +43,7 @@ impl Display for Commands {
         match self {
             Commands::CountChimeric(_) => write!(f, "chimericcount"),
             Commands::BamToFq(_) => write!(f, "bam2fq"),
+            Commands::FqToFa(_) => write!(f, "fq2fa"),
         }
     }
 }
@@ -82,6 +86,10 @@ fn main() -> Result<()> {
 
         Some(Commands::BamToFq(bam2fq)) => {
             bam2fq.run().unwrap();
+        }
+
+        Some(Commands::FqToFa(fq2fa)) => {
+            fq2fa.run().unwrap();
         }
 
         None => {
