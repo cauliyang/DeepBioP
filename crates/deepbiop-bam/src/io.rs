@@ -24,10 +24,16 @@ pub fn bam2fq(bam: &Path, threads: Option<usize>) -> Result<Vec<fastq::Record>> 
         .par_bridge()
         .map(|result| {
             let record = result.unwrap();
+
+            let seq = record.sequence().as_ref().to_vec();
+            let qual = record.quality_scores().as_ref().to_vec();
+
+            assert_eq!(seq.len(), qual.len());
+
             let fq_record = fastq::Record::new(
                 fastq::record::Definition::new(record.name().unwrap().to_vec(), ""),
-                record.sequence().as_ref().to_vec(),
-                record.quality_scores().as_ref().to_vec(),
+                seq,
+                qual,
             );
             fq_record
         })
