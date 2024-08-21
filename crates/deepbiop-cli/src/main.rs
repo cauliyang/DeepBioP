@@ -30,12 +30,16 @@ struct Cli {
 pub enum Commands {
     /// Count chimeric reads in a BAM file.
     CountChimeric(cli::CountChimeric),
+
+    /// BAM to fastq conversion.
+    BamToFq(cli::BamToFq),
 }
 
 impl Display for Commands {
     fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
         match self {
             Commands::CountChimeric(_) => write!(f, "chimericcount"),
+            Commands::BamToFq(_) => write!(f, "bam2fq"),
         }
     }
 }
@@ -73,7 +77,11 @@ fn main() -> Result<()> {
 
     match &cli.command {
         Some(Commands::CountChimeric(count_chimeric)) => {
-            println!("{:?}", count_chimeric.run());
+            count_chimeric.run().unwrap();
+        }
+
+        Some(Commands::BamToFq(bam2fq)) => {
+            bam2fq.run().unwrap();
         }
 
         None => {
