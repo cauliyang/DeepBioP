@@ -21,7 +21,7 @@ pub fn bam2fq(bam: &Path, threads: Option<usize>) -> Result<Vec<fastq::Record>> 
     let mut reader = bam::io::Reader::from(decoder);
     let _header = reader.read_header()?;
 
-    Ok(reader
+    reader
         .records()
         .par_bridge()
         .map(|result| {
@@ -32,12 +32,20 @@ pub fn bam2fq(bam: &Path, threads: Option<usize>) -> Result<Vec<fastq::Record>> 
 
             assert_eq!(seq.len(), qual.len());
 
+            if seq.len() != qual.len() {
+                let name = String::from_utf8_lossy(record.name().unwrap().as_ref()).to_string();
+                return Err(anyhow::anyhow!(
+                    "{} seq and qual length are not equal",
+                    name
+                ));
+            }
+
             let fq_record = fastq::Record::new(
                 fastq::record::Definition::new(record.name().unwrap().to_vec(), ""),
                 seq,
                 qual,
             );
-            fq_record
+            Ok(fq_record)
         })
-        .collect::<Vec<fastq::Record>>())
+        .collect::<Result<Vec<fastq::Record>>>()
 }

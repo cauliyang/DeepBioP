@@ -1,4 +1,3 @@
-use ahash::HashMap;
 use anyhow::Result;
 use clap::Parser;
 use deepbiop_bam as bam;
@@ -18,11 +17,13 @@ pub struct CountChimeric {
 }
 
 impl CountChimeric {
-    pub fn run(&self) -> Result<HashMap<PathBuf, usize>> {
+    pub fn run(&self) -> Result<()> {
         set_up_threads(self.threads)?;
-        Ok(bam::chimeric::count_chimeric_reads_for_paths(
-            &self.bam,
-            self.threads,
-        ))
+        let res = bam::chimeric::count_chimeric_reads_for_paths(&self.bam, self.threads);
+        for (path, count) in res {
+            log::info!("{}: {}", path.to_string_lossy(), count);
+        }
+
+        Ok(())
     }
 }
