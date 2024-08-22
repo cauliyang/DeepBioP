@@ -23,7 +23,6 @@ impl CountChimeric {
         for (path, count) in res {
             log::info!("{}: {}", path.to_string_lossy(), count);
         }
-
         Ok(())
     }
 }

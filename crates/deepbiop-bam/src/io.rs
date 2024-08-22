@@ -30,8 +30,6 @@ pub fn bam2fq(bam: &Path, threads: Option<usize>) -> Result<Vec<fastq::Record>> 
             let seq = record.sequence().as_ref().to_vec();
             let qual = record.quality_scores().as_ref().to_vec();
 
-            assert_eq!(seq.len(), qual.len());
-
             if seq.len() != qual.len() {
                 let name = String::from_utf8_lossy(record.name().unwrap().as_ref()).to_string();
                 return Err(anyhow::anyhow!(
