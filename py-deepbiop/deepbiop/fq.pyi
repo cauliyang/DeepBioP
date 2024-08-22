@@ -86,6 +86,18 @@ class RecordData:
     def set_seq(self, seq: str) -> None: ...
     def set_qual(self, qual: str) -> None: ...
 
+class TensorEncoder:
+    tensor_max_width: int
+    tensor_max_seq_len: int
+    kmer2id_table: dict[list[int], int]
+    id2kmer_table: dict[int, list[int]]
+    def __new__(
+        cls,
+        option: FqEncoderOption,
+        tensor_max_width: int | None,
+        tensor_max_seq_len: int | None,
+    ): ...
+
 def convert_multiple_fqs_to_one_fq(
     paths: typing.Sequence[str | os.PathLike | pathlib.Path],
     result_path: str | os.PathLike | pathlib.Path,

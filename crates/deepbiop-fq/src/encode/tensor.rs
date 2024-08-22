@@ -22,9 +22,11 @@ use crate::{
 
 use super::{triat::Encoder, FqEncoderOption};
 use needletail::Sequence;
+use pyo3_stub_gen::derive::*;
 use rayon::prelude::*;
 
-#[pyclass]
+#[gen_stub_pyclass]
+#[pyclass(module = "deepbiop.fq")]
 #[derive(Debug, Builder, Default, Clone)]
 #[builder(build_fn(skip))] // Specify custom build function
 pub struct TensorEncoder {
