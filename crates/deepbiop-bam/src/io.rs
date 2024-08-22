@@ -5,6 +5,8 @@ use std::{fs::File, num::NonZeroUsize, path::Path, thread};
 
 use noodles::fastq;
 
+// FIXME: The function has a bug since seq != qual
+
 pub fn bam2fq(bam: &Path, threads: Option<usize>) -> Result<Vec<fastq::Record>> {
     let file = File::open(bam)?;
     let worker_count = if let Some(threads) = threads {

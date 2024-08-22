@@ -18,7 +18,7 @@ pub struct BamToFq {
     #[arg(short, long, default_value = "2")]
     threads: Option<usize>,
 
-    /// output compressed fastq file
+    /// output bgzip compressed fastq file
     #[arg(short, long, action=clap::ArgAction::SetTrue)]
     compressed: bool,
 }
