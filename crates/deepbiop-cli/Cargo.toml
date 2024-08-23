@@ -5,7 +5,7 @@ authors = { workspace = true }
 edition = { workspace = true }
 homepage = { workspace = true }
 repository = { workspace = true }
-keywords = ["deep-learning", "bioinformatics", "biological-data", "cli"]
+keywords = ["deep-learning", "science::bioinformatics", "biological-data", "command-line-utilities"]
 license = { workspace = true }
 readme = "../../README.md"
 description = "CLI tool for Processing Biological Data."
