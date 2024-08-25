@@ -24,11 +24,11 @@ impl FqToFa {
 
         for fq in &self.fq {
             let fq_records = fq::io::fastq_to_fasta(fq)?;
-            let file_path = fq.with_extension("fa");
-            let file = std::fs::File::create(&file_path)?;
-            let mut writer = fasta::io::Writer::new(file);
+            let fa_file_path = fq.with_extension("fa");
+            let fa_file_handler = std::fs::File::create(&fa_file_path)?;
+            let mut fa_writer = fasta::io::Writer::new(fa_file_handler);
             for record in fq_records {
-                writer.write_record(&record)?;
+                fa_writer.write_record(&record)?;
             }
         }
         Ok(())
