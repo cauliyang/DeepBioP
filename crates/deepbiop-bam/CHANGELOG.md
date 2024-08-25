@@ -6,6 +6,20 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.1.11](https://github.com/cauliyang/DeepBioP/compare/deepbiop-bam-v0.1.10...deepbiop-bam-v0.1.11) - 2024-08-25
+
+### Added
+- Update keywords in Cargo.toml files
+- *(io)* Refactor bam2fq function to handle equal seq and qual lengths
+- Add BAM to fastq conversion functionality
+- Add CLI installation guide
+
+### Other
+- Remove unnecessary empty line
+- Improve function and field comments
+- Improve code readability and performance
+- Merge branch 'dev'
+
 ## [0.1.10](https://github.com/cauliyang/DeepBioP/compare/deepbiop-bam-v0.1.9...deepbiop-bam-v0.1.10) - 2024-08-20
 
 ### Added

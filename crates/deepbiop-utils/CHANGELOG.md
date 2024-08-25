@@ -6,6 +6,15 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.1.11](https://github.com/cauliyang/DeepBioP/compare/deepbiop-utils-v0.1.10...deepbiop-utils-v0.1.11) - 2024-08-25
+
+### Added
+- Update keywords in Cargo.toml files
+- Add CLI installation guide
+
+### Other
+- Merge branch 'dev'
+
 ## [0.1.10](https://github.com/cauliyang/DeepBioP/compare/deepbiop-utils-v0.1.9...deepbiop-utils-v0.1.10) - 2024-08-20
 
 ### Added
