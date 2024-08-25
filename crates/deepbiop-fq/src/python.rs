@@ -19,6 +19,7 @@ use rayon::prelude::*;
 
 use pyo3_stub_gen::derive::*;
 
+#[gen_stub_pymethods]
 #[pymethods]
 impl encode::TensorEncoder {
     #[new]

@@ -1,3 +1,9 @@
+pub mod bam2fq;
+pub use bam2fq::*;
+pub mod fq2fa;
+pub use fq2fa::*;
+pub mod fa2fq;
+pub use fa2fq::*;
 pub mod chimeric_count;
 pub use chimeric_count::*;
 
