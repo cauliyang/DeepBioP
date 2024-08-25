@@ -5,7 +5,7 @@ authors = { workspace = true }
 edition = { workspace = true }
 homepage = { workspace = true }
 repository = { workspace = true }
-keywords = ["parquet", "fastq", "deep-learning", "science::ml"]
+keywords = ["parquet", "fastq", "deep-learning"]
 license = { workspace = true }
 readme = "../../README.md"
 description = "Deep Learning Preprocessing Library for Fastq Format"
