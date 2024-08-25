@@ -36,6 +36,9 @@ pub enum Commands {
 
     /// Fastq to fasta conversion.
     FqToFa(cli::FqToFa),
+
+    /// Fastq to fasta conversion.
+    FaToFq(cli::FaToFq),
 }
 
 impl Display for Commands {
@@ -44,6 +47,7 @@ impl Display for Commands {
             Commands::CountChimeric(_) => write!(f, "chimericcount"),
             Commands::BamToFq(_) => write!(f, "bam2fq"),
             Commands::FqToFa(_) => write!(f, "fq2fa"),
+            Commands::FaToFq(_) => write!(f, "fa2fq"),
         }
     }
 }
@@ -90,6 +94,10 @@ fn main() -> Result<()> {
 
         Some(Commands::FqToFa(fq2fa)) => {
             fq2fa.run().unwrap();
+        }
+
+        Some(Commands::FaToFq(fa2fq)) => {
+            fa2fq.run().unwrap();
         }
 
         None => {

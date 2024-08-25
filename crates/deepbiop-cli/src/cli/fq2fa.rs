@@ -9,7 +9,7 @@ use super::set_up_threads;
 
 #[derive(Debug, Parser)]
 pub struct FqToFa {
-    /// path to the bam file
+    /// path to the fq file
     #[arg(value_name = "fq", action=clap::ArgAction::Append)]
     fq: Vec<PathBuf>,
 
