@@ -31,9 +31,9 @@ classifiers = [
 
 [project.urls]
 Homepage = "https://github.com/cauliyang/DeepBioP"
-Documentation = "https://github.com/cauliyang/DeepBioP"
+Documentation = "https://yangyangli.top/DeepBioP"
 Repository = "https://github.com/cauliyang/DeepBioP"
-Changelog = "https://github.com/cauliyang/DeepBioP/CHANGELOG.md"
+Changelog = "https://github.com/cauliyang/DeepBioP/releases"
 
 
 [tool.mypy]
