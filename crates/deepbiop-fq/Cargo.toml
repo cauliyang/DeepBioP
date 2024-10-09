@@ -37,6 +37,7 @@ pyo3 = { workspace = true }
 pyo3-stub-gen = { workspace = true }
 
 deepbiop-utils = { path = "../deepbiop-utils", version = "0.1" }
+
 [dev-dependencies]
 bio = { workspace = true }
 tempfile = { workspace = true }
