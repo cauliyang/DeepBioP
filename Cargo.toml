@@ -24,7 +24,7 @@ walkdir = { version = "2.5" }
 rayon = { version = "1.10" }
 log = "0.4"
 pyo3-log = "0.11"
-noodles = { version = "0.79.0", features = [
+noodles = { version = "0.83.0", features = [
     "bgzf",
     "core",
     "csi",
@@ -54,7 +54,7 @@ lazy_static = "1.5.0"
 tempfile = "3.13"
 parquet = "52.2.0"
 arrow = "52.2"
-candle-core = { git = "https://github.com/huggingface/candle.git", version = "0.6.0" }
+candle-core = { git = "https://github.com/huggingface/candle.git", version = "0.7.2" }
 colored = "2.1"
 textwrap = "0.16"
 flate2 = { version = "1.0.34", features = [
