@@ -19,7 +19,7 @@ use log::debug;
 use pyo3::prelude::*;
 use std::str::FromStr;
 
-use super::is_retain_record;
+use super::{is_chimeric_record, is_retain_record};
 
 /// A chimeric event.
 #[pyclass]
@@ -169,7 +169,7 @@ where
         .par_bridge()
         .filter_map(|result| {
             let record = result.unwrap();
-            if is_retain_record(&record) {
+            if is_retain_record(&record) && is_chimeric_record(&record) {
                 if let Some(predict_function) = &predict {
                     if predict_function(&record) {
                         Some(record)
