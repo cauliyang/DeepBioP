@@ -132,8 +132,6 @@ impl ChimericEvent {
     /// assert_eq!(chimeric_event.len(),2);
     /// ```
     pub fn parse_list_pos(s: &str, name: &str) -> Result<Self> {
-        use rayon::str::ParallelString;
-
         let intervals = s
             .par_split(',')
             .map(|event| {
