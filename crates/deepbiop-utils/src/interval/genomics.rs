@@ -74,7 +74,7 @@ impl GenomicInterval {
 
 impl Overlap for GenomicInterval {
     fn overlap(&self, other: &Self) -> bool {
-        self.chr == other.chr && self.start <= other.end && self.end >= other.start
+        self.chr == other.chr && self.start < other.end && self.end > other.start
     }
 }
 
