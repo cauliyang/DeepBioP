@@ -121,6 +121,43 @@ impl ChimericEvent {
 
         Ok(chimeric_event)
     }
+
+    /// Construct a ChimericEvent from a string chr:start-end,chr:start-end
+    /// # Example
+    /// ```
+    /// use deepbiop_bam as bam;
+    /// use bam::chimeric::ChimericEvent;
+    /// let  value =  "chr1:100-200,chr2:200-300";
+    /// let chimeric_event: ChimericEvent = ChimericEvent::parse_list_pos(value, "value").unwrap();
+    /// assert_eq!(chimeric_event.len(),2);
+    /// ```
+    pub fn parse_list_pos(s: &str, name: &str) -> Result<Self> {
+        use rayon::str::ParallelString;
+
+        let intervals = s
+            .par_split(',')
+            .map(|event| {
+                let mut splits = event.split(':');
+                let chr = splits.next().unwrap();
+                let positions: Vec<&str> = splits.next().unwrap().split('-').collect();
+                let start: usize = positions[0].parse().unwrap();
+                let end: usize = positions[1].parse().unwrap();
+                GenomicIntervalBuilder::default()
+                    .chr(chr.into())
+                    .start(start)
+                    .end(end)
+                    .build()
+                    .unwrap()
+            })
+            .collect::<Vec<GenomicInterval>>();
+
+        Ok(ChimericEventBuilder::default()
+            .name(Some(name.into()))
+            .intervals(intervals)
+            .build()?)
+
+        // Ok(res)
+    }
 }
 
 impl FromStr for ChimericEvent {
