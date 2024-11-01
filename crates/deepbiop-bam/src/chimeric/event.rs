@@ -127,7 +127,7 @@ impl ChimericEvent {
     /// ```
     /// use deepbiop_bam as bam;
     /// use bam::chimeric::ChimericEvent;
-    /// let  value =  "chr1:100-200,chr2:200-300";
+    /// let  value =  "chr1:103959-104483,chr1:280386-280637";
     /// let chimeric_event: ChimericEvent = ChimericEvent::parse_list_pos(value, "value").unwrap();
     /// assert_eq!(chimeric_event.len(),2);
     /// ```
@@ -138,8 +138,8 @@ impl ChimericEvent {
                 let mut splits = event.split(':');
                 let chr = splits.next().unwrap();
                 let positions: Vec<&str> = splits.next().unwrap().split('-').collect();
-                let start: usize = positions[0].parse().unwrap();
-                let end: usize = positions[1].parse().unwrap();
+                let start: usize = lexical::parse(positions[0]).unwrap();
+                let end: usize = lexical::parse(positions[1]).unwrap();
                 GenomicIntervalBuilder::default()
                     .chr(chr.into())
                     .start(start)
