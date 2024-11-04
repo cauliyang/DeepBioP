@@ -221,3 +221,26 @@ where
         .map(|record| ChimericEvent::parse_noodle_bam_record(&record, references))
         .collect()
 }
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    #[test]
+    fn test_create_chimeric_events_from_bam() {
+        // Create a test BAM file
+        let bam = "test/data/test_chimric_reads.bam";
+
+        // Define a predict function for testing
+        let predict_fn = |_record: &bam::Record| -> bool {
+            // Define predict function logic here for testing
+            true
+        };
+        // Call the function with test parameters
+        let result = create_chimeric_events_from_bam(bam, Some(2), Some(predict_fn));
+        // Assert on the result
+        assert!(result.is_ok());
+        let chimeric_events = result.unwrap();
+        assert_eq!(chimeric_events.len(), 100);
+    }
+}
