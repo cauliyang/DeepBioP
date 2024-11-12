@@ -18,13 +18,13 @@ pyo3 = { version = "0.21.2", features = [
     "anyhow",
 ] }
 pyo3-stub-gen = "0.6.0"
-thiserror = "1.0"
+thiserror = "2.0"
 anyhow = "1.0"
 walkdir = { version = "2.5" }
 rayon = { version = "1.10" }
 log = "0.4"
 pyo3-log = "0.11"
-noodles = { version = "0.84.0", features = [
+noodles = { version = "0.85.0", features = [
     "bgzf",
     "core",
     "csi",
@@ -35,7 +35,7 @@ noodles = { version = "0.84.0", features = [
 ] }
 
 bio = "2.0"
-needletail = "0.5"
+needletail = "0.6"
 
 ahash = "0.8.11"
 numpy = "0.21"
@@ -51,7 +51,7 @@ derive_builder = "0.20"
 lexical = "7.0"
 bstr = "1.10.0"
 lazy_static = "1.5.0"
-tempfile = "3.13"
+tempfile = "3.14"
 parquet = "52.2.0"
 arrow = "52.2"
 candle-core = { git = "https://github.com/huggingface/candle.git", version = "0.7.2" }
