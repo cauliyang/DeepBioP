@@ -54,7 +54,7 @@ lazy_static = "1.5.0"
 tempfile = "3.14"
 parquet = "52.2.0"
 arrow = "52.2"
-candle-core = { git = "https://github.com/huggingface/candle.git", version = "0.7.2" }
+candle-core = { git = "https://github.com/huggingface/candle.git", version = "0.8.0" }
 colored = "2.1"
 textwrap = "0.16"
 flate2 = { version = "1.0.34", features = [
