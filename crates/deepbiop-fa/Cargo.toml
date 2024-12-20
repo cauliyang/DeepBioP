@@ -1,0 +1,47 @@
+[package]
+name = "deepbiop-fa"
+version = { workspace = true }
+authors = { workspace = true }
+edition = { workspace = true }
+homepage = { workspace = true }
+repository = { workspace = true }
+keywords = ["parquet", "fasta", "deep-learning"]
+license = { workspace = true }
+readme = "../../README.md"
+description = "Deep Learning Preprocessing Library for Fastq Format"
+
+[dependencies]
+thiserror = { workspace = true }
+anyhow = { workspace = true }
+noodles = { workspace = true }
+rayon = { workspace = true }
+log = { workspace = true }
+needletail = { workspace = true }
+ahash = { workspace = true }
+numpy = { workspace = true }
+ndarray = { workspace = true }
+serde = { workspace = true }
+serde_json = { workspace = true }
+derive_builder = { workspace = true }
+itertools = { workspace = true }
+lexical = { workspace = true }
+flate2 = { workspace = true }
+bstr = { workspace = true }
+walkdir = { workspace = true }
+
+parquet = { workspace = true }
+arrow = { workspace = true }
+candle-core = { workspace = true }
+
+pyo3 = { workspace = true }
+pyo3-stub-gen = { workspace = true }
+
+deepbiop-utils = { path = "../deepbiop-utils", version = "0.1" }
+
+[dev-dependencies]
+bio = { workspace = true }
+tempfile = { workspace = true }
+
+
+[features]
+python = []

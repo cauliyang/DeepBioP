@@ -229,7 +229,7 @@ mod tests {
     #[test]
     fn test_create_chimeric_events_from_bam() {
         // Create a test BAM file
-        let bam = "test/data/test_chimric_reads.bam";
+        let bam = "tests/data/test_chimric_reads.bam";
 
         // Define a predict function for testing
         let predict_fn = |_record: &bam::Record| -> bool {
