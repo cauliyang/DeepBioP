@@ -35,8 +35,18 @@ impl FromStr for GenomicInterval {
     /// ```
     fn from_str(s: &str) -> std::result::Result<Self, Self::Err> {
         let parts: Vec<&str> = s.split(':').collect();
+
+        if parts.len() != 2 {
+            return Err(anyhow::anyhow!("Invalid format"));
+        }
+
         let chr = parts[0];
         let positions: Vec<&str> = parts[1].split('-').collect();
+
+        if positions.len() != 2 {
+            return Err(anyhow::anyhow!("Invalid format"));
+        }
+
         let start: usize = positions[0].parse()?;
         let end: usize = positions[1].parse()?;
 
