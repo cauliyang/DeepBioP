@@ -4,7 +4,7 @@ use std::str::FromStr;
 use bstr::BString;
 use derive_builder::Builder;
 
-use std::fmt::Display;
+use std::fmt;
 
 /// StructuralVariantType
 #[derive(Debug, Clone, PartialEq, Eq)]
@@ -37,7 +37,7 @@ impl FromStr for StructralVariantType {
     }
 }
 
-impl Display for StructralVariantType {
+impl fmt::Display for StructralVariantType {
     fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
         match self {
             StructralVariantType::Deletion => write!(f, "DEL"),
@@ -59,7 +59,7 @@ pub struct StructuralVariant {
     pub breakpoint2: usize,
 }
 
-impl Display for StructuralVariant {
+impl fmt::Display for StructuralVariant {
     fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
         write!(
             f,
