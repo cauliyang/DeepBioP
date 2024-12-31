@@ -4,6 +4,8 @@ use std::str::FromStr;
 use bstr::BString;
 use derive_builder::Builder;
 
+use std::fmt::Display;
+
 /// StructuralVariantType
 #[derive(Debug, Clone, PartialEq, Eq)]
 pub enum StructralVariantType {
@@ -35,6 +37,19 @@ impl FromStr for StructralVariantType {
     }
 }
 
+impl Display for StructralVariantType {
+    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+        match self {
+            StructralVariantType::Deletion => write!(f, "DEL"),
+            StructralVariantType::Duplication => write!(f, "DUP"),
+            StructralVariantType::Inversion => write!(f, "INV"),
+            StructralVariantType::Translocation => write!(f, "TRA"),
+            StructralVariantType::Insertion => write!(f, "INS"),
+            StructralVariantType::UNKNOWN => write!(f, "UNKNOWN"),
+        }
+    }
+}
+
 /// A StructuralVariant is a genomic interval defined by a chromosome, a start position and an end position.
 #[derive(Debug, Builder, Clone)]
 pub struct StructuralVariant {
@@ -42,6 +57,16 @@ pub struct StructuralVariant {
     pub chr: BString,
     pub breakpoint1: usize,
     pub breakpoint2: usize,
+}
+
+impl Display for StructuralVariant {
+    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+        write!(
+            f,
+            "{}:{}:{}-{}",
+            self.sv_type, self.chr, self.breakpoint1, self.breakpoint2
+        )
+    }
 }
 
 impl FromStr for StructuralVariant {
