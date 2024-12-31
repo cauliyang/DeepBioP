@@ -5,7 +5,7 @@ use bstr::BString;
 use derive_builder::Builder;
 
 /// StructuralVariantType
-#[derive(Debug, Clone)]
+#[derive(Debug, Clone, PartialEq)]
 pub enum StructralVariantType {
     Deletion,
     Duplication,
@@ -34,6 +34,7 @@ impl FromStr for StructralVariantType {
         }
     }
 }
+
 /// A StructuralVariant is a genomic interval defined by a chromosome, a start position and an end position.
 #[derive(Debug, Builder, Clone)]
 pub struct StructuralVariant {
@@ -177,5 +178,9 @@ mod tests {
         assert_eq!(sv.chr, "chr1");
         assert_eq!(sv.breakpoint1, 100);
         assert_eq!(sv.breakpoint2, 200);
+
+        let sv2 = sv.clone();
+
+        assert_eq!(sv.sv_type, sv2.sv_type);
     }
 }
