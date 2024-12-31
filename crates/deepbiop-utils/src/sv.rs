@@ -5,7 +5,7 @@ use bstr::BString;
 use derive_builder::Builder;
 
 /// StructuralVariantType
-#[derive(Debug, Clone, PartialEq)]
+#[derive(Debug, Clone, PartialEq, Eq)]
 pub enum StructralVariantType {
     Deletion,
     Duplication,
