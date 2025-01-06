@@ -2,6 +2,7 @@
 
 pub mod blat;
 pub mod interval;
+pub mod io;
 pub mod strategy;
 pub mod sv;
 
