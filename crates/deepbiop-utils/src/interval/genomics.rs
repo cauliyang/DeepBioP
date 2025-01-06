@@ -35,8 +35,18 @@ impl FromStr for GenomicInterval {
     /// ```
     fn from_str(s: &str) -> std::result::Result<Self, Self::Err> {
         let parts: Vec<&str> = s.split(':').collect();
+
+        if parts.len() != 2 {
+            return Err(anyhow::anyhow!("Invalid format"));
+        }
+
         let chr = parts[0];
         let positions: Vec<&str> = parts[1].split('-').collect();
+
+        if positions.len() != 2 {
+            return Err(anyhow::anyhow!("Invalid format"));
+        }
+
         let start: usize = positions[0].parse()?;
         let end: usize = positions[1].parse()?;
 
@@ -121,8 +131,21 @@ mod tests {
             .build();
         assert!(segment3.is_err());
 
-        let segment4 = GenomicInterval::new("chr2", 100, 200).unwrap();
+        let segment11 = GenomicInterval::new("chr1", 100, 200).unwrap();
+        assert!(segment.overlap(&segment11));
+
+        let segment4 = GenomicInterval::new("chr2", 150, 300).unwrap();
 
         assert!(!segment.overlap(&segment4));
+        assert!(!segment4.overlap(&segment));
+
+        let segment5 = GenomicInterval::new("chr1", 150, 300).unwrap();
+        let segment6 = GenomicInterval::new("chr1", 170, 200).unwrap();
+
+        assert!(segment5.overlap(&segment));
+        assert!(segment.overlap(&segment5));
+
+        assert!(segment5.overlap(&segment6));
+        assert!(segment6.overlap(&segment5));
     }
 }

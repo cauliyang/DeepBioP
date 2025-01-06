@@ -14,3 +14,7 @@ pub use deepbiop_bam as bam;
 #[cfg(feature = "utils")]
 #[doc(inline)]
 pub use deepbiop_utils as utils;
+
+#[cfg(feature = "fasta")]
+#[doc(inline)]
+pub use deepbiop_fa as fasta;

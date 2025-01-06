@@ -19,7 +19,7 @@ use log::debug;
 use pyo3::prelude::*;
 use std::str::FromStr;
 
-use super::is_retain_record;
+use super::{is_chimeric_record, is_retain_record};
 
 /// A chimeric event.
 #[pyclass]
@@ -121,6 +121,41 @@ impl ChimericEvent {
 
         Ok(chimeric_event)
     }
+
+    /// Construct a ChimericEvent from a string chr:start-end,chr:start-end
+    /// # Example
+    /// ```
+    /// use deepbiop_bam as bam;
+    /// use bam::chimeric::ChimericEvent;
+    /// let  value =  "chr1:103959-104483,chr1:280386-280637";
+    /// let chimeric_event: ChimericEvent = ChimericEvent::parse_list_pos(value, "value").unwrap();
+    /// assert_eq!(chimeric_event.len(),2);
+    /// ```
+    pub fn parse_list_pos(s: &str, name: &str) -> Result<Self> {
+        let intervals = s
+            .par_split(',')
+            .map(|event| {
+                let mut splits = event.split(':');
+                let chr = splits.next().unwrap();
+                let positions: Vec<&str> = splits.next().unwrap().split('-').collect();
+                let start: usize = lexical::parse(positions[0]).unwrap();
+                let end: usize = lexical::parse(positions[1]).unwrap();
+                GenomicIntervalBuilder::default()
+                    .chr(chr.into())
+                    .start(start)
+                    .end(end)
+                    .build()
+                    .unwrap()
+            })
+            .collect::<Vec<GenomicInterval>>();
+
+        Ok(ChimericEventBuilder::default()
+            .name(Some(name.into()))
+            .intervals(intervals)
+            .build()?)
+
+        // Ok(res)
+    }
 }
 
 impl FromStr for ChimericEvent {
@@ -169,7 +204,7 @@ where
         .par_bridge()
         .filter_map(|result| {
             let record = result.unwrap();
-            if is_retain_record(&record) {
+            if is_retain_record(&record) && is_chimeric_record(&record) {
                 if let Some(predict_function) = &predict {
                     if predict_function(&record) {
                         Some(record)
@@ -185,4 +220,27 @@ where
         })
         .map(|record| ChimericEvent::parse_noodle_bam_record(&record, references))
         .collect()
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    #[test]
+    fn test_create_chimeric_events_from_bam() {
+        // Create a test BAM file
+        let bam = "tests/data/test_chimric_reads.bam";
+
+        // Define a predict function for testing
+        let predict_fn = |_record: &bam::Record| -> bool {
+            // Define predict function logic here for testing
+            true
+        };
+        // Call the function with test parameters
+        let result = create_chimeric_events_from_bam(bam, Some(2), Some(predict_fn));
+        // Assert on the result
+        assert!(result.is_ok());
+        let chimeric_events = result.unwrap();
+        assert_eq!(chimeric_events.len(), 100);
+    }
 }

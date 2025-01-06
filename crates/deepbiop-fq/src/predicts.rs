@@ -290,7 +290,7 @@ pub fn load_predicts_from_batch_pt(
     ignore_label: i64,
     id_table: &HashMap<i64, char>,
 ) -> Result<HashMap<String, Predict>> {
-    let tensors = pickle::read_all(pt_path).unwrap();
+    let tensors = pickle::read_all(pt_path)?;
     let mut tensors_map = HashMap::new();
 
     for (key, value) in tensors {
