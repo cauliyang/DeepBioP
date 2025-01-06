@@ -11,3 +11,8 @@ mod option;
 mod parquet;
 mod record;
 mod traits;
+
+pub use option::*;
+pub use parquet::*;
+pub use record::*;
+pub use traits::*;
