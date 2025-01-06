@@ -10,6 +10,7 @@ class GenomicInterval:
     A segment is a genomic interval defined by a chromosome, a start position and an end position.
     The start position is inclusive and the end position is exclusive.
     """
+
     start: int
     end: int
     chr: str
@@ -42,17 +43,14 @@ class PslAlignment:
 def generate_unmaped_intervals(input:typing.Sequence[tuple[int, int]],total_length:int) -> list[tuple[int, int]]:
     ...
 
-def highlight_targets(sequence:str,targets:typing.Sequence[tuple[int, int]],text_width:typing.Optional[int]) -> str:
+def highlight_targets(sequence:str,targets:typing.Sequence[tuple[int, int]],text_width:int | None) -> str:
     ...
 
 def majority_voting(labels:typing.Sequence[int],window_size:int) -> list[int]:
     ...
 
 def parse_psl_by_qname(file_path:str | os.PathLike | pathlib.Path) -> dict[str, list[PslAlignment]]:
-    r"""
-    Parse PSL file by query name.
-    """
-    ...
+    r"""Parse PSL file by query name."""
 
 def remove_intervals_and_keep_left(seq:str,intervals:typing.Sequence[tuple[int, int]]) -> tuple[list[str], list[tuple[int, int]]]:
     ...
