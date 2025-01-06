@@ -3,21 +3,21 @@ default_language_version:
 
 repos:
   - repo: https://github.com/pre-commit/pre-commit-hooks
-    rev: v4.6.0
+    rev: v5.0.0
     hooks:
       - id: check-yaml
-        stages: [commit]
+        stages: [pre-commit]
         exclude: "mkdocs.yml"
       - id: check-json
-        stages: [commit]
+        stages: [pre-commit]
       - id: check-toml
-        stages: [commit]
+        stages: [pre-commit]
       - id: check-merge-conflict
-        stages: [commit]
+        stages: [pre-commit]
       - id: check-case-conflict
-        stages: [commit]
+        stages: [pre-commit]
       - id: detect-private-key
-        stages: [commit]
+        stages: [pre-commit]
       - id: check-added-large-files
         args: ["--maxkb=150000"]
       - id: end-of-file-fixer
@@ -30,7 +30,7 @@ repos:
       - id: cargo-check
 
   - repo: https://github.com/charliermarsh/ruff-pre-commit
-    rev: "v0.6.3"
+    rev: "v0.8.6"
     hooks:
       - id: ruff
         args: [--fix, --exit-non-zero-on-fix, --unsafe-fixes]
@@ -62,7 +62,7 @@ repos:
       - id: shellcheck
 
   - repo: https://github.com/DevinR528/cargo-sort
-    rev: v1.0.9
+    rev: v1.1.0
     hooks:
       - id: cargo-sort
 

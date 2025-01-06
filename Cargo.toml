@@ -64,6 +64,7 @@ flate2 = { version = "1.0.35", features = [
 deepbiop-fq = { version = "0.1.11", path = "crates/deepbiop-fq" }
 deepbiop-bam = { version = "0.1.11", path = "crates/deepbiop-bam" }
 deepbiop-utils = { version = "0.1.11", path = "crates/deepbiop-utils" }
+deepbiop-fa = { version = "0.1.11", path = "crates/deepbiop-fa" }
 
 [profile.opt-dev]
 inherits = "dev"
