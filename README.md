@@ -9,6 +9,8 @@
 
 Deep Learning Processing Library for Biological Data
 
+![](./docs/imgs/diagram.png)
+
 # Setup
 
 ## Python

@@ -1,0 +1,596 @@
+<?xml version="1.0" encoding="UTF-8" standalone="no"?>
+<svg
+   viewBox="0 0 1000 800"
+   version="1.1"
+   id="svg38"
+   sodipodi:docname="diagram.svg"
+   inkscape:version="1.4 (e7c3feb1, 2024-10-09)"
+   xmlns:inkscape="http://www.inkscape.org/namespaces/inkscape"
+   xmlns:sodipodi="http://sodipodi.sourceforge.net/DTD/sodipodi-0.dtd"
+   xmlns="http://www.w3.org/2000/svg"
+   xmlns:svg="http://www.w3.org/2000/svg">
+  <sodipodi:namedview
+     id="namedview38"
+     pagecolor="#ffffff"
+     bordercolor="#000000"
+     borderopacity="0.25"
+     inkscape:showpageshadow="2"
+     inkscape:pageopacity="0.0"
+     inkscape:pagecheckerboard="0"
+     inkscape:deskcolor="#d1d1d1"
+     inkscape:zoom="2.1383031"
+     inkscape:cx="450.35711"
+     inkscape:cy="612.86916"
+     inkscape:window-width="1920"
+     inkscape:window-height="2082"
+     inkscape:window-x="1088"
+     inkscape:window-y="40"
+     inkscape:window-maximized="0"
+     inkscape:current-layer="g34" />
+  <!-- Gradient Definitions -->
+  <defs
+     id="defs7">
+    <linearGradient
+       id="userGradient"
+       x1="0%"
+       y1="0%"
+       x2="100%"
+       y2="100%">
+      <stop
+         offset="0%"
+         style="stop-color:#a8e6cf;stop-opacity:1"
+         id="stop1" />
+      <stop
+         offset="100%"
+         style="stop-color:#69d2e7;stop-opacity:1"
+         id="stop2" />
+    </linearGradient>
+    <linearGradient
+       id="apiGradient"
+       x1="0%"
+       y1="0%"
+       x2="100%"
+       y2="100%">
+      <stop
+         offset="0%"
+         style="stop-color:#ffd3b6;stop-opacity:1"
+         id="stop3" />
+      <stop
+         offset="100%"
+         style="stop-color:#ffaaa5;stop-opacity:1"
+         id="stop4" />
+    </linearGradient>
+    <linearGradient
+       id="coreGradient"
+       x1="0%"
+       y1="0%"
+       x2="100%"
+       y2="100%">
+      <stop
+         offset="0%"
+         style="stop-color:#dcedc1;stop-opacity:1"
+         id="stop5" />
+      <stop
+         offset="100%"
+         style="stop-color:#a8e6cf;stop-opacity:1"
+         id="stop6" />
+    </linearGradient>
+    <filter
+       id="dropShadow"
+       x="-0.008"
+       y="-0.06"
+       width="1.0182222"
+       height="1.1366667">
+      <feGaussianBlur
+         in="SourceAlpha"
+         stdDeviation="3"
+         id="feGaussianBlur6" />
+      <feOffset
+         dx="2"
+         dy="2"
+         id="feOffset6" />
+      <feMerge
+         id="feMerge7">
+        <feMergeNode
+           id="feMergeNode6" />
+        <feMergeNode
+           in="SourceGraphic"
+           id="feMergeNode7" />
+      </feMerge>
+    </filter>
+  </defs>
+  <!-- Background -->
+  <rect
+     width="1000"
+     height="800"
+     fill="#f8f9fa"
+     id="rect7" />
+  <!-- Title -->
+  <text
+     x="500"
+     y="50"
+     text-anchor="middle"
+     font-family="Arial"
+     font-size="36"
+     font-weight="bold"
+     fill="#2c3e50"
+     id="text7">
+        DeepBioP Architecture
+    </text>
+  <text
+     x="500"
+     y="80"
+     text-anchor="middle"
+     font-family="Arial"
+     font-size="16"
+     fill="#34495e"
+     id="text8">
+        Bioinformatics Data Processing Library
+    </text>
+  <!-- User Layer -->
+  <g
+     transform="translate(0, 120)"
+     id="g11">
+    <rect
+       x="50"
+       y="0"
+       width="900"
+       height="120"
+       rx="10"
+       fill="url(#userGradient)"
+       filter="url(#dropShadow)"
+       opacity="0.9"
+       id="rect8" />
+    <text
+       x="100"
+       y="40"
+       font-family="Arial"
+       font-size="24"
+       fill="#2c3e50"
+       id="text9">Users</text>
+    <!-- User Components -->
+    <rect
+       x="200"
+       y="20"
+       width="280"
+       height="80"
+       rx="5"
+       fill="white"
+       stroke="#2c3e50"
+       stroke-width="2"
+       id="rect9" />
+    <text
+       x="340"
+       y="65"
+       text-anchor="middle"
+       font-family="Arial"
+       font-size="18"
+       id="text10">Rust Applications</text>
+    <rect
+       x="520"
+       y="20"
+       width="280"
+       height="80"
+       rx="5"
+       fill="white"
+       stroke="#2c3e50"
+       stroke-width="2"
+       id="rect10" />
+    <text
+       x="660"
+       y="65"
+       text-anchor="middle"
+       font-family="Arial"
+       font-size="18"
+       id="text11">Python Applications</text>
+  </g>
+  <!-- API Layer -->
+  <g
+     transform="translate(0, 280)"
+     id="g15">
+    <rect
+       x="50"
+       y="0"
+       width="900"
+       height="120"
+       rx="10"
+       fill="url(#apiGradient)"
+       filter="url(#dropShadow)"
+       opacity="0.9"
+       id="rect11" />
+    <text
+       x="100"
+       y="40"
+       font-family="Arial"
+       font-size="24"
+       fill="#2c3e50"
+       id="text12">API Layer</text>
+    <!-- API Components -->
+    <rect
+       x="200"
+       y="20"
+       width="180"
+       height="80"
+       rx="5"
+       fill="white"
+       stroke="#2c3e50"
+       stroke-width="2"
+       id="rect12" />
+    <text
+       x="290"
+       y="65"
+       text-anchor="middle"
+       font-family="Arial"
+       font-size="18"
+       id="text13">Rust API</text>
+    <rect
+       x="410"
+       y="20"
+       width="180"
+       height="80"
+       rx="5"
+       fill="white"
+       stroke="#2c3e50"
+       stroke-width="2"
+       id="rect13" />
+    <text
+       x="500"
+       y="65"
+       text-anchor="middle"
+       font-family="Arial"
+       font-size="18"
+       id="text14">Python API</text>
+    <rect
+       x="620"
+       y="20"
+       width="180"
+       height="80"
+       rx="5"
+       fill="white"
+       stroke="#2c3e50"
+       stroke-width="2"
+       id="rect14" />
+    <text
+       x="710"
+       y="65"
+       text-anchor="middle"
+       font-family="Arial"
+       font-size="18"
+       id="text15">Python Bindings</text>
+  </g>
+  <!-- Core Layer -->
+  <g
+     transform="translate(0, 440)"
+     id="g34">
+    <rect
+       x="50"
+       y="0"
+       width="900"
+       height="320"
+       rx="10"
+       fill="url(#coreGradient)"
+       filter="url(#dropShadow)"
+       opacity="0.9"
+       id="rect15" />
+    <text
+       x="100"
+       y="40"
+       font-family="Arial"
+       font-size="24"
+       fill="#2c3e50"
+       id="text16">Core Processing Library</text>
+    <!-- File Formats -->
+    <g
+       transform="translate(100, 60)"
+       id="g21">
+      <rect
+         x="0"
+         y="0"
+         width="240"
+         height="240"
+         rx="5"
+         fill="white"
+         stroke="#2c3e50"
+         stroke-width="2"
+         id="rect16" />
+      <text
+         x="120"
+         y="30"
+         text-anchor="middle"
+         font-family="Arial"
+         font-size="18"
+         fill="#2c3e50"
+         id="text17">File Format Processing</text>
+      <rect
+         x="20"
+         y="50"
+         width="200"
+         height="40"
+         rx="5"
+         fill="#e8f4f8"
+         stroke="#2c3e50"
+         id="rect17" />
+      <text
+         x="120"
+         y="75"
+         text-anchor="middle"
+         font-family="Arial"
+         font-size="14"
+         id="text18">BAM/SAM Processing</text>
+      <rect
+         x="20"
+         y="100"
+         width="200"
+         height="40"
+         rx="5"
+         fill="#e8f4f8"
+         stroke="#2c3e50"
+         id="rect18" />
+      <text
+         x="120"
+         y="125"
+         text-anchor="middle"
+         font-family="Arial"
+         font-size="14"
+         id="text19">VCF/BCF Processing</text>
+      <rect
+         x="20"
+         y="150"
+         width="200"
+         height="40"
+         rx="5"
+         fill="#e8f4f8"
+         stroke="#2c3e50"
+         id="rect19" />
+      <text
+         x="120"
+         y="175"
+         text-anchor="middle"
+         font-family="Arial"
+         font-size="14"
+         id="text20">FASTQ Processing</text>
+      <rect
+         x="20"
+         y="200"
+         width="200"
+         height="40"
+         rx="5"
+         fill="#e8f4f8"
+         stroke="#2c3e50"
+         id="rect20" />
+      <text
+         x="120"
+         y="225"
+         text-anchor="middle"
+         font-family="Arial"
+         font-size="14"
+         id="text21">BED/GFF/GTF Processing</text>
+    </g>
+    <!-- Data Operations -->
+    <g
+       transform="translate(380, 60)"
+       id="g28">
+      <rect
+         x="0"
+         y="0"
+         width="240"
+         height="240"
+         rx="5"
+         fill="white"
+         stroke="#2c3e50"
+         stroke-width="2"
+         id="rect21" />
+      <text
+         x="120"
+         y="30"
+         text-anchor="middle"
+         font-family="Arial"
+         font-size="18"
+         fill="#2c3e50"
+         id="text22">Data Operations</text>
+      <!-- Sequence Operations -->
+      <rect
+         x="21.524981"
+         y="50.304996"
+         width="200"
+         height="80"
+         rx="5"
+         fill="#f8e8f4"
+         stroke="#2c3e50"
+         id="rect22" />
+      <text
+         x="120.9873"
+         y="121.38338"
+         text-anchor="middle"
+         font-family="Arial"
+         font-size="12px"
+         id="text28-7">• Format Conversion</text>
+      <text
+         x="120"
+         y="70"
+         text-anchor="middle"
+         font-family="Arial"
+         font-size="14"
+         font-weight="bold"
+         id="text23">Sequence Operations</text>
+      <text
+         x="109.65234"
+         y="87.661705"
+         text-anchor="middle"
+         font-family="Arial"
+         font-size="12px"
+         id="text24">• Quality Control</text>
+      <text
+         x="119.99999"
+         y="103.92635"
+         text-anchor="middle"
+         font-family="Arial"
+         font-size="12px"
+         id="text25">• Sequence Filtering</text>
+      <!-- Image Operations -->
+      <rect
+         x="20"
+         y="140"
+         width="200"
+         height="80"
+         rx="5"
+         fill="#f8e8f4"
+         stroke="#2c3e50"
+         id="rect25" />
+      <text
+         x="120"
+         y="160"
+         text-anchor="middle"
+         font-family="Arial"
+         font-size="14"
+         font-weight="bold"
+         id="text26">Image Operations</text>
+      <text
+         x="107.33496"
+         y="180"
+         text-anchor="middle"
+         font-family="Arial"
+         font-size="12px"
+         id="text27">• Preprocessing</text>
+      <text
+         x="120"
+         y="197.37793"
+         text-anchor="middle"
+         font-family="Arial"
+         font-size="12px"
+         id="text28">• Format Conversion</text>
+    </g>
+    <!-- Utilities -->
+    <g
+       transform="translate(660, 60)"
+       id="g33">
+      <rect
+         x="0"
+         y="0"
+         width="240"
+         height="240"
+         rx="5"
+         fill="white"
+         stroke="#2c3e50"
+         stroke-width="2"
+         id="rect28" />
+      <text
+         x="120"
+         y="30"
+         text-anchor="middle"
+         font-family="Arial"
+         font-size="18"
+         fill="#2c3e50"
+         id="text29">Utilities</text>
+      <rect
+         x="20"
+         y="50"
+         width="200"
+         height="40"
+         rx="5"
+         fill="#f4f8e8"
+         stroke="#2c3e50"
+         id="rect29" />
+      <text
+         x="120"
+         y="75"
+         text-anchor="middle"
+         font-family="Arial"
+         font-size="14"
+         id="text30">Parallel Processing</text>
+      <rect
+         x="20"
+         y="100"
+         width="200"
+         height="40"
+         rx="5"
+         fill="#f4f8e8"
+         stroke="#2c3e50"
+         id="rect30" />
+      <text
+         x="120"
+         y="125"
+         text-anchor="middle"
+         font-family="Arial"
+         font-size="14"
+         id="text31">Memory Management</text>
+      <rect
+         x="20"
+         y="150"
+         width="200"
+         height="40"
+         rx="5"
+         fill="#f4f8e8"
+         stroke="#2c3e50"
+         id="rect31" />
+      <text
+         x="120"
+         y="175"
+         text-anchor="middle"
+         font-family="Arial"
+         font-size="14"
+         id="text32">I/O Operations</text>
+      <rect
+         x="20"
+         y="200"
+         width="200"
+         height="40"
+         rx="5"
+         fill="#f4f8e8"
+         stroke="#2c3e50"
+         id="rect32" />
+      <text
+         x="120"
+         y="225"
+         text-anchor="middle"
+         font-family="Arial"
+         font-size="14"
+         id="text33">Error Handling</text>
+    </g>
+  </g>
+  <!-- Connecting Lines -->
+  <g
+     stroke="#2c3e50"
+     stroke-width="2"
+     fill="none"
+     id="g38">
+    <!-- User to API -->
+    <path
+       d="M340,220 L340,300"
+       marker-end="url(#arrowhead)"
+       id="path34" />
+    <path
+       d="M660,220 L660,300"
+       marker-end="url(#arrowhead)"
+       id="path35" />
+    <!-- API to Core -->
+    <path
+       d="M290,380 L290,440"
+       marker-end="url(#arrowhead)"
+       id="path36" />
+    <path
+       d="M500,380 L500,440"
+       marker-end="url(#arrowhead)"
+       id="path37" />
+    <path
+       d="M710,380 L710,440"
+       marker-end="url(#arrowhead)"
+       id="path38" />
+  </g>
+  <!-- Arrow Marker -->
+  <defs
+     id="defs38">
+    <marker
+       id="arrowhead"
+       markerWidth="10"
+       markerHeight="7"
+       refX="9"
+       refY="3.5"
+       orient="auto">
+      <polygon
+         points="0 0, 10 3.5, 0 7"
+         fill="#2c3e50"
+         id="polygon38" />
+    </marker>
+  </defs>
+</svg>
