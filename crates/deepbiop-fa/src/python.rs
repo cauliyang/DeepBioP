@@ -37,7 +37,7 @@ impl From<encode::RecordData> for PyRecordData {
 impl<'py> FromPyObject<'py> for PyRecordData {
     fn extract_bound(ob: &Bound<'py, PyAny>) -> PyResult<Self> {
         // Assuming Python objects are tuples of (id, seq, qual)
-        let (id, seq, qual): (String, String, String) = ob.extract()?;
+        let (id, seq): (String, String) = ob.extract()?;
         Ok(PyRecordData(encode::RecordData {
             id: id.into(),
             seq: seq.into(),
