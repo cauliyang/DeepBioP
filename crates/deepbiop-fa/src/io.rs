@@ -181,7 +181,6 @@ pub fn convert_multiple_zip_fas_to_one_zip_fa<P: AsRef<Path>>(
 #[cfg(test)]
 mod tests {
     use super::*;
-    use std::fs;
 
     #[test]
     fn test_read_noodle_records_from_fa() -> Result<()> {
@@ -192,8 +191,6 @@ mod tests {
 
         // Check the number of records
         assert_eq!(records.len(), 14);
-        // Cleanup
-        fs::remove_file(test_file)?;
         Ok(())
     }
 }
