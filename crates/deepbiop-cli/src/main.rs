@@ -37,10 +37,10 @@ pub enum Commands {
     /// Fastq to fasta conversion.
     FqToFa(cli::FqToFa),
 
-    /// Fastq to fasta conversion.
+    /// Fasta to fastq conversion.
     FaToFq(cli::FaToFq),
 
-    /// Fastq to parquet conversion.
+    /// Fasta to parquet conversion.
     FaToParquet(cli::FaToParquet),
 }
 
