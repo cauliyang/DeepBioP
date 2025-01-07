@@ -24,6 +24,7 @@ pub struct FaEncoderOption {
 #[pymethods]
 impl FaEncoderOption {
     #[new]
+    #[pyo3(signature = (bases, threads=None))]
     fn py_new(bases: String, threads: Option<usize>) -> Self {
         FaEncoderOptionBuilder::default()
             .bases(bases.as_bytes().to_vec())

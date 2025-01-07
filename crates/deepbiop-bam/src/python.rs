@@ -13,6 +13,7 @@ use pyo3_stub_gen::derive::*;
 /// Calculate the number of chimeric reads in a BAM file.
 #[gen_stub_pyfunction(module = "deepbiop.bam")]
 #[pyfunction]
+#[pyo3(signature = (bam, threads=None))]
 fn count_chimeric_reads_for_path(bam: PathBuf, threads: Option<usize>) -> Result<usize> {
     chimeric::count_chimeric_reads_for_path(bam, threads)
 }
@@ -20,6 +21,7 @@ fn count_chimeric_reads_for_path(bam: PathBuf, threads: Option<usize>) -> Result
 /// Calculate the number of chimeric reads in multiple BAM files.
 #[gen_stub_pyfunction(module = "deepbiop.bam")]
 #[pyfunction]
+#[pyo3(signature = (bams, threads=None))]
 fn count_chimeric_reads_for_paths(
     bams: Vec<PathBuf>,
     threads: Option<usize>,
@@ -38,7 +40,7 @@ fn left_right_soft_clip(cigar_string: &str) -> Result<(usize, usize)> {
 // register bam sub module
 pub fn register_bam_module(parent_module: &Bound<'_, PyModule>) -> PyResult<()> {
     let sub_module_name = "bam";
-    let child_module = PyModule::new_bound(parent_module.py(), sub_module_name)?;
+    let child_module = PyModule::new(parent_module.py(), sub_module_name)?;
 
     child_module.add_function(wrap_pyfunction!(left_right_soft_clip, &child_module)?)?;
     child_module.add_function(wrap_pyfunction!(

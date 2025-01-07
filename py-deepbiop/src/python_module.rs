@@ -5,7 +5,7 @@ use pyo3::prelude::*;
 // register default sub_module
 pub fn register_default_module(parent_module: &Bound<'_, PyModule>) -> PyResult<()> {
     let sub_module_name = "default";
-    let child_module = PyModule::new_bound(parent_module.py(), sub_module_name)?;
+    let child_module = PyModule::new(parent_module.py(), sub_module_name)?;
 
     child_module.add("QUAL_OFFSET", deepbiop_fq::default::QUAL_OFFSET)?;
     child_module.add(

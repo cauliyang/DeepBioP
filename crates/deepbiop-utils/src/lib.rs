@@ -16,6 +16,7 @@ use pyo3_stub_gen::derive::*;
 
 #[gen_stub_pyfunction(module = "deepbiop.utils")]
 #[pyfunction]
+#[pyo3(signature = (sequence, targets, text_width=None))]
 pub fn highlight_targets(
     sequence: &str,
     targets: Vec<(usize, usize)>,
