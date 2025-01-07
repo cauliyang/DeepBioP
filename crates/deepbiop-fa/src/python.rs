@@ -108,11 +108,9 @@ fn encode_fa_path_to_parquet_chunk(
     chunk_size: usize,
     parallel: bool,
     bases: String,
-    qual_offset: usize,
 ) -> Result<()> {
     let option = encode::FaEncoderOptionBuilder::default()
         .bases(bases.as_bytes().to_vec())
-        .qual_offset(qual_offset as u8)
         .build()?;
 
     let mut fa_encoder = encode::ParquetEncoderBuilder::default()
@@ -127,12 +125,10 @@ fn encode_fa_path_to_parquet_chunk(
 fn encode_fa_path_to_parquet(
     fa_path: PathBuf,
     bases: String,
-    qual_offset: usize,
     result_path: Option<PathBuf>,
 ) -> Result<()> {
     let option = encode::FaEncoderOptionBuilder::default()
         .bases(bases.as_bytes().to_vec())
-        .qual_offset(qual_offset as u8)
         .build()?;
 
     let mut fa_encoder = encode::ParquetEncoderBuilder::default()
@@ -155,13 +151,9 @@ fn encode_fa_path_to_parquet(
 
 #[gen_stub_pyfunction(module = "deepbiop.fa")]
 #[pyfunction]
-fn encode_fa_paths_to_parquet(
-    fa_path: Vec<PathBuf>,
-    bases: String,
-    qual_offset: usize,
-) -> Result<()> {
+fn encode_fa_paths_to_parquet(fa_path: Vec<PathBuf>, bases: String) -> Result<()> {
     fa_path.iter().for_each(|path| {
-        encode_fa_path_to_parquet(path.clone(), bases.clone(), qual_offset, None).unwrap();
+        encode_fa_path_to_parquet(path.clone(), bases.clone(), None).unwrap();
     });
     Ok(())
 }
