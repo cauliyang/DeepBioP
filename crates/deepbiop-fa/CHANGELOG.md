@@ -7,6 +7,17 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.1.13](https://github.com/cauliyang/DeepBioP/compare/deepbiop-fa-v0.1.12...deepbiop-fa-v0.1.13) - 2025-01-07
+
+### Added
+
+- Add fa2parquet conversion functionality
+- Add FaToParquet struct for converting fa to parquet
+
+### Other
+
+- Update PyO3 version to 0.23.3
+
 ## [0.1.12](https://github.com/cauliyang/DeepBioP/compare/deepbiop-fa-v0.1.11...deepbiop-fa-v0.1.12) - 2025-01-06
 
 ### Added
