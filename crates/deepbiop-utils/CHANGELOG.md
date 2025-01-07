@@ -6,6 +6,27 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.1.12](https://github.com/cauliyang/DeepBioP/compare/deepbiop-utils-v0.1.11...deepbiop-utils-v0.1.12) - 2025-01-06
+
+### Added
+
+- Add new modules for JSON and Parquet file I/O
+- Add Display implementation for StructralVariantType and StructuralVariant
+- Add support for parsing StructuralVariant from string
+- Update dependencies versions and add new module
+
+### Fixed
+
+- Update overlap conditions in genomic interval
+- Update noodles and candle-core versions
+
+### Other
+
+- Update fmt usage in sv.rs
+- Add Eq trait to StructuralVariantType enum
+- Add PartialEq trait to StructuralVariantType enum
+- Add overlap tests for GenomicInterval
+
 ## [0.1.11](https://github.com/cauliyang/DeepBioP/compare/deepbiop-utils-v0.1.10...deepbiop-utils-v0.1.11) - 2024-08-25
 
 ### Added
