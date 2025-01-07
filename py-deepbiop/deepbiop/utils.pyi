@@ -43,7 +43,7 @@ class PslAlignment:
 def generate_unmaped_intervals(input:typing.Sequence[tuple[int, int]],total_length:int) -> list[tuple[int, int]]:
     ...
 
-def highlight_targets(sequence:str,targets:typing.Sequence[tuple[int, int]],text_width:int | None) -> str:
+def highlight_targets(sequence,targets,text_width = ...) -> str:
     ...
 
 def majority_voting(labels:typing.Sequence[int],window_size:int) -> list[int]:

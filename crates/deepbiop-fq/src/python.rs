@@ -1,3 +1,4 @@
+use numpy::IntoPyArray;
 use std::path::PathBuf;
 
 use crate::{
@@ -13,7 +14,7 @@ use anyhow::Result;
 use log::warn;
 use needletail::Sequence;
 use noodles::fasta;
-use numpy::{IntoPyArray, PyArray2, PyArray3};
+use numpy::{PyArray2, PyArray3};
 use pyo3::prelude::*;
 use rayon::prelude::*;
 
@@ -23,6 +24,7 @@ use pyo3_stub_gen::derive::*;
 #[pymethods]
 impl encode::TensorEncoder {
     #[new]
+    #[pyo3(signature = (option, tensor_max_width=None, tensor_max_seq_len=None))]
     fn py_new(
         option: encode::FqEncoderOption,
         tensor_max_width: Option<usize>,
@@ -117,6 +119,7 @@ impl PyRecordData {
 
 #[gen_stub_pyfunction(module = "deepbiop.fq")]
 #[pyfunction]
+#[pyo3(signature = (records_data, file_path=None))]
 fn write_fq(records_data: Vec<PyRecordData>, file_path: Option<PathBuf>) -> Result<()> {
     let records: Vec<encode::RecordData> = records_data
         .into_par_iter()
@@ -196,6 +199,7 @@ fn normalize_seq(seq: String, iupac: bool) -> String {
 #[allow(clippy::too_many_arguments, clippy::type_complexity)]
 #[gen_stub_pyfunction(module = "deepbiop.fq")]
 #[pyfunction]
+#[pyo3(signature = (fq_paths, k, bases, qual_offset, vectorized_target, parallel_for_files, max_width=None, max_seq_len=None))]
 fn encode_fq_paths_to_tensor(
     py: Python,
     fq_paths: Vec<PathBuf>,
@@ -234,9 +238,9 @@ fn encode_fq_paths_to_tensor(
         .collect();
 
     Ok((
-        input.into_pyarray_bound(py),
-        target.into_pyarray_bound(py),
-        qual.into_pyarray_bound(py),
+        input.into_pyarray(py),
+        target.into_pyarray(py),
+        qual.into_pyarray(py),
         kmer2id,
     ))
 }
@@ -244,6 +248,7 @@ fn encode_fq_paths_to_tensor(
 #[allow(clippy::too_many_arguments, clippy::type_complexity)]
 #[gen_stub_pyfunction(module = "deepbiop.fq")]
 #[pyfunction]
+#[pyo3(signature = (fq_path, k, bases, qual_offset, vectorized_target, max_width=None, max_seq_len=None))]
 fn encode_fq_path_to_tensor(
     py: Python,
     fq_path: PathBuf,
@@ -281,15 +286,16 @@ fn encode_fq_path_to_tensor(
         .collect();
 
     Ok((
-        input.into_pyarray_bound(py),
-        target.into_pyarray_bound(py),
-        qual.into_pyarray_bound(py),
+        input.into_pyarray(py),
+        target.into_pyarray(py),
+        qual.into_pyarray(py),
         kmer2id,
     ))
 }
 
 #[gen_stub_pyfunction(module = "deepbiop.fq")]
 #[pyfunction]
+#[pyo3(signature = (fq_path, k, bases, qual_offset, vectorized_target, result_path=None))]
 fn encode_fq_path_to_json(
     fq_path: PathBuf,
     k: usize,
@@ -350,6 +356,7 @@ fn encode_fq_path_to_parquet_chunk(
 
 #[gen_stub_pyfunction(module = "deepbiop.fq")]
 #[pyfunction]
+#[pyo3(signature = (fq_path, bases, qual_offset, vectorized_target, result_path=None))]
 fn encode_fq_path_to_parquet(
     fq_path: PathBuf,
     bases: String,
@@ -471,6 +478,7 @@ pub fn load_predicts_from_batch_pt(
 
 #[gen_stub_pyfunction(module = "deepbiop.fq")]
 #[pyfunction]
+#[pyo3(signature = (pt_path, ignore_label, id_table, max_predicts=None))]
 pub fn load_predicts_from_batch_pts(
     pt_path: PathBuf,
     ignore_label: i64,
@@ -495,7 +503,7 @@ pub fn fastq_to_fasta(fastq_path: PathBuf, fasta_path: PathBuf) -> Result<()> {
 // register fq sub_module
 pub fn register_fq_module(parent_module: &Bound<'_, PyModule>) -> PyResult<()> {
     let sub_module_name = "fq";
-    let child_module = PyModule::new_bound(parent_module.py(), sub_module_name)?;
+    let child_module = PyModule::new(parent_module.py(), sub_module_name)?;
 
     child_module.add_class::<PyRecordData>()?;
     child_module.add_class::<encode::FqEncoderOption>()?;

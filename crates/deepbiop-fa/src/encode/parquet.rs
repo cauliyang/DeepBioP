@@ -178,11 +178,11 @@ mod tests {
     #[test]
     fn test_encode_fq_for_parquet() {
         let option = FaEncoderOptionBuilder::default().build().unwrap();
-
         let mut encoder = ParquetEncoderBuilder::default()
             .option(option)
             .build()
             .unwrap();
+
         let (record_batch, scheme) = encoder.encode("tests/data/test.fa").unwrap();
         write_parquet("test.parquet", record_batch, scheme).unwrap();
         // remove test.parquet

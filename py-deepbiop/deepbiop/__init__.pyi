@@ -3,6 +3,4 @@
 
 from deepbiop import bam, fq, utils
 
-def add(a:int,b:int) -> int:
-    ...
-
+def add(a: int, b: int) -> int: ...

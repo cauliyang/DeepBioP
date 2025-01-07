@@ -12,7 +12,7 @@ repository = "https://github.com/cauliyang/DeepBioP"
 license = "Apache-2.0"
 
 [workspace.dependencies]
-pyo3 = { version = "0.21.2", features = [
+pyo3 = { version = "0.23.3", features = [
     "abi3-py39",
     "extension-module",
     "anyhow",
@@ -23,7 +23,7 @@ anyhow = "1.0"
 walkdir = { version = "2.5" }
 rayon = { version = "1.10" }
 log = "0.4"
-pyo3-log = "0.11"
+pyo3-log = "0.12.1"
 noodles = { version = "0.87.0", features = [
     "bgzf",
     "core",
@@ -38,22 +38,22 @@ bio = "2.0"
 needletail = "0.6"
 
 ahash = "0.8.11"
-numpy = "0.21"
-ndarray = { version = "0.15", features = ["serde", "rayon"] }
+numpy = "0.23"
+ndarray = { version = "0.16", features = ["serde", "rayon"] }
 num-traits = { version = "0.2" }
 serde = { version = "1.0", features = ["derive"] }
 serde_json = "1.0"
 rand = "0.8"
 rand_distr = "0.4"
 bitvec = "1.0"
-itertools = "0.13.0"
+itertools = "0.14.0"
 derive_builder = "0.20"
 lexical = "7.0"
 bstr = "1.11.3"
 lazy_static = "1.5.0"
 tempfile = "3.15"
-parquet = "52.2.0"
-arrow = "52.2"
+parquet = "54.0"
+arrow = "54.0"
 candle-core = { git = "https://github.com/huggingface/candle.git", version = "0.8.1" }
 colored = "2.2"
 textwrap = "0.16"

@@ -15,6 +15,7 @@ noodles = { workspace = true }
 deepbiop-fq = { workspace = true }
 deepbiop-bam = { workspace = true }
 deepbiop-utils = { workspace = true }
+deepbiop-fa = { workspace = true }
 
 rayon = { workspace = true }
 log = { workspace = true }
@@ -23,7 +24,7 @@ ahash = { workspace = true }
 
 clap = { version = "4.5", features = ["derive"] }
 clap_complete = "4.5"
-clap-verbosity-flag = "2.2"
+clap-verbosity-flag = "3.0"
 ctrlc = "3.4"
 human-panic = "2.0"
 env_logger = "0.11.6"

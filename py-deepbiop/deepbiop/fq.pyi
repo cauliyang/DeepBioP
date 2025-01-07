@@ -14,7 +14,7 @@ class FqEncoderOption:
     bases: list[int]
     vectorized_target: bool
     threads: int
-    def __new__(cls,kmer_size:int, qual_offset:int, bases:str, vectorized_target:bool, threads:int | None): ...
+    def __new__(cls,kmer_size,qual_offset,bases,vectorized_target,threads = ...): ...
 
 class JsonEncoder:
     def __new__(cls,option:FqEncoderOption): ...
@@ -30,7 +30,7 @@ class Predict:
     id: str
     is_truncated: bool
     qual: str | None
-    def __new__(cls,prediction:typing.Sequence[int], seq:str, id:str, is_truncated:bool, qual:str | None): ...
+    def __new__(cls,prediction,seq,id,is_truncated,qual = ...): ...
     def __repr__(self) -> str:
         ...
 
@@ -52,7 +52,7 @@ class Predict:
     def qual_array(self) -> list[int]:
         r"""Get the quality score array."""
 
-    def show_info(self, smooth_interval:typing.Sequence[tuple[int, int]], text_width:int | None) -> str:
+    def show_info(self, smooth_interval,text_width = ...) -> str:
         r"""Show the information of the prediction."""
 
     def __getstate__(self) -> typing.Any:
@@ -82,27 +82,27 @@ class TensorEncoder:
     tensor_max_seq_len: int
     kmer2id_table: dict[list[int], int]
     id2kmer_table: dict[int, list[int]]
-    def __new__(cls,option:FqEncoderOption, tensor_max_width:int | None, tensor_max_seq_len:int | None): ...
+    def __new__(cls,option,tensor_max_width = ...,tensor_max_seq_len = ...): ...
 
 def convert_multiple_fqs_to_one_fq(paths:typing.Sequence[str | os.PathLike | pathlib.Path],result_path:str | os.PathLike | pathlib.Path,parallel:bool) -> None:
     ...
 
-def encode_fq_path_to_json(fq_path:str | os.PathLike | pathlib.Path,k:int,bases:str,qual_offset:int,vectorized_target:bool,result_path:str | os.PathLike | pathlib.Path | None) -> None:
+def encode_fq_path_to_json(fq_path,k,bases,qual_offset,vectorized_target,result_path = ...) -> None:
     ...
 
-def encode_fq_path_to_parquet(fq_path:str | os.PathLike | pathlib.Path,bases:str,qual_offset:int,vectorized_target:bool,result_path:str | os.PathLike | pathlib.Path | None) -> None:
+def encode_fq_path_to_parquet(fq_path,bases,qual_offset,vectorized_target,result_path = ...) -> None:
     ...
 
 def encode_fq_path_to_parquet_chunk(fq_path:str | os.PathLike | pathlib.Path,chunk_size:int,parallel:bool,bases:str,qual_offset:int,vectorized_target:bool) -> None:
     ...
 
-def encode_fq_path_to_tensor(fq_path:str | os.PathLike | pathlib.Path,k:int,bases:str,qual_offset:int,vectorized_target:bool,max_width:int | None,max_seq_len:int | None) -> tuple[numpy.typing.NDArray[numpy.int32], numpy.typing.NDArray[numpy.int32], numpy.typing.NDArray[numpy.int32], dict[str, int]]:
+def encode_fq_path_to_tensor(fq_path,k,bases,qual_offset,vectorized_target,max_width = ...,max_seq_len = ...) -> tuple[numpy.typing.NDArray[numpy.int32], numpy.typing.NDArray[numpy.int32], numpy.typing.NDArray[numpy.int32], dict[str, int]]:
     ...
 
 def encode_fq_paths_to_parquet(fq_path:typing.Sequence[str | os.PathLike | pathlib.Path],bases:str,qual_offset:int,vectorized_target:bool) -> None:
     ...
 
-def encode_fq_paths_to_tensor(fq_paths:typing.Sequence[str | os.PathLike | pathlib.Path],k:int,bases:str,qual_offset:int,vectorized_target:bool,parallel_for_files:bool,max_width:int | None,max_seq_len:int | None) -> tuple[numpy.typing.NDArray[numpy.int32], numpy.typing.NDArray[numpy.int32], numpy.typing.NDArray[numpy.int32], dict[str, int]]:
+def encode_fq_paths_to_tensor(fq_paths,k,bases,qual_offset,vectorized_target,parallel_for_files,max_width = ...,max_seq_len = ...) -> tuple[numpy.typing.NDArray[numpy.int32], numpy.typing.NDArray[numpy.int32], numpy.typing.NDArray[numpy.int32], dict[str, int]]:
     ...
 
 def encode_qual(qual:str,qual_offset:int) -> list[int]:
@@ -126,7 +126,7 @@ def kmers_to_seq(kmers:typing.Sequence[str]) -> str:
 def load_predicts_from_batch_pt(pt_path:str | os.PathLike | pathlib.Path,ignore_label:int,id_table:typing.Mapping[int, str]) -> dict[str, Predict]:
     ...
 
-def load_predicts_from_batch_pts(pt_path:str | os.PathLike | pathlib.Path,ignore_label:int,id_table:typing.Mapping[int, str],max_predicts:int | None) -> dict[str, Predict]:
+def load_predicts_from_batch_pts(pt_path,ignore_label,id_table,max_predicts = ...) -> dict[str, Predict]:
     ...
 
 def normalize_seq(seq:str,iupac:bool) -> str:
@@ -152,7 +152,7 @@ def seq_to_kmers(seq:str,k:int,overlap:bool) -> list[str]:
 def test_predicts(predicts:typing.Sequence[Predict]) -> None:
     ...
 
-def write_fq(records_data:typing.Sequence[RecordData],file_path:str | os.PathLike | pathlib.Path | None) -> None:
+def write_fq(records_data,file_path = ...) -> None:
     ...
 
 def write_fq_parallel(records_data:typing.Sequence[RecordData],file_path:str | os.PathLike | pathlib.Path,threads:int) -> None:

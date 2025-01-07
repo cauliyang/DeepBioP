@@ -1,5 +1,8 @@
 .PHONY: clean build
 
+# add build target to the default target
+all: build
+
 clean:
 	rm -rf build dist
 
