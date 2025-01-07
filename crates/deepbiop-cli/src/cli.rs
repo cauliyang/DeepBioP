@@ -6,6 +6,8 @@ pub mod fa2fq;
 pub use fa2fq::*;
 pub mod chimeric_count;
 pub use chimeric_count::*;
+pub mod fa2parquet;
+pub use fa2parquet::*;
 
 use anyhow::Result;
 

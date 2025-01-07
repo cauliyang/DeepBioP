@@ -14,21 +14,16 @@ pub struct FaEncoderOption {
     #[pyo3(get, set)]
     #[builder(default = "BASES.to_vec()")]
     pub bases: Vec<u8>,
-
-    #[pyo3(get, set)]
-    #[builder(default = "2")]
-    pub threads: usize,
 }
 
 #[gen_stub_pymethods]
 #[pymethods]
 impl FaEncoderOption {
     #[new]
-    #[pyo3(signature = (bases, threads=None))]
-    fn py_new(bases: String, threads: Option<usize>) -> Self {
+    #[pyo3(signature = (bases))]
+    fn py_new(bases: String) -> Self {
         FaEncoderOptionBuilder::default()
             .bases(bases.as_bytes().to_vec())
-            .threads(threads.unwrap_or(2))
             .build()
             .expect("Failed to build FqEncoderOption from Python arguments.")
     }

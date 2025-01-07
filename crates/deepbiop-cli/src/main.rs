@@ -39,6 +39,9 @@ pub enum Commands {
 
     /// Fastq to fasta conversion.
     FaToFq(cli::FaToFq),
+
+    /// Fastq to parquet conversion.
+    FaToParquet(cli::FaToParquet),
 }
 
 impl Display for Commands {
@@ -48,6 +51,7 @@ impl Display for Commands {
             Commands::BamToFq(_) => write!(f, "bam2fq"),
             Commands::FqToFa(_) => write!(f, "fq2fa"),
             Commands::FaToFq(_) => write!(f, "fa2fq"),
+            Commands::FaToParquet(_) => write!(f, "fa2parquet"),
         }
     }
 }
@@ -98,6 +102,10 @@ fn main() -> Result<()> {
 
         Some(Commands::FaToFq(fa2fq)) => {
             fa2fq.run().unwrap();
+        }
+
+        Some(Commands::FaToParquet(fa2parquet)) => {
+            fa2parquet.run().unwrap();
         }
 
         None => {
