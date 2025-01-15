@@ -146,6 +146,9 @@ def normalize_seq(seq:str,iupac:bool) -> str:
     A normalized DNA sequence as a `String`.
     """
 
+def select_record_from_fq(selected_reads:typing.Sequence[str],fq:str | os.PathLike | pathlib.Path,output:str | os.PathLike | pathlib.Path) -> None:
+    ...
+
 def seq_to_kmers(seq:str,k:int,overlap:bool) -> list[str]:
     ...
 
