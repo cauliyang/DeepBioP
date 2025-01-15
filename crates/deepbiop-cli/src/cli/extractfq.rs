@@ -53,7 +53,7 @@ impl ExtractFq {
         let reads = parse_reads(&self.reads)?;
         info!("load {} selected reads from {:?}", reads.len(), &self.reads);
 
-        let records = fq::io::select_record_from_fq(&self.fq, &reads)?;
+        let records = fq::io::select_record_from_fq_by_stream(&self.fq, &reads)?;
         info!("collect {} records", records.len());
 
         if self.compressed {

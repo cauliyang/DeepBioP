@@ -232,6 +232,27 @@ pub fn select_record_from_fq<P: AsRef<Path>>(
         .collect())
 }
 
+pub fn select_record_from_fq_by_stream<P: AsRef<Path>>(
+    fq: P,
+    selected_records: &HashSet<BString>,
+) -> Result<Vec<FastqRecord>> {
+    let mut reader = File::open(fq).map(BufReader::new).map(fastq::Reader::new)?;
+
+    reader
+        .records()
+        .par_bridge()
+        .filter_map(|record| {
+            let record = record.unwrap();
+            let id: BString = record.definition().name().into();
+            if selected_records.contains(&id) {
+                Some(Ok(record))
+            } else {
+                None
+            }
+        })
+        .collect()
+}
+
 #[cfg(test)]
 mod tests {
     use super::*;
