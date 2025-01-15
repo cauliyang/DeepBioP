@@ -10,6 +10,7 @@ use std::io::BufReader;
 use std::path::{Path, PathBuf};
 
 use super::set_up_threads;
+use log::info;
 
 #[derive(Debug, Parser)]
 pub struct ExtractFq {
@@ -51,6 +52,9 @@ impl ExtractFq {
 
         let reads = parse_reads(&self.reads)?;
         let records = fq::io::select_record_from_fq(&self.fq, &reads)?;
+
+        info!("load {} selected reads from {:?}", reads.len(), &self.reads);
+        info!("collect {} records", records.len());
 
         if self.compressed {
             let file_path = self.fq.with_extension("_selected_fq.bgz");
