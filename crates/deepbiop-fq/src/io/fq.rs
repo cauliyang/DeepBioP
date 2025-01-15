@@ -19,28 +19,6 @@ use flate2::read::GzDecoder;
 
 use crate::encode::RecordData;
 
-pub fn write_fq(records: &[RecordData], file_path: Option<PathBuf>) -> Result<()> {
-    let sink: Box<dyn io::Write> = if let Some(file) = file_path {
-        Box::new(File::create(file)?)
-    } else {
-        Box::new(io::stdout().lock())
-    };
-    let mut writer = fastq::io::Writer::new(sink);
-
-    for record in records {
-        let qual_str = record.qual.to_string();
-
-        let record = fastq::Record::new(
-            Definition::new(record.id.to_vec(), ""),
-            record.seq.to_vec(),
-            qual_str,
-        );
-        writer.write_record(&record)?;
-    }
-
-    Ok(())
-}
-
 pub fn read_noodel_records_from_fq_or_zip_fq<P: AsRef<Path>>(
     file_path: P,
 ) -> Result<Vec<FastqRecord>> {
@@ -70,63 +48,6 @@ pub fn read_noodle_records_from_fq<P: AsRef<Path>>(file_path: P) -> Result<Vec<F
         })
         .collect();
     records
-}
-
-pub fn write_fq_for_noodle_record<P: AsRef<Path>>(
-    records: &[FastqRecord],
-    file_path: P,
-) -> Result<()> {
-    let file = File::create(file_path)?;
-    let mut writer = fastq::io::Writer::new(file);
-    for record in records {
-        writer.write_record(record)?;
-    }
-    Ok(())
-}
-
-pub fn write_zip_fq_parallel(
-    records: &[RecordData],
-    file_path: PathBuf,
-    threads: Option<usize>,
-) -> Result<()> {
-    let worker_count = NonZeroUsize::new(threads.unwrap_or(1))
-        .map(|count| count.min(thread::available_parallelism().unwrap()))
-        .unwrap();
-
-    let sink = File::create(file_path)?;
-    let encoder = bgzf::MultithreadedWriter::with_worker_count(worker_count, sink);
-
-    let mut writer = fastq::io::Writer::new(encoder);
-
-    for record in records {
-        let record = fastq::Record::new(
-            Definition::new(record.id.to_vec(), ""),
-            record.seq.to_vec(),
-            record.qual.to_vec(),
-        );
-        writer.write_record(&record)?;
-    }
-    Ok(())
-}
-
-pub fn write_fq_parallel_for_noodle_record(
-    records: &[FastqRecord],
-    file_path: PathBuf,
-    threads: Option<usize>,
-) -> Result<()> {
-    let worker_count = NonZeroUsize::new(threads.unwrap_or(2))
-        .map(|count| count.min(thread::available_parallelism().unwrap()))
-        .unwrap();
-
-    let sink = File::create(file_path)?;
-    let encoder = bgzf::MultithreadedWriter::with_worker_count(worker_count, sink);
-
-    let mut writer = fastq::io::Writer::new(encoder);
-
-    for record in records {
-        writer.write_record(record)?;
-    }
-    Ok(())
 }
 
 pub fn read_noodle_records_from_gzip_fq<P: AsRef<Path>>(file_path: P) -> Result<Vec<FastqRecord>> {
@@ -161,27 +82,103 @@ pub fn read_noodle_records_from_bzip_fq<P: AsRef<Path>>(file_path: P) -> Result<
     records
 }
 
-pub fn convert_multiple_zip_fqs_to_one_zip_fq<P: AsRef<Path>>(
-    paths: &[PathBuf],
-    result_path: P,
-    parallel: bool,
-) -> Result<()> {
-    let records = if parallel {
-        paths
-            .par_iter()
-            .flat_map(|path| read_noodle_records_from_bzip_fq(path).unwrap())
-            .collect::<Vec<FastqRecord>>()
+pub fn write_fq(records: &[RecordData], file_path: Option<PathBuf>) -> Result<()> {
+    let sink: Box<dyn io::Write> = if let Some(file) = file_path {
+        Box::new(File::create(file)?)
     } else {
-        paths
-            .iter()
-            .flat_map(|path| read_noodle_records_from_bzip_fq(path).unwrap())
-            .collect::<Vec<FastqRecord>>()
+        Box::new(io::stdout().lock())
     };
-    write_fq_parallel_for_noodle_record(&records, result_path.as_ref().to_path_buf(), None)?;
+    let mut writer = fastq::io::Writer::new(sink);
+
+    for record in records {
+        let qual_str = record.qual.to_string();
+
+        let record = fastq::Record::new(
+            Definition::new(record.id.to_vec(), ""),
+            record.seq.to_vec(),
+            qual_str,
+        );
+        writer.write_record(&record)?;
+    }
+
     Ok(())
 }
 
-pub fn convert_multiple_fqs_to_one_zip_fq<P: AsRef<Path>>(
+pub fn write_fq_for_noodle_record<P: AsRef<Path>>(data: &[fastq::Record], path: P) -> Result<()> {
+    let file = std::fs::File::create(path.as_ref())?;
+    let mut writer = fastq::io::Writer::new(file);
+    for record in data {
+        writer.write_record(record)?;
+    }
+    Ok(())
+}
+
+pub fn write_bzip_fq_parallel(
+    records: &[RecordData],
+    file_path: PathBuf,
+    threads: Option<usize>,
+) -> Result<()> {
+    let worker_count = NonZeroUsize::new(threads.unwrap_or(1))
+        .map(|count| count.min(thread::available_parallelism().unwrap()))
+        .unwrap();
+
+    let sink = File::create(file_path)?;
+    let encoder = bgzf::MultithreadedWriter::with_worker_count(worker_count, sink);
+
+    let mut writer = fastq::io::Writer::new(encoder);
+
+    for record in records {
+        let record = fastq::Record::new(
+            Definition::new(record.id.to_vec(), ""),
+            record.seq.to_vec(),
+            record.qual.to_vec(),
+        );
+        writer.write_record(&record)?;
+    }
+    Ok(())
+}
+
+pub fn write_bzip_fq_parallel_for_noodle_record(
+    records: &[FastqRecord],
+    file_path: PathBuf,
+    threads: Option<usize>,
+) -> Result<()> {
+    let worker_count = NonZeroUsize::new(threads.unwrap_or(2))
+        .map(|count| count.min(thread::available_parallelism().unwrap()))
+        .unwrap();
+
+    let sink = File::create(file_path)?;
+    let encoder = bgzf::MultithreadedWriter::with_worker_count(worker_count, sink);
+
+    let mut writer = fastq::io::Writer::new(encoder);
+
+    for record in records {
+        writer.write_record(record)?;
+    }
+    Ok(())
+}
+
+pub fn convert_multiple_bzip_fqs_to_one_bzip_fq<P: AsRef<Path>>(
+    paths: &[PathBuf],
+    result_path: P,
+    parallel: bool,
+) -> Result<()> {
+    let records = if parallel {
+        paths
+            .par_iter()
+            .flat_map(|path| read_noodle_records_from_bzip_fq(path).unwrap())
+            .collect::<Vec<FastqRecord>>()
+    } else {
+        paths
+            .iter()
+            .flat_map(|path| read_noodle_records_from_bzip_fq(path).unwrap())
+            .collect::<Vec<FastqRecord>>()
+    };
+    write_bzip_fq_parallel_for_noodle_record(&records, result_path.as_ref().to_path_buf(), None)?;
+    Ok(())
+}
+
+pub fn convert_multiple_fqs_to_one_bzip_fq<P: AsRef<Path>>(
     paths: &[PathBuf],
     result_path: P,
     parallel: bool,
@@ -197,7 +194,7 @@ pub fn convert_multiple_fqs_to_one_zip_fq<P: AsRef<Path>>(
             .flat_map(|path| read_noodle_records_from_fq(path).unwrap())
             .collect::<Vec<FastqRecord>>()
     };
-    write_fq_parallel_for_noodle_record(&records, result_path.as_ref().to_path_buf(), None)?;
+    write_bzip_fq_parallel_for_noodle_record(&records, result_path.as_ref().to_path_buf(), None)?;
     Ok(())
 }
 
@@ -283,7 +280,7 @@ mod tests {
         let file_path = file.path().to_path_buf();
 
         // Call the function being tested
-        write_zip_fq_parallel(&records, file_path, None).unwrap();
+        write_bzip_fq_parallel(&records, file_path, None).unwrap();
 
         let decoder = bgzf::Reader::new(file.reopen().unwrap());
         let mut reader = fastq::Reader::new(decoder);

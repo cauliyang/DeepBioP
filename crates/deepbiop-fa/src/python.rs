@@ -6,7 +6,9 @@ use crate::{
     io,
 };
 
+use ahash::HashSet;
 use anyhow::Result;
+use bstr::BString;
 use deepbiop_utils::io as deepbiop_io;
 use log::warn;
 use pyo3::prelude::*;
@@ -99,7 +101,7 @@ fn write_fa_parallel(
         .into_par_iter()
         .map(|py_record| py_record.0)
         .collect();
-    io::write_zip_fa_parallel(&records, file_path, Some(threads))
+    io::write_bzip_fa_parallel(&records, file_path, Some(threads))
 }
 
 #[gen_stub_pyfunction(module = "deepbiop.fa")]
@@ -179,6 +181,21 @@ fn convert_multiple_fas_to_one_fa(
         io::convert_multiple_zip_fas_to_one_zip_fa(&paths, result_path, parallel)?;
     }
 
+    Ok(())
+}
+
+#[gen_stub_pyfunction(module = "deepbiop.fa")]
+#[pyfunction(name = "select_record_from_fa")]
+pub fn py_select_record_from_fq(
+    selected_reads: Vec<String>,
+    fq: PathBuf,
+    output: PathBuf,
+) -> Result<()> {
+    let selected_reads: HashSet<BString> =
+        selected_reads.into_par_iter().map(|s| s.into()).collect();
+
+    let records = io::select_record_from_fa(fq, &selected_reads)?;
+    io::write_fa_for_noodle_record(&records, output)?;
     Ok(())
 }
 

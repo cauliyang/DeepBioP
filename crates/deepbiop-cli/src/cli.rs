@@ -9,6 +9,11 @@ pub use chimeric_count::*;
 pub mod fa2parquet;
 pub use fa2parquet::*;
 
+pub mod extractfq;
+pub use extractfq::*;
+pub mod extractfa;
+pub use extractfa::*;
+
 use anyhow::Result;
 
 // Set up threads only once, using the common_opts from the top-level Cli struct
