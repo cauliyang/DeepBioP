@@ -141,7 +141,7 @@ fn write_fq_parallel(
         .map(|py_record| py_record.0)
         .collect();
 
-    io::write_zip_fq_parallel(&records, file_path, Some(threads))
+    io::write_bzip_fq_parallel(&records, file_path, Some(threads))
 }
 
 #[gen_stub_pyfunction(module = "deepbiop.fq")]
@@ -434,9 +434,9 @@ fn convert_multiple_fqs_to_one_fq(
     let is_zip = paths[0].extension().unwrap() == "gz";
 
     if is_zip {
-        io::convert_multiple_fqs_to_one_zip_fq(&paths, result_path, parallel)?;
+        io::convert_multiple_fqs_to_one_bzip_fq(&paths, result_path, parallel)?;
     } else {
-        io::convert_multiple_zip_fqs_to_one_zip_fq(&paths, result_path, parallel)?;
+        io::convert_multiple_bzip_fqs_to_one_bzip_fq(&paths, result_path, parallel)?;
     }
 
     Ok(())

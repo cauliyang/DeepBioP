@@ -1,4 +1,6 @@
-use anyhow::Result;
+use ahash::HashSet;
+use anyhow::{Ok, Result};
+use bstr::BString;
 use rayon::prelude::*;
 use std::fs::File;
 use std::io::{self, BufReader};
@@ -11,25 +13,6 @@ use noodles::fasta::record::{Definition, Record as FastaRecord, Sequence};
 use noodles::{bgzf, fasta};
 
 use crate::encode::RecordData;
-
-pub fn write_fa(records: &[RecordData], file_path: Option<PathBuf>) -> Result<()> {
-    let sink: Box<dyn io::Write> = if let Some(file) = file_path {
-        Box::new(File::create(file)?)
-    } else {
-        Box::new(io::stdout().lock())
-    };
-    let mut writer = fasta::io::Writer::new(sink);
-
-    for record in records {
-        let record = fasta::Record::new(
-            Definition::new(record.id.to_vec(), None),
-            Sequence::from(record.seq.to_vec()),
-        );
-        writer.write_record(&record)?;
-    }
-
-    Ok(())
-}
 
 pub fn read_noodel_records_from_fa_or_zip_fa<P: AsRef<Path>>(
     file_path: P,
@@ -93,7 +76,35 @@ pub fn read_noodle_records_from_bzip_fa<P: AsRef<Path>>(file_path: P) -> Result<
     records
 }
 
-pub fn write_zip_fa_parallel(
+pub fn write_fa(records: &[RecordData], file_path: Option<PathBuf>) -> Result<()> {
+    let sink: Box<dyn io::Write> = if let Some(file) = file_path {
+        Box::new(File::create(file)?)
+    } else {
+        Box::new(io::stdout().lock())
+    };
+    let mut writer = fasta::io::Writer::new(sink);
+
+    for record in records {
+        let record = fasta::Record::new(
+            Definition::new(record.id.to_vec(), None),
+            Sequence::from(record.seq.to_vec()),
+        );
+        writer.write_record(&record)?;
+    }
+
+    Ok(())
+}
+
+pub fn write_fa_for_noodle_record<P: AsRef<Path>>(data: &[fasta::Record], path: P) -> Result<()> {
+    let file = std::fs::File::create(path.as_ref())?;
+    let mut writer = fasta::io::Writer::new(file);
+    for record in data {
+        writer.write_record(record)?;
+    }
+    Ok(())
+}
+
+pub fn write_bzip_fa_parallel(
     records: &[RecordData],
     file_path: PathBuf,
     threads: Option<usize>,
@@ -118,7 +129,7 @@ pub fn write_zip_fa_parallel(
     Ok(())
 }
 
-pub fn write_fa_parallel_for_noodle_record(
+pub fn write_bzip_fa_parallel_for_noodle_record(
     records: &[FastaRecord],
     file_path: PathBuf,
     threads: Option<usize>,
@@ -154,7 +165,7 @@ pub fn convert_multiple_fas_to_one_zip_fa<P: AsRef<Path>>(
             .flat_map(|path| read_noodle_records_from_fa(path).unwrap())
             .collect::<Vec<FastaRecord>>()
     };
-    write_fa_parallel_for_noodle_record(&records, result_path.as_ref().to_path_buf(), None)?;
+    write_bzip_fa_parallel_for_noodle_record(&records, result_path.as_ref().to_path_buf(), None)?;
     Ok(())
 }
 
@@ -174,8 +185,23 @@ pub fn convert_multiple_zip_fas_to_one_zip_fa<P: AsRef<Path>>(
             .flat_map(|path| read_noodle_records_from_bzip_fa(path).unwrap())
             .collect::<Vec<FastaRecord>>()
     };
-    write_fa_parallel_for_noodle_record(&records, result_path.as_ref().to_path_buf(), None)?;
+    write_bzip_fa_parallel_for_noodle_record(&records, result_path.as_ref().to_path_buf(), None)?;
     Ok(())
+}
+
+pub fn select_record_from_fa<P: AsRef<Path>>(
+    fa: P,
+    selected_records: &HashSet<BString>,
+) -> Result<Vec<FastaRecord>> {
+    let fa_records = read_noodle_records_from_fa(fa)?;
+
+    Ok(fa_records
+        .into_par_iter()
+        .filter(|record| {
+            let name: BString = record.name().to_vec().into();
+            selected_records.contains(&name)
+        })
+        .collect())
 }
 
 #[cfg(test)]
