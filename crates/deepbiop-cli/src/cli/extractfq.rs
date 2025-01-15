@@ -51,16 +51,18 @@ impl ExtractFq {
         set_up_threads(self.threads)?;
 
         let reads = parse_reads(&self.reads)?;
-        let records = fq::io::select_record_from_fq(&self.fq, &reads)?;
-
         info!("load {} selected reads from {:?}", reads.len(), &self.reads);
+
+        let records = fq::io::select_record_from_fq(&self.fq, &reads)?;
         info!("collect {} records", records.len());
 
         if self.compressed {
-            let file_path = self.fq.with_extension("_selected_fq.bgz");
+            let file_path = self.fq.with_extension("selected.fq.bgz");
+            info!("write to {}", &file_path.display());
             fq::io::write_bzip_fq_parallel_for_noodle_record(&records, file_path, self.threads)?;
         } else {
-            let file_path = self.fq.with_extension("fq");
+            let file_path = self.fq.with_extension("selected.fq");
+            info!("write to {}", &file_path.display());
             fq::io::write_fq_for_noodle_record(&records, file_path)?;
         }
         Ok(())

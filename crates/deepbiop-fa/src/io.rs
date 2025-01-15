@@ -19,13 +19,13 @@ pub fn read_noodel_records_from_fa_or_zip_fa<P: AsRef<Path>>(
 ) -> Result<Vec<FastaRecord>> {
     let extension = file_path.as_ref().extension().unwrap();
     if extension == "bgz" {
-        log::info!("Reading from bgz file");
+        log::debug!("Reading from bgz file");
         read_noodle_records_from_bzip_fa(file_path)
     } else if extension == "gz" {
-        log::info!("Reading from gz file");
+        log::debug!("Reading from gz file");
         read_noodle_records_from_gzip_fa(file_path)
     } else {
-        log::info!("Reading from fq file");
+        log::debug!("Reading from fq file");
         read_noodle_records_from_fa(file_path)
     }
 }
