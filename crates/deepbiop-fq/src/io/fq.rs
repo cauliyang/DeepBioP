@@ -39,6 +39,7 @@ pub fn read_noodle_records_from_fq<P: AsRef<Path>>(file_path: P) -> Result<Vec<F
     let mut reader = File::open(file_path)
         .map(BufReader::new)
         .map(fastq::Reader::new)?;
+
     let records: Result<Vec<FastqRecord>> = reader
         .records()
         .par_bridge()
@@ -220,6 +221,7 @@ pub fn select_record_from_fq<P: AsRef<Path>>(
     selected_records: &HashSet<BString>,
 ) -> Result<Vec<FastqRecord>> {
     let fq_records = read_noodel_records_from_fq_or_zip_fq(&fq)?;
+    log::info!("load {} reads in total", fq_records.len());
 
     Ok(fq_records
         .into_par_iter()

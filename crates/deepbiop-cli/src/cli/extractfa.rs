@@ -51,18 +51,21 @@ impl ExtractFa {
         set_up_threads(self.threads)?;
 
         let reads = parse_reads(&self.reads)?;
-        let records = fa::io::select_record_from_fa(&self.fa, &reads)?;
-
         info!("load {} selected reads from {:?}", reads.len(), &self.reads);
+
+        let records = fa::io::select_record_from_fa(&self.fa, &reads)?;
         info!("collect {} records", records.len());
 
         if self.compressed {
-            let file_path = self.fa.with_extension("_selected_fq.bgz");
+            let file_path = self.fa.with_extension("selected.fa.bgz");
+            info!("write to {}", &file_path.display());
             fa::io::write_bzip_fa_parallel_for_noodle_record(&records, file_path, self.threads)?;
         } else {
-            let file_path = self.fa.with_extension("fq");
+            let file_path = self.fa.with_extension("selected.fa");
+            info!("write to {}", &file_path.display());
             fa::io::write_fa_for_noodle_record(&records, file_path)?;
         }
+
         Ok(())
     }
 }
