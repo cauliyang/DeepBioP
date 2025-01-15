@@ -198,10 +198,31 @@ pub fn select_record_from_fa<P: AsRef<Path>>(
     Ok(fa_records
         .into_par_iter()
         .filter(|record| {
-            let name: BString = record.name().to_vec().into();
-            selected_records.contains(&name)
+            let id: BString = record.name().to_vec().into();
+            selected_records.contains(&id)
         })
         .collect())
+}
+
+pub fn select_record_from_fa_by_stream<P: AsRef<Path>>(
+    fa: P,
+    selected_records: &HashSet<BString>,
+) -> Result<Vec<FastaRecord>> {
+    let mut reader = File::open(fa).map(BufReader::new).map(fasta::Reader::new)?;
+
+    reader
+        .records()
+        .par_bridge()
+        .filter_map(|record| {
+            let record = record.unwrap();
+            let id: BString = record.name().to_vec().into();
+            if selected_records.contains(&id) {
+                Some(Ok(record))
+            } else {
+                None
+            }
+        })
+        .collect()
 }
 
 #[cfg(test)]

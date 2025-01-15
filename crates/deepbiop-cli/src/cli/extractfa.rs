@@ -53,7 +53,7 @@ impl ExtractFa {
         let reads = parse_reads(&self.reads)?;
         info!("load {} selected reads from {:?}", reads.len(), &self.reads);
 
-        let records = fa::io::select_record_from_fa(&self.fa, &reads)?;
+        let records = fa::io::select_record_from_fa_by_stream(&self.fa, &reads)?;
         info!("collect {} records", records.len());
 
         if self.compressed {
