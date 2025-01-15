@@ -55,7 +55,7 @@ tempfile = "3.15"
 parquet = "54.0"
 arrow = "54.0"
 candle-core = { git = "https://github.com/huggingface/candle.git", version = "0.8.1" }
-colored = "2.2"
+colored = "3.0"
 textwrap = "0.16"
 flate2 = { version = "1.0.35", features = [
   "zlib-ng",
