@@ -1,3 +1,4 @@
+use bstr::BString;
 use numpy::IntoPyArray;
 use std::path::PathBuf;
 
@@ -9,7 +10,7 @@ use crate::{
     utils,
 };
 
-use ahash::HashMap;
+use ahash::{HashMap, HashSet};
 use anyhow::Result;
 use log::warn;
 use needletail::Sequence;
@@ -500,6 +501,21 @@ pub fn fastq_to_fasta(fastq_path: PathBuf, fasta_path: PathBuf) -> Result<()> {
     Ok(())
 }
 
+#[gen_stub_pyfunction(module = "deepbiop.fq")]
+#[pyfunction(name = "select_record_from_fq")]
+pub fn py_select_record_from_fq(
+    selected_reads: Vec<String>,
+    fq: PathBuf,
+    output: PathBuf,
+) -> Result<()> {
+    let selected_reads: HashSet<BString> =
+        selected_reads.into_par_iter().map(|s| s.into()).collect();
+
+    let records = io::select_record_from_fq(fq, &selected_reads)?;
+    io::write_fq_for_noodle_record(&records, output)?;
+    Ok(())
+}
+
 // register fq sub_module
 pub fn register_fq_module(parent_module: &Bound<'_, PyModule>) -> PyResult<()> {
     let sub_module_name = "fq";
@@ -512,6 +528,7 @@ pub fn register_fq_module(parent_module: &Bound<'_, PyModule>) -> PyResult<()> {
     child_module.add_class::<encode::ParquetEncoder>()?;
     child_module.add_class::<predicts::Predict>()?;
 
+    child_module.add_function(wrap_pyfunction!(py_select_record_from_fq, &child_module)?)?;
     child_module.add_function(wrap_pyfunction!(fastq_to_fasta, &child_module)?)?;
     child_module.add_function(wrap_pyfunction!(get_label_region, &child_module)?)?;
     child_module.add_function(wrap_pyfunction!(encode_qual, &child_module)?)?;
