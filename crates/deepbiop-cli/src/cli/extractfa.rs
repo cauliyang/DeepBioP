@@ -5,6 +5,7 @@ use bstr::BString;
 use clap::Parser;
 use deepbiop_fa as fa;
 
+use log::info;
 use std::io::BufRead;
 use std::io::BufReader;
 use std::path::{Path, PathBuf};
@@ -51,6 +52,9 @@ impl ExtractFa {
 
         let reads = parse_reads(&self.reads)?;
         let records = fa::io::select_record_from_fa(&self.fa, &reads)?;
+
+        info!("load {} selected reads from {:?}", reads.len(), &self.reads);
+        info!("collect {} records", records.len());
 
         if self.compressed {
             let file_path = self.fa.with_extension("_selected_fq.bgz");
