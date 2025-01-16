@@ -7,6 +7,22 @@ use pyo3_stub_gen::derive::*;
 
 pub const BASES: &[u8] = b"ATCGN";
 
+/// Options for configuring the FASTA sequence encoder.
+///
+/// This struct provides configuration options for encoding FASTA sequences,
+/// such as which bases to consider during encoding.
+///
+/// # Fields
+///
+/// * `bases` - A vector of valid bases (as bytes) to use for encoding. Defaults to "ATCGN".
+///
+/// # Example
+///
+/// ```
+/// use deepbiop_fa::encode::option::EncoderOption;
+///
+/// let options = EncoderOption::default();
+/// ```
 #[gen_stub_pyclass]
 #[pyclass(module = "deepbiop.fa")]
 #[derive(Debug, Builder, Default, Clone, Serialize, Deserialize)]

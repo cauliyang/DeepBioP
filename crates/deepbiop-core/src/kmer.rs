@@ -6,7 +6,6 @@ use crate::{
     error::DPError,
     types::{Element, Id2KmerTable, Kmer2IdTable},
 };
-use anyhow::anyhow;
 use anyhow::Error;
 use anyhow::Result;
 
@@ -216,26 +215,38 @@ pub fn seq_to_kmers(seq: &[u8], k: usize, overlap: bool) -> Vec<&[u8]> {
 /// assert_eq!(seq, b"ATCGA");
 /// ```
 pub fn kmers_to_seq(kmers: Vec<&[u8]>) -> Result<Vec<u8>> {
+    // Early return for empty input
     if kmers.is_empty() {
         return Ok(Vec::new());
     }
-    let mut res = kmers[0].to_vec();
-    // Iterate over the k-mers, starting from the second one
-    let reset: Result<Vec<u8>> = kmers
+
+    // Validate first kmer
+    let first_kmer = kmers[0];
+    if first_kmer.is_empty() {
+        return Err(DPError::InvalidKmerId.into());
+    }
+
+    // Initialize result with first kmer
+    let mut result = Vec::with_capacity(first_kmer.len() + kmers.len() - 1);
+    result.extend_from_slice(first_kmer);
+
+    // Process remaining kmers in parallel
+    let remaining_bases: Result<Vec<u8>> = kmers
         .into_par_iter()
         .skip(1)
         .map(|kmer| {
-            // Assuming the k-mers are correctly ordered and overlap by k-1,
-            // append only the last character of each subsequent k-mer to the sequence.
-            kmer.last().ok_or(anyhow!("Invalid kmer")).copied()
+            kmer.last()
+                .ok_or_else(|| DPError::InvalidKmerId.into())
+                .copied()
         })
         .collect();
 
-    let reset = reset?;
+    // Extend result with remaining bases
+    result.extend(remaining_bases?);
 
-    res.extend(reset);
-    Ok(res)
+    Ok(result)
 }
+
 /// Convert a DNA sequence into k-mers with their positions in the original sequence.
 ///
 /// This function takes a DNA sequence and splits it into k-mers of specified length,
