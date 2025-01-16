@@ -10,7 +10,25 @@ use anyhow::anyhow;
 use anyhow::Error;
 use anyhow::Result;
 
-/// Kmer ids to sequence.
+/// Convert a sequence of k-mer IDs back into a DNA sequence.
+///
+/// This function takes a slice of k-mer IDs and a lookup table mapping IDs to k-mers,
+/// and reconstructs the original DNA sequence by converting each ID back to its k-mer
+/// and joining them together.
+///
+/// # Arguments
+///
+/// * `kmer_ids` - A slice of integer IDs representing k-mers
+/// * `id2kmer_table` - A HashMap mapping k-mer IDs to their byte sequences
+///
+/// # Returns
+///
+/// The reconstructed DNA sequence as a vector of bytes, wrapped in a Result.
+/// Returns an error if any k-mer ID is not found in the lookup table.
+///
+/// # Errors
+///
+/// Returns `DPError::InvalidKmerId` if a k-mer ID is not found in the lookup table
 pub fn kmerids_to_seq(kmer_ids: &[Element], id2kmer_table: Id2KmerTable) -> Result<Vec<u8>> {
     let result = kmer_ids
         .par_iter()
@@ -25,6 +43,31 @@ pub fn kmerids_to_seq(kmer_ids: &[Element], id2kmer_table: Id2KmerTable) -> Resu
     kmers_to_seq(result)
 }
 
+/// Convert a k-mer target region back to the original sequence target region.
+///
+/// This function takes a target region that was adjusted for k-mer calculations and converts it
+/// back to the corresponding region in the original sequence by reversing the k-mer adjustments.
+///
+/// # Arguments
+///
+/// * `kmer_target` - The target region adjusted for k-mers as a Range<usize>
+/// * `k` - The length of k-mers used
+///
+/// # Returns
+///
+/// A Range<usize> representing the target region in the original sequence
+///
+/// # Example
+///
+/// ```
+/// use std::ops::Range;
+/// use deepbiop_core::kmer::to_original_target_region;
+///
+/// let kmer_target = 0..3;  // A k-mer target region
+/// let k = 4;  // k-mer length
+/// let original_target = to_original_target_region(&kmer_target, k);
+/// assert_eq!(original_target, 0..6);  // Original sequence region
+/// ```
 pub fn to_original_target_region(kmer_target: &Range<usize>, k: usize) -> Range<usize> {
     // The start of the target region remains the same
     let original_start = kmer_target.start;
@@ -39,7 +82,39 @@ pub fn to_original_target_region(kmer_target: &Range<usize>, k: usize) -> Range<
     original_start..original_end
 }
 
-/// Convert a target region to a k-mer target region.
+/// Convert an original sequence target region to a k-mer target region.
+///
+/// This function takes a target region from the original sequence and converts it to the corresponding
+/// region for k-mer calculations by adjusting for k-mer length and sequence boundaries.
+///
+/// # Arguments
+///
+/// * `original_target` - The target region in the original sequence as a Range<usize>
+/// * `k` - The length of k-mers to use
+/// * `seq_len` - Optional sequence length to validate target region bounds
+///
+/// # Returns
+///
+/// A Result containing a Range<usize> representing the adjusted k-mer target region
+///
+/// # Errors
+///
+/// Returns `DPError::TargetRegionInvalid` if:
+/// - The target region is invalid (start >= end)
+/// - k is 0
+/// - The target region extends beyond sequence length (if seq_len provided)
+///
+/// # Example
+///
+/// ```
+/// use std::ops::Range;
+/// use deepbiop_core::kmer::to_kmer_target_region;
+///
+/// let original_target = 0..6;  // Original sequence region
+/// let k = 4;  // k-mer length
+/// let kmer_target = to_kmer_target_region(&original_target, k, Some(10)).unwrap();
+/// assert_eq!(kmer_target, 0..3);  // Adjusted k-mer region
+/// ```
 pub fn to_kmer_target_region(
     original_target: &Range<usize>,
     k: usize,
@@ -77,7 +152,36 @@ pub fn to_kmer_target_region(
     Ok(new_start..new_end)
 }
 
-/// Convert a sequence to k-mers.
+/// Convert a DNA sequence into k-mers.
+///
+/// This function takes a DNA sequence and splits it into k-mers of specified length.
+/// The k-mers can be either overlapping or non-overlapping based on the `overlap` parameter.
+///
+/// # Arguments
+///
+/// * `seq` - A byte slice containing the DNA sequence
+/// * `k` - The length of each k-mer
+/// * `overlap` - Whether to generate overlapping k-mers
+///
+/// # Returns
+///
+/// A vector of k-mer byte slices
+///
+/// # Example
+///
+/// ```
+/// use deepbiop_core::kmer::seq_to_kmers;
+///
+/// let seq = b"ATCGATCG";
+///
+/// // Overlapping k-mers
+/// let kmers = seq_to_kmers(seq, 3, true);
+/// assert_eq!(kmers, vec![b"ATC", b"TCG", b"CGA", b"GAT", b"ATC", b"TCG"]);
+///
+/// // Non-overlapping k-mers
+/// let kmers = seq_to_kmers(seq, 3, false);
+/// assert_eq!(kmers, vec![b"ATC".as_slice(), b"GAT".as_slice(), b"CG".as_slice()]);
+/// ```
 pub fn seq_to_kmers(seq: &[u8], k: usize, overlap: bool) -> Vec<&[u8]> {
     if overlap {
         seq.par_windows(k).collect()
@@ -85,8 +189,32 @@ pub fn seq_to_kmers(seq: &[u8], k: usize, overlap: bool) -> Vec<&[u8]> {
         seq.par_chunks(k).collect()
     }
 }
-
-/// Convert k-mers to a sequence.
+/// Convert k-mers back into a DNA sequence.
+///
+/// This function takes a vector of k-mers and reconstructs the original DNA sequence.
+/// The k-mers are assumed to be in order and overlapping by k-1 bases.
+///
+/// # Arguments
+///
+/// * `kmers` - A vector of k-mer byte slices
+///
+/// # Returns
+///
+/// A Result containing the reconstructed DNA sequence as a byte vector
+///
+/// # Errors
+///
+/// Returns an error if any k-mer is invalid (empty)
+///
+/// # Example
+///
+/// ```
+/// use deepbiop_core::kmer::kmers_to_seq;
+///
+/// let kmers = vec![b"ATC".as_slice(), b"TCG".as_slice(), b"CGA".as_slice()];
+/// let seq = kmers_to_seq(kmers).unwrap();
+/// assert_eq!(seq, b"ATCGA");
+/// ```
 pub fn kmers_to_seq(kmers: Vec<&[u8]>) -> Result<Vec<u8>> {
     if kmers.is_empty() {
         return Ok(Vec::new());
@@ -108,7 +236,41 @@ pub fn kmers_to_seq(kmers: Vec<&[u8]>) -> Result<Vec<u8>> {
     res.extend(reset);
     Ok(res)
 }
-
+/// Convert a DNA sequence into k-mers with their positions in the original sequence.
+///
+/// This function takes a DNA sequence and splits it into k-mers of specified length,
+/// returning both the k-mers and their start/end positions in the original sequence.
+///
+/// # Arguments
+///
+/// * `seq` - A DNA sequence as a byte slice
+/// * `kmer_size` - The length of each k-mer
+/// * `overlap` - Whether to generate overlapping k-mers
+///
+/// # Returns
+///
+/// A Result containing a vector of tuples, where each tuple contains:
+/// - A k-mer as a byte slice
+/// - A tuple of (start_position, end_position) indicating the k-mer's location in the original sequence
+///
+/// # Errors
+///
+/// Returns an error if:
+/// - `kmer_size` is 0
+/// - `kmer_size` is greater than the sequence length
+///
+/// # Example
+///
+/// ```
+/// use deepbiop_core::kmer::seq_to_kmers_and_offset;
+///
+/// let seq = b"ATCGA";
+/// let result = seq_to_kmers_and_offset(seq, 3, true).unwrap();
+/// assert_eq!(result.len(), 3);
+/// assert_eq!(result[0], (b"ATC".as_slice(), (0, 3)));
+/// assert_eq!(result[1], (b"TCG".as_slice(), (1, 4)));
+/// assert_eq!(result[2], (b"CGA".as_slice(), (2, 5)));
+/// ```
 #[allow(clippy::type_complexity)]
 pub fn seq_to_kmers_and_offset(
     seq: &[u8],
@@ -148,6 +310,30 @@ pub fn seq_to_kmers_and_offset(
     }
 }
 
+/// Generate a lookup table mapping k-mers to unique IDs.
+///
+/// This function takes a slice of base characters and a k-mer length,
+/// and generates a HashMap mapping each possible k-mer to a unique integer ID.
+///
+/// # Arguments
+///
+/// * `base` - A slice containing the base characters to use (e.g. b"ATCG")
+/// * `k` - The length of k-mers to generate
+///
+/// # Returns
+///
+/// A HashMap mapping k-mer byte sequences to integer IDs
+///
+/// # Example
+///
+/// ```
+/// use deepbiop_core::kmer::generate_kmers_table;
+///
+/// let bases = b"AC";
+/// let k = 2;
+/// let table = generate_kmers_table(bases, k);
+/// assert_eq!(table.len(), 4); // AA, AC, CA, CC
+/// ```
 pub fn generate_kmers_table(base: &[u8], k: u8) -> Kmer2IdTable {
     generate_kmers(base, k)
         .into_par_iter()
@@ -156,6 +342,30 @@ pub fn generate_kmers_table(base: &[u8], k: u8) -> Kmer2IdTable {
         .collect()
 }
 
+/// Generate all possible k-mers from a set of base characters.
+///
+/// This function takes a slice of base characters and a k-mer length,
+/// and generates all possible k-mer combinations of that length.
+///
+/// # Arguments
+///
+/// * `bases` - A slice containing the base characters to use (e.g. b"ATCG")
+/// * `k` - The length of k-mers to generate
+///
+/// # Returns
+///
+/// A vector containing all possible k-mer combinations as byte vectors
+///
+/// # Example
+///
+/// ```
+/// use deepbiop_core::kmer::generate_kmers;
+///
+/// let bases = b"AC";
+/// let k = 2;
+/// let kmers = generate_kmers(bases, 2);
+/// assert_eq!(kmers.len(), 4); // AA, AC, CA, CC
+/// ```
 pub fn generate_kmers(bases: &[u8], k: u8) -> Vec<Vec<u8>> {
     // Convert u8 slice to char Vec directly where needed
     (0..k)
