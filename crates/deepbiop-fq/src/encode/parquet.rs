@@ -23,10 +23,9 @@ use pyo3_stub_gen::derive::*;
 
 #[derive(Debug, Builder, Default)]
 pub struct ParquetData {
-    pub id: BString,          // id
-    pub seq: BString,         // kmer_seq
-    pub qual: Vec<Element>,   // kmer_qual
-    pub target: Vec<Element>, // kmer_target
+    pub id: BString,        // id
+    pub seq: BString,       // kmer_seq
+    pub qual: Vec<Element>, // kmer_qual
 }
 
 #[gen_stub_pyclass]
@@ -47,11 +46,6 @@ impl ParquetEncoder {
             Field::new("seq", DataType::Utf8, false),
             Field::new(
                 "qual",
-                DataType::List(Box::new(Field::new("item", DataType::Int32, true)).into()),
-                false,
-            ),
-            Field::new(
-                "target",
                 DataType::List(Box::new(Field::new("item", DataType::Int32, true)).into()),
                 false,
             ),
@@ -79,7 +73,6 @@ impl ParquetEncoder {
         let mut id_builder = StringBuilder::new();
         let mut seq_builder = StringBuilder::new();
         let mut qual_builder = ListBuilder::new(Int32Builder::new());
-        let mut target_builder = ListBuilder::new(Int32Builder::new());
 
         // Populate builders
         data.into_iter().for_each(|parquet_record| {
@@ -90,18 +83,12 @@ impl ParquetEncoder {
                 qual_builder.values().append_value(qual);
             });
             qual_builder.append(true);
-
-            parquet_record.target.into_iter().for_each(|target| {
-                target_builder.values().append_value(target);
-            });
-            target_builder.append(true);
         });
 
         // Build arrays
         let id_array = Arc::new(id_builder.finish());
         let seq_array = Arc::new(seq_builder.finish());
         let qual_array = Arc::new(qual_builder.finish());
-        let target_array = Arc::new(target_builder.finish());
 
         // Create a RecordBatch
         let record_batch = RecordBatch::try_new(
@@ -110,7 +97,6 @@ impl ParquetEncoder {
                 id_array as Arc<dyn Array>,
                 seq_array as Arc<dyn Array>,
                 qual_array as Arc<dyn Array>,
-                target_array as Arc<dyn Array>,
             ],
         )?;
         Ok(record_batch)
@@ -123,7 +109,7 @@ impl ParquetEncoder {
         parallel: bool,
     ) -> Result<()> {
         let schema = self.generate_schema();
-        let records = self.fetch_records(&path, self.option.kmer_size)?;
+        let records = self.fetch_records(&path)?;
         info!("Encoding records with chunk size {} ", chunk_size);
 
         // create a folder for the chunk parquet files
@@ -179,16 +165,10 @@ impl Display for ParquetEncoder {
 }
 
 impl Encoder for ParquetEncoder {
-    type TargetOutput = Result<Vec<Element>>;
     type RecordOutput = Result<ParquetData>;
     type EncodeOutput = Result<(RecordBatch, Arc<Schema>)>;
 
-    fn encode_qual(
-        &self,
-        qual: &[u8],
-        _kmer_size: u8,
-        qual_offset: u8,
-    ) -> (Vec<Element>, Vec<Element>) {
+    fn encode_qual(&self, qual: &[u8], qual_offset: u8) -> Vec<Element> {
         // input is quality of fastq
         // 1. convert the quality to a score
         // 2. return the score
@@ -199,32 +179,17 @@ impl Encoder for ParquetEncoder {
                 (q - qual_offset) as Element
             })
             .collect();
-        let empty: Vec<Element> = vec![];
-        (encoded_qual, empty)
-    }
-
-    fn encode_target(&self, id: &[u8], _kmer_seq_len: Option<usize>) -> Self::TargetOutput {
-        let target = Self::parse_target_from_id(id).context("Failed to parse target from ID")?;
-        let result = target
-            .into_par_iter()
-            .map(|x| [x.start as Element, x.end as Element])
-            .flatten()
-            .collect();
-        Ok(result)
+        encoded_qual
     }
 
     fn encode_record(&self, id: &[u8], seq: &[u8], qual: &[u8]) -> Self::RecordOutput {
         // encode the quality
-        let (encoded_qual, _encoded_kmer_qual) =
-            self.encode_qual(qual, self.option.kmer_size, self.option.qual_offset);
-
-        let encoded_target = self.encode_target(id, Some(seq.len()))?;
+        let encoded_qual = self.encode_qual(qual, self.option.qual_offset);
 
         let result = ParquetDataBuilder::default()
             .id(id.into())
             .seq(seq.into())
             .qual(encoded_qual)
-            .target(encoded_target)
             .build()
             .context("Failed to build parquet data")?;
         Ok(result)
@@ -233,7 +198,7 @@ impl Encoder for ParquetEncoder {
     fn encode<P: AsRef<Path>>(&mut self, path: P) -> Self::EncodeOutput {
         // Define the schema of the data (one column of integers)
         let schema = self.generate_schema();
-        let records = self.fetch_records(path, self.option.kmer_size)?;
+        let records = self.fetch_records(path)?;
         let record_batch = self.generate_batch(&records, &schema)?;
         Ok((record_batch, schema))
     }
@@ -250,11 +215,7 @@ mod tests {
     use super::*;
     #[test]
     fn test_encode_fq_for_parquet() {
-        let option = FqEncoderOptionBuilder::default()
-            .kmer_size(3)
-            .vectorized_target(false)
-            .build()
-            .unwrap();
+        let option = FqEncoderOptionBuilder::default().build().unwrap();
 
         let mut encoder = ParquetEncoderBuilder::default()
             .option(option)

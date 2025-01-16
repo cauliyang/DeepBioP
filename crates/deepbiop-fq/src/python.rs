@@ -5,7 +5,7 @@ use crate::{
     encode::{self, Encoder},
     io, kmer,
     predicts::{self, Predict},
-    types::{Element, Kmer2IdTable},
+    types::Kmer2IdTable,
     utils,
 };
 
@@ -14,34 +14,10 @@ use anyhow::Result;
 use log::warn;
 use needletail::Sequence;
 use noodles::fasta;
-use numpy::{IntoPyArray, PyArray2, PyArray3};
 use pyo3::prelude::*;
 use rayon::prelude::*;
 
 use pyo3_stub_gen::derive::*;
-
-#[gen_stub_pymethods]
-#[pymethods]
-impl encode::TensorEncoder {
-    #[new]
-    #[pyo3(signature = (option, tensor_max_width=None, tensor_max_seq_len=None))]
-    fn py_new(
-        option: encode::FqEncoderOption,
-        tensor_max_width: Option<usize>,
-        tensor_max_seq_len: Option<usize>,
-    ) -> Self {
-        encode::TensorEncoder::new(option, tensor_max_width, tensor_max_seq_len)
-    }
-}
-
-#[gen_stub_pymethods]
-#[pymethods]
-impl encode::JsonEncoder {
-    #[new]
-    fn py_new(option: encode::FqEncoderOption) -> Self {
-        encode::JsonEncoder::new(option)
-    }
-}
 
 #[gen_stub_pymethods]
 #[pymethods]
@@ -196,140 +172,6 @@ fn normalize_seq(seq: String, iupac: bool) -> String {
     String::from_utf8_lossy(&seq.as_bytes().normalize(iupac)).to_string()
 }
 
-#[allow(clippy::too_many_arguments, clippy::type_complexity)]
-#[gen_stub_pyfunction(module = "deepbiop.fq")]
-#[pyfunction]
-#[pyo3(signature = (fq_paths, k, bases, qual_offset, vectorized_target, parallel_for_files, max_width=None, max_seq_len=None))]
-fn encode_fq_paths_to_tensor(
-    py: Python,
-    fq_paths: Vec<PathBuf>,
-    k: usize,
-    bases: String,
-    qual_offset: usize,
-    vectorized_target: bool,
-    parallel_for_files: bool,
-    max_width: Option<usize>,
-    max_seq_len: Option<usize>,
-) -> Result<(
-    Bound<'_, PyArray3<Element>>,
-    Bound<'_, PyArray3<Element>>,
-    Bound<'_, PyArray2<Element>>,
-    HashMap<String, Element>,
-)> {
-    let option = encode::FqEncoderOptionBuilder::default()
-        .kmer_size(k as u8)
-        .bases(bases.as_bytes().to_vec())
-        .qual_offset(qual_offset as u8)
-        .vectorized_target(vectorized_target)
-        .build()?;
-
-    let mut fq_encoder = encode::TensorEncoderBuilder::default()
-        .option(option)
-        .tensor_max_width(max_width.unwrap_or(0))
-        .tensor_max_seq_len(max_seq_len.unwrap_or(0))
-        .build()?;
-
-    let ((input, target), qual) = fq_encoder.encode_multiple(&fq_paths, parallel_for_files)?;
-
-    let kmer2id: HashMap<String, Element> = fq_encoder
-        .kmer2id_table
-        .par_iter()
-        .map(|(k, v)| (String::from_utf8_lossy(k).to_string(), *v))
-        .collect();
-
-    Ok((
-        input.into_pyarray(py),
-        target.into_pyarray(py),
-        qual.into_pyarray(py),
-        kmer2id,
-    ))
-}
-
-#[allow(clippy::too_many_arguments, clippy::type_complexity)]
-#[gen_stub_pyfunction(module = "deepbiop.fq")]
-#[pyfunction]
-#[pyo3(signature = (fq_path, k, bases, qual_offset, vectorized_target, max_width=None, max_seq_len=None))]
-fn encode_fq_path_to_tensor(
-    py: Python,
-    fq_path: PathBuf,
-    k: usize,
-    bases: String,
-    qual_offset: usize,
-    vectorized_target: bool,
-    max_width: Option<usize>,
-    max_seq_len: Option<usize>,
-) -> Result<(
-    Bound<'_, PyArray3<Element>>,
-    Bound<'_, PyArray3<Element>>,
-    Bound<'_, PyArray2<Element>>,
-    HashMap<String, Element>,
-)> {
-    let option = encode::FqEncoderOptionBuilder::default()
-        .kmer_size(k as u8)
-        .bases(bases.as_bytes().to_vec())
-        .qual_offset(qual_offset as u8)
-        .vectorized_target(vectorized_target)
-        .build()?;
-
-    let mut fq_encoder = encode::TensorEncoderBuilder::default()
-        .option(option)
-        .tensor_max_width(max_width.unwrap_or(0))
-        .tensor_max_seq_len(max_seq_len.unwrap_or(0))
-        .build()?;
-
-    let ((input, target), qual) = fq_encoder.encode(fq_path)?;
-
-    let kmer2id: HashMap<String, Element> = fq_encoder
-        .kmer2id_table
-        .par_iter()
-        .map(|(k, v)| (String::from_utf8_lossy(k).to_string(), *v))
-        .collect();
-
-    Ok((
-        input.into_pyarray(py),
-        target.into_pyarray(py),
-        qual.into_pyarray(py),
-        kmer2id,
-    ))
-}
-
-#[gen_stub_pyfunction(module = "deepbiop.fq")]
-#[pyfunction]
-#[pyo3(signature = (fq_path, k, bases, qual_offset, vectorized_target, result_path=None))]
-fn encode_fq_path_to_json(
-    fq_path: PathBuf,
-    k: usize,
-    bases: String,
-    qual_offset: usize,
-    vectorized_target: bool,
-    result_path: Option<PathBuf>,
-) -> Result<()> {
-    let option = encode::FqEncoderOptionBuilder::default()
-        .kmer_size(k as u8)
-        .bases(bases.as_bytes().to_vec())
-        .qual_offset(qual_offset as u8)
-        .vectorized_target(vectorized_target)
-        .build()?;
-
-    let mut fq_encoder = encode::JsonEncoderBuilder::default()
-        .option(option)
-        .build()?;
-
-    let result = fq_encoder.encode(&fq_path)?;
-
-    // result file is fq_path with .parquet extension
-    let json_path = if let Some(path) = result_path {
-        if path.with_extension("json").exists() {
-            warn!("{} already exists, overwriting", path.display());
-        }
-        path.with_extension("json")
-    } else {
-        fq_path.with_extension("json")
-    };
-    io::write_json(json_path, result)?;
-    Ok(())
-}
-
 #[gen_stub_pyfunction(module = "deepbiop.fq")]
 #[pyfunction]
 fn encode_fq_path_to_parquet_chunk(
@@ -338,13 +180,10 @@ fn encode_fq_path_to_parquet_chunk(
     parallel: bool,
     bases: String,
     qual_offset: usize,
-    vectorized_target: bool,
 ) -> Result<()> {
     let option = encode::FqEncoderOptionBuilder::default()
-        .kmer_size(0)
         .bases(bases.as_bytes().to_vec())
         .qual_offset(qual_offset as u8)
-        .vectorized_target(vectorized_target)
         .build()?;
 
     let mut fq_encoder = encode::ParquetEncoderBuilder::default()
@@ -356,19 +195,16 @@ fn encode_fq_path_to_parquet_chunk(
 
 #[gen_stub_pyfunction(module = "deepbiop.fq")]
 #[pyfunction]
-#[pyo3(signature = (fq_path, bases, qual_offset, vectorized_target, result_path=None))]
+#[pyo3(signature = (fq_path, bases, qual_offset, result_path=None))]
 fn encode_fq_path_to_parquet(
     fq_path: PathBuf,
     bases: String,
     qual_offset: usize,
-    vectorized_target: bool,
     result_path: Option<PathBuf>,
 ) -> Result<()> {
     let option = encode::FqEncoderOptionBuilder::default()
-        .kmer_size(0)
         .bases(bases.as_bytes().to_vec())
         .qual_offset(qual_offset as u8)
-        .vectorized_target(vectorized_target)
         .build()?;
 
     let mut fq_encoder = encode::ParquetEncoderBuilder::default()
@@ -395,17 +231,9 @@ fn encode_fq_paths_to_parquet(
     fq_path: Vec<PathBuf>,
     bases: String,
     qual_offset: usize,
-    vectorized_target: bool,
 ) -> Result<()> {
     fq_path.iter().for_each(|path| {
-        encode_fq_path_to_parquet(
-            path.clone(),
-            bases.clone(),
-            qual_offset,
-            vectorized_target,
-            None,
-        )
-        .unwrap();
+        encode_fq_path_to_parquet(path.clone(), bases.clone(), qual_offset, None).unwrap();
     });
     Ok(())
 }
@@ -522,8 +350,6 @@ pub fn register_fq_module(parent_module: &Bound<'_, PyModule>) -> PyResult<()> {
 
     child_module.add_class::<PyRecordData>()?;
     child_module.add_class::<encode::FqEncoderOption>()?;
-    child_module.add_class::<encode::TensorEncoder>()?;
-    child_module.add_class::<encode::JsonEncoder>()?;
     child_module.add_class::<encode::ParquetEncoder>()?;
     child_module.add_class::<predicts::Predict>()?;
 
@@ -540,19 +366,15 @@ pub fn register_fq_module(parent_module: &Bound<'_, PyModule>) -> PyResult<()> {
     child_module.add_function(wrap_pyfunction!(kmers_to_seq, &child_module)?)?;
     child_module.add_function(wrap_pyfunction!(generate_kmers, &child_module)?)?;
     child_module.add_function(wrap_pyfunction!(generate_kmers_table, &child_module)?)?;
-    child_module.add_function(wrap_pyfunction!(encode_fq_paths_to_tensor, &child_module)?)?;
 
     child_module.add_function(wrap_pyfunction!(write_fq, &child_module)?)?;
     child_module.add_function(wrap_pyfunction!(write_fq_parallel, &child_module)?)?;
-    child_module.add_function(wrap_pyfunction!(encode_fq_paths_to_tensor, &child_module)?)?;
-    child_module.add_function(wrap_pyfunction!(encode_fq_path_to_tensor, &child_module)?)?;
     child_module.add_function(wrap_pyfunction!(encode_fq_path_to_parquet, &child_module)?)?;
     child_module.add_function(wrap_pyfunction!(encode_fq_paths_to_parquet, &child_module)?)?;
     child_module.add_function(wrap_pyfunction!(
         encode_fq_path_to_parquet_chunk,
         &child_module
     )?)?;
-    child_module.add_function(wrap_pyfunction!(encode_fq_path_to_json, &child_module)?)?;
 
     child_module.add_function(wrap_pyfunction!(
         convert_multiple_fqs_to_one_fq,
