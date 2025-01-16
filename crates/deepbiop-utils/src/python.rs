@@ -1,4 +1,5 @@
 use crate::blat;
+use crate::io;
 
 use crate::{
     blat::PslAlignment,
@@ -12,8 +13,6 @@ use pyo3::prelude::*;
 use rayon::prelude::*;
 use std::ops::Range;
 use std::path::PathBuf;
-
-use needletail::Sequence;
 
 use pyo3_stub_gen::derive::*;
 
@@ -108,9 +107,9 @@ fn generate_unmaped_intervals(
 }
 
 #[gen_stub_pyfunction(module = "deepbiop.utils")]
-#[pyfunction]
-fn reverse_complement(seq: String) -> String {
-    String::from_utf8(seq.as_bytes().reverse_complement()).unwrap()
+#[pyfunction(name = "detect_compression")]
+fn py_detect_compression(path: PathBuf) -> Result<(bool, bool)> {
+    io::detect_compression(path)
 }
 
 // register utils module
@@ -122,7 +121,6 @@ pub fn register_utils_module(parent_module: &Bound<'_, PyModule>) -> PyResult<()
     child_module.add_class::<PslAlignment>()?;
 
     child_module.add_function(wrap_pyfunction!(majority_voting, &child_module)?)?;
-    child_module.add_function(wrap_pyfunction!(reverse_complement, &child_module)?)?;
     child_module.add_function(wrap_pyfunction!(crate::highlight_targets, &child_module)?)?;
     child_module.add_function(wrap_pyfunction!(parse_psl_by_qname, &child_module)?)?;
     child_module.add_function(wrap_pyfunction!(
@@ -130,6 +128,7 @@ pub fn register_utils_module(parent_module: &Bound<'_, PyModule>) -> PyResult<()
         &child_module
     )?)?;
     child_module.add_function(wrap_pyfunction!(generate_unmaped_intervals, &child_module)?)?;
+    child_module.add_function(wrap_pyfunction!(py_detect_compression, &child_module)?)?;
 
     parent_module.add_submodule(&child_module)?;
     Ok(())

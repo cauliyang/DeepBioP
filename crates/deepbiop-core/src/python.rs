@@ -102,6 +102,7 @@ pub fn register_core_module(parent_module: &Bound<'_, PyModule>) -> PyResult<()>
     child_module.add_function(wrap_pyfunction!(kmers_to_seq, &child_module)?)?;
     child_module.add_function(wrap_pyfunction!(generate_kmers, &child_module)?)?;
     child_module.add_function(wrap_pyfunction!(generate_kmers_table, &child_module)?)?;
+    child_module.add_function(wrap_pyfunction!(seq::reverse_complement, &child_module)?)?;
 
     parent_module.add_submodule(&child_module)?;
 

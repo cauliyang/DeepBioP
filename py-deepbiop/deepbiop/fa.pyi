@@ -6,42 +6,80 @@ import pathlib
 import typing
 
 class EncoderOption:
+    r"""
+    Options for configuring the FASTA sequence encoder.
+
+    This struct provides configuration options for encoding FASTA sequences,
+    such as which bases to consider during encoding.
+
+    # Fields
+
+    * `bases` - A vector of valid bases (as bytes) to use for encoding. Defaults to "ATCGN".
+
+    # Example
+
+    ```
+    use deepbiop_fa::encode::option::EncoderOption;
+
+    let options = EncoderOption::default();
+    ```
+    """
+
     bases: list[int]
-    def __new__(cls, bases): ...
+    def __new__(cls,bases): ...
 
 class ParquetEncoder:
-    def __new__(cls, option: EncoderOption): ...
+    r"""
+    An encoder for converting FASTA records to Parquet format.
+
+    This struct provides functionality to encode FASTA sequence data into Parquet files,
+    which are an efficient columnar storage format.
+
+    # Fields
+
+    * `option` - Configuration options for the encoder, including which bases to consider
+
+    # Example
+
+    ```
+    use deepbiop_fa::encode::{option::EncoderOption, parquet::ParquetEncoder};
+
+    let options = EncoderOption::default();
+    let encoder = ParquetEncoder::new(options);
+    ```
+    """
+
+    def __new__(cls,option:EncoderOption): ...
 
 class RecordData:
     id: str
     seq: str
-    def __new__(cls, id: str, seq: str): ...
-    def set_id(self, id: str) -> None: ...
-    def set_seq(self, seq: str) -> None: ...
+    def __new__(cls,id:str, seq:str): ...
+    def set_id(self, id:str) -> None:
+        ...
 
-def convert_multiple_fas_to_one_fa(
-    paths: typing.Sequence[str | os.PathLike | pathlib.Path],
-    result_path: str | os.PathLike | pathlib.Path,
-    parallel: bool,
-) -> None: ...
-def encode_fa_path_to_parquet(fa_path, bases, result_path=...) -> None: ...
-def encode_fa_path_to_parquet_chunk(
-    fa_path: str | os.PathLike | pathlib.Path,
-    chunk_size: int,
-    parallel: bool,
-    bases: str,
-) -> None: ...
-def encode_fa_paths_to_parquet(
-    fa_path: typing.Sequence[str | os.PathLike | pathlib.Path], bases: str
-) -> None: ...
-def select_record_from_fa(
-    selected_reads: typing.Sequence[str],
-    fq: str | os.PathLike | pathlib.Path,
-    output: str | os.PathLike | pathlib.Path,
-) -> None: ...
-def write_fa(records_data, file_path=...) -> None: ...
-def write_fa_parallel(
-    records_data: typing.Sequence[RecordData],
-    file_path: str | os.PathLike | pathlib.Path,
-    threads: int,
-) -> None: ...
+    def set_seq(self, seq:str) -> None:
+        ...
+
+
+def convert_multiple_fas_to_one_fa(paths:typing.Sequence[str | os.PathLike | pathlib.Path],result_path:str | os.PathLike | pathlib.Path,parallel:bool) -> None:
+    ...
+
+def encode_fa_path_to_parquet(fa_path,bases,result_path = ...) -> None:
+    ...
+
+def encode_fa_path_to_parquet_chunk(fa_path:str | os.PathLike | pathlib.Path,chunk_size:int,parallel:bool,bases:str) -> None:
+    ...
+
+def encode_fa_paths_to_parquet(fa_path:typing.Sequence[str | os.PathLike | pathlib.Path],bases:str) -> None:
+    ...
+
+def select_record_from_fa(selected_reads:typing.Sequence[str],fq:str | os.PathLike | pathlib.Path,output:str | os.PathLike | pathlib.Path) -> None:
+    ...
+
+def write_fa(records_data,file_path = ...) -> None:
+    ...
+
+def write_fa_parallel(records_data:typing.Sequence[RecordData],file_path:str | os.PathLike | pathlib.Path,threads:int) -> None:
+    ...
+
