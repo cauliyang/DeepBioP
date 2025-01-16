@@ -1,4 +1,4 @@
-use crate::default::{BASES, QUAL_OFFSET};
+use deepbiop_core::default::{BASES, QUAL_OFFSET};
 use derive_builder::Builder;
 use serde::{Deserialize, Serialize};
 use std::fmt::{self, Display, Formatter};

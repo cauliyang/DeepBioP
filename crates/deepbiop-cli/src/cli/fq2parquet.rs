@@ -8,6 +8,7 @@ use super::set_up_threads;
 use deepbiop_fq as fq;
 use fq::encode::Encoder;
 
+use deepbiop_core::default;
 use deepbiop_utils as utils;
 
 #[derive(Debug, Parser)]
@@ -37,7 +38,7 @@ impl FqToParquet {
     pub fn run(&self) -> Result<()> {
         set_up_threads(self.threads)?;
         let option = fq::encode::EncoderOptionBuilder::default()
-            .bases(fq::default::BASES.to_vec())
+            .bases(default::BASES.to_vec())
             .build()?;
         let mut fq_encoder = fq::encode::ParquetEncoderBuilder::default()
             .option(option)

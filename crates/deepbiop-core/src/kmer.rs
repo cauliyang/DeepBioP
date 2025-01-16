@@ -3,45 +3,12 @@ use rayon::prelude::*;
 use std::ops::Range;
 
 use crate::{
-    error::EncodingError,
+    error::DPError,
     types::{Element, Id2KmerTable, Kmer2IdTable},
 };
 use anyhow::anyhow;
 use anyhow::Error;
 use anyhow::Result;
-use pyo3::prelude::*;
-
-/// Split the quality scores by offsets.
-pub fn split_qual_by_offsets(target: &[usize], offsets: &[(usize, usize)]) -> Result<Vec<usize>> {
-    let res: Vec<usize> = offsets
-        .par_iter()
-        .map(|(start, end)| {
-            if start == end {
-                // Special token
-                0
-            } else {
-                (*start..*end).map(|i| target[i]).sum::<usize>() / (end - start)
-            }
-        })
-        .collect();
-    Ok(res)
-}
-
-/// Vertorize the target region.
-#[pyfunction]
-pub fn vertorize_target(start: usize, end: usize, length: usize) -> Result<Vec<usize>> {
-    if start > end || end > length {
-        return Err(Error::from(EncodingError::TargetRegionInvalid));
-    }
-
-    let mut result = vec![0; length];
-    result
-        .par_iter_mut()
-        .take(end)
-        .skip(start)
-        .for_each(|x| *x = 1);
-    Ok(result)
-}
 
 /// Kmer ids to sequence.
 pub fn kmerids_to_seq(kmer_ids: &[Element], id2kmer_table: Id2KmerTable) -> Result<Vec<u8>> {
@@ -50,7 +17,7 @@ pub fn kmerids_to_seq(kmer_ids: &[Element], id2kmer_table: Id2KmerTable) -> Resu
         .map(|&id| {
             id2kmer_table
                 .get(&id)
-                .ok_or(Error::new(EncodingError::InvalidKmerId))
+                .ok_or(Error::new(DPError::InvalidKmerId))
                 .map(|kmer| kmer.as_ref())
         })
         .collect::<Result<Vec<_>>>()?;
@@ -79,13 +46,13 @@ pub fn to_kmer_target_region(
     seq_len: Option<usize>,
 ) -> Result<Range<usize>> {
     if original_target.start >= original_target.end || k == 0 {
-        return Err(Error::from(EncodingError::TargetRegionInvalid));
+        return Err(Error::from(DPError::TargetRegionInvalid));
     }
 
     if let Some(seq_len) = seq_len {
         // Ensure the target region is valid.
         if original_target.end > seq_len {
-            return Err(Error::new(EncodingError::TargetRegionInvalid));
+            return Err(Error::new(DPError::TargetRegionInvalid));
         }
     }
 
@@ -150,7 +117,7 @@ pub fn seq_to_kmers_and_offset(
 ) -> Result<Vec<(&[u8], (usize, usize))>> {
     // Check for invalid kmer_size
     if kmer_size == 0 || kmer_size > seq.len() {
-        return Err(EncodingError::SeqShorterThanKmer.into());
+        return Err(DPError::SeqShorterThanKmer.into());
     }
 
     if seq.is_empty() {
@@ -326,7 +293,7 @@ mod tests {
 
         assert_eq!(
             result.unwrap_err().to_string(),
-            EncodingError::TargetRegionInvalid.to_string()
+            DPError::TargetRegionInvalid.to_string()
         );
     }
 
@@ -341,7 +308,7 @@ mod tests {
         assert!(result.is_err());
         assert_eq!(
             result.unwrap_err().to_string(),
-            EncodingError::TargetRegionInvalid.to_string()
+            DPError::TargetRegionInvalid.to_string()
         );
     }
 
@@ -386,24 +353,5 @@ mod tests {
         assert_eq!(result.len(), seq.len() / kmer_size);
         assert_eq!(result[0], (&b"ATCG"[..], (0, 4)));
         assert_eq!(result[1], (&b"ATCG"[..], (4, 8)));
-    }
-
-    #[test]
-    fn test_vertorize_target_valid() {
-        let start = 3;
-        let end = 5;
-        let result = vertorize_target(start, end, 6).unwrap();
-        assert_eq!(result, vec![0, 0, 0, 1, 1, 0]);
-
-        let rr = vertorize_target(0, 0, 6).unwrap();
-        assert_eq!(rr, vec![0, 0, 0, 0, 0, 0]);
-    }
-
-    #[test]
-    fn test_vertorize_target_invalid() {
-        let start = 5;
-        let end = 0;
-        let result = vertorize_target(start, end, 2);
-        assert!(result.is_err());
     }
 }
