@@ -106,9 +106,19 @@ fn generate_unmaped_intervals(
         .collect()
 }
 
+/// Check the compression type of a file.
+///
+/// Args:
+///     path: Path to the file to check
+///
+/// Returns:
+///     The compression type of the file (None, Gzip, Bzip2, Xz)
+///
+/// Raises:
+///     IOError: If the file cannot be opened or read
 #[gen_stub_pyfunction(module = "deepbiop.utils")]
-#[pyfunction(name = "detect_compression")]
-fn py_detect_compression(path: PathBuf) -> Result<io::CompressedType> {
+#[pyfunction(name = "check_compressed_type")]
+fn py_check_compressed_type(path: PathBuf) -> Result<io::CompressedType> {
     io::check_compressed_type(path)
 }
 
@@ -129,7 +139,7 @@ pub fn register_utils_module(parent_module: &Bound<'_, PyModule>) -> PyResult<()
         &child_module
     )?)?;
     child_module.add_function(wrap_pyfunction!(generate_unmaped_intervals, &child_module)?)?;
-    child_module.add_function(wrap_pyfunction!(py_detect_compression, &child_module)?)?;
+    child_module.add_function(wrap_pyfunction!(py_check_compressed_type, &child_module)?)?;
 
     parent_module.add_submodule(&child_module)?;
     Ok(())
