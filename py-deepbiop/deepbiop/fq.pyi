@@ -87,10 +87,7 @@ def fastq_to_fasta(
     fastq_path: str | os.PathLike | pathlib.Path,
     fasta_path: str | os.PathLike | pathlib.Path,
 ) -> None: ...
-def generate_kmers(base: str, k: int) -> list[str]: ...
-def generate_kmers_table(base: str, k: int) -> dict[list[int], int]: ...
 def get_label_region(labels: typing.Sequence[int]) -> list[tuple[int, int]]: ...
-def kmers_to_seq(kmers: typing.Sequence[str]) -> str: ...
 def load_predicts_from_batch_pt(
     pt_path: str | os.PathLike | pathlib.Path,
     ignore_label: int,
@@ -99,29 +96,11 @@ def load_predicts_from_batch_pt(
 def load_predicts_from_batch_pts(
     pt_path, ignore_label, id_table, max_predicts=...
 ) -> dict[str, Predict]: ...
-def normalize_seq(seq: str, iupac: bool) -> str:
-    r"""
-    Normalize a DNA sequence by converting any non-standard nucleotides to standard ones.
-
-    This function takes a DNA sequence as a `String` and a boolean flag `iupac` indicating whether to normalize using IUPAC ambiguity codes.
-    It returns a normalized DNA sequence as a `String`.
-
-    # Arguments
-
-    * `seq` - A DNA sequence as a `String`.
-    * `iupac` - A boolean flag indicating whether to normalize using IUPAC ambiguity codes.
-
-    # Returns
-
-    A normalized DNA sequence as a `String`.
-    """
-
 def select_record_from_fq(
     selected_reads: typing.Sequence[str],
     fq: str | os.PathLike | pathlib.Path,
     output: str | os.PathLike | pathlib.Path,
 ) -> None: ...
-def seq_to_kmers(seq: str, k: int, overlap: bool) -> list[str]: ...
 def test_predicts(predicts: typing.Sequence[Predict]) -> None: ...
 def write_fq(records_data, file_path=...) -> None: ...
 def write_fq_parallel(
