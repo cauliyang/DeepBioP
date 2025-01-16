@@ -40,7 +40,7 @@ fn generate_kmers(base: String, k: usize) -> Vec<String> {
         .collect()
 }
 
-// register fq sub_module
+// register python sub_module
 pub fn register_core_module(parent_module: &Bound<'_, PyModule>) -> PyResult<()> {
     let sub_module_name = "core";
     let child_module = PyModule::new(parent_module.py(), sub_module_name)?;
