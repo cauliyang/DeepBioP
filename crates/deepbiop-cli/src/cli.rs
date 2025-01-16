@@ -8,6 +8,8 @@ pub mod chimeric_count;
 pub use chimeric_count::*;
 pub mod fa2parquet;
 pub use fa2parquet::*;
+pub mod fq2parquet;
+pub use fq2parquet::*;
 
 pub mod extractfq;
 pub use extractfq::*;
