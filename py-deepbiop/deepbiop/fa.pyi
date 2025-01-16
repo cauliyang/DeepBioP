@@ -5,12 +5,12 @@ import os
 import pathlib
 import typing
 
-class FaEncoderOption:
+class EncoderOption:
     bases: list[int]
     def __new__(cls,bases): ...
 
 class ParquetEncoder:
-    def __new__(cls,option:FaEncoderOption): ...
+    def __new__(cls,option:EncoderOption): ...
 
 class RecordData:
     id: str

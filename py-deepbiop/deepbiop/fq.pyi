@@ -5,14 +5,14 @@ import os
 import pathlib
 import typing
 
-class FqEncoderOption:
+class EncoderOption:
     qual_offset: int
     bases: list[int]
     threads: int
     def __new__(cls,qual_offset,bases,threads = ...): ...
 
 class ParquetEncoder:
-    def __new__(cls,option:FqEncoderOption): ...
+    def __new__(cls,option:EncoderOption): ...
 
 class Predict:
     r"""A struct to store the prediction result."""
