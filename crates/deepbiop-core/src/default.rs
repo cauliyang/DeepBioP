@@ -1,3 +1,5 @@
+/// Default values for the configuration of the Deepbiop.
+
 pub const QUAL_OFFSET: u8 = 33;
 pub const BASES: &[u8] = b"ATCGN";
 pub const KMER_SIZE: u8 = 3;
