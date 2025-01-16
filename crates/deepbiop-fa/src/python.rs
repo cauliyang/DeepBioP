@@ -20,7 +20,7 @@ use pyo3_stub_gen::derive::*;
 #[pymethods]
 impl encode::ParquetEncoder {
     #[new]
-    fn py_new(option: encode::FaEncoderOption) -> Self {
+    fn py_new(option: encode::EncoderOption) -> Self {
         encode::ParquetEncoder::new(option)
     }
 }
@@ -112,7 +112,7 @@ fn encode_fa_path_to_parquet_chunk(
     parallel: bool,
     bases: String,
 ) -> Result<()> {
-    let option = encode::FaEncoderOptionBuilder::default()
+    let option = encode::EncoderOptionBuilder::default()
         .bases(bases.as_bytes().to_vec())
         .build()?;
 
@@ -131,7 +131,7 @@ fn encode_fa_path_to_parquet(
     bases: String,
     result_path: Option<PathBuf>,
 ) -> Result<()> {
-    let option = encode::FaEncoderOptionBuilder::default()
+    let option = encode::EncoderOptionBuilder::default()
         .bases(bases.as_bytes().to_vec())
         .build()?;
 
@@ -204,7 +204,7 @@ pub fn register_fa_module(parent_module: &Bound<'_, PyModule>) -> PyResult<()> {
     let child_module = PyModule::new(parent_module.py(), sub_module_name)?;
 
     child_module.add_class::<PyRecordData>()?;
-    child_module.add_class::<encode::FaEncoderOption>()?;
+    child_module.add_class::<encode::EncoderOption>()?;
     child_module.add_class::<encode::ParquetEncoder>()?;
 
     child_module.add_function(wrap_pyfunction!(write_fa, &child_module)?)?;

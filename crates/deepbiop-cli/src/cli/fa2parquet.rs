@@ -36,7 +36,7 @@ pub struct FaToParquet {
 impl FaToParquet {
     pub fn run(&self) -> Result<()> {
         set_up_threads(self.threads)?;
-        let option = fa::encode::FaEncoderOptionBuilder::default()
+        let option = fa::encode::EncoderOptionBuilder::default()
             .bases(fa::encode::BASES.to_vec())
             .build()?;
         let mut fa_encoder = fa::encode::ParquetEncoderBuilder::default()

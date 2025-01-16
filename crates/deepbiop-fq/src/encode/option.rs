@@ -9,7 +9,7 @@ use pyo3_stub_gen::derive::*;
 #[gen_stub_pyclass]
 #[pyclass(module = "deepbiop.fq")]
 #[derive(Debug, Builder, Default, Clone, Serialize, Deserialize)]
-pub struct FqEncoderOption {
+pub struct EncoderOption {
     #[pyo3(get, set)]
     #[builder(default = "QUAL_OFFSET")]
     pub qual_offset: u8,
@@ -25,11 +25,11 @@ pub struct FqEncoderOption {
 
 #[gen_stub_pymethods]
 #[pymethods]
-impl FqEncoderOption {
+impl EncoderOption {
     #[new]
     #[pyo3(signature = (qual_offset, bases, threads=None))]
     fn py_new(qual_offset: u8, bases: String, threads: Option<usize>) -> Self {
-        FqEncoderOptionBuilder::default()
+        EncoderOptionBuilder::default()
             .qual_offset(qual_offset)
             .bases(bases.as_bytes().to_vec())
             .threads(threads.unwrap_or(2))
@@ -38,7 +38,7 @@ impl FqEncoderOption {
     }
 }
 
-impl Display for FqEncoderOption {
+impl Display for EncoderOption {
     fn fmt(&self, f: &mut Formatter) -> fmt::Result {
         write!(
             f,

@@ -65,6 +65,7 @@ deepbiop-fq = { version = "0.1.13", path = "crates/deepbiop-fq" }
 deepbiop-bam = { version = "0.1.11", path = "crates/deepbiop-bam" }
 deepbiop-utils = { version = "0.1.12", path = "crates/deepbiop-utils" }
 deepbiop-fa = { version = "0.1.13", path = "crates/deepbiop-fa" }
+deepbiop-core = { version = "0.1.13", path = "crates/deepbiop-core" }
 
 [profile.opt-dev]
 inherits = "dev"

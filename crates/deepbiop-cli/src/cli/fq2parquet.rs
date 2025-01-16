@@ -36,7 +36,7 @@ pub struct FqToParquet {
 impl FqToParquet {
     pub fn run(&self) -> Result<()> {
         set_up_threads(self.threads)?;
-        let option = fq::encode::FqEncoderOptionBuilder::default()
+        let option = fq::encode::EncoderOptionBuilder::default()
             .bases(fq::default::BASES.to_vec())
             .build()?;
         let mut fq_encoder = fq::encode::ParquetEncoderBuilder::default()

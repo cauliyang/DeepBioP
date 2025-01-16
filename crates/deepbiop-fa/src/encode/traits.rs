@@ -7,7 +7,6 @@ use std::path::{Path, PathBuf};
 use super::record::RecordData;
 
 pub trait Encoder {
-    type TargetOutput;
     type EncodeOutput;
     type RecordOutput;
 
