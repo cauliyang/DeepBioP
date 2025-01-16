@@ -15,16 +15,10 @@ class GenomicInterval:
     start: int
     end: int
     chr: str
-    def __new__(cls,chr:str, start:int, end:int): ...
-    def set_chr(self, chr:str) -> None:
-        ...
-
-    def overlap(self, other:GenomicInterval) -> bool:
-        ...
-
-    def __repr__(self) -> str:
-        ...
-
+    def __new__(cls, chr: str, start: int, end: int): ...
+    def set_chr(self, chr: str) -> None: ...
+    def overlap(self, other: GenomicInterval) -> bool: ...
+    def __repr__(self) -> str: ...
 
 class PslAlignment:
     qname: str
@@ -37,11 +31,27 @@ class PslAlignment:
     tstart: int
     tend: int
     identity: float
-    def __repr__(self) -> str:
-        ...
-
+    def __repr__(self) -> str: ...
 
 class CompressedType(Enum):
+    r"""
+    Represents different types of file compression formats.
+
+    This enum is used to identify and handle various compression formats commonly used for files.
+    It can be used in Python through the deepbiop.utils module.
+
+    # Variants
+
+    * `Uncompress` - Uncompressed/raw file format
+    * `Gzip` - Standard gzip compression (.gz files)
+    * `Bgzip` - Blocked gzip format, commonly used in bioinformatics
+    * `Zip` - ZIP archive format
+    * `Bzip2` - bzip2 compression format
+    * `Xz` - XZ compression format (LZMA2)
+    * `Zstd` - Zstandard compression format
+    * `Unknown` - Unknown or unrecognized compression format
+    """
+
     Uncompress = auto()
     Gzip = auto()
     Bgzip = auto()
@@ -51,21 +61,32 @@ class CompressedType(Enum):
     Zstd = auto()
     Unknown = auto()
 
-def detect_compression(path:str | os.PathLike | pathlib.Path) -> CompressedType:
-    ...
+def check_compressed_type(path: str | os.PathLike | pathlib.Path) -> CompressedType:
+    r"""
+    Check the compression type of a file.
 
-def generate_unmaped_intervals(input:typing.Sequence[tuple[int, int]],total_length:int) -> list[tuple[int, int]]:
-    ...
+    Args:
+        path: Path to the file to check
 
-def highlight_targets(sequence,targets,text_width = ...) -> str:
-    ...
+    Returns
+    -------
+        The compression type of the file (None, Gzip, Bzip2, Xz)
 
-def majority_voting(labels:typing.Sequence[int],window_size:int) -> list[int]:
-    ...
+    Raises
+    ------
+        IOError: If the file cannot be opened or read
+    """
 
-def parse_psl_by_qname(file_path:str | os.PathLike | pathlib.Path) -> dict[str, list[PslAlignment]]:
+def generate_unmaped_intervals(
+    input: typing.Sequence[tuple[int, int]], total_length: int
+) -> list[tuple[int, int]]: ...
+def highlight_targets(sequence, targets, text_width=...) -> str: ...
+def majority_voting(labels: typing.Sequence[int], window_size: int) -> list[int]: ...
+def parse_psl_by_qname(
+    file_path: str | os.PathLike | pathlib.Path,
+) -> dict[str, list[PslAlignment]]:
     r"""Parse PSL file by query name."""
 
-def remove_intervals_and_keep_left(seq:str,intervals:typing.Sequence[tuple[int, int]]) -> tuple[list[str], list[tuple[int, int]]]:
-    ...
-
+def remove_intervals_and_keep_left(
+    seq: str, intervals: typing.Sequence[tuple[int, int]]
+) -> tuple[list[str], list[tuple[int, int]]]: ...
