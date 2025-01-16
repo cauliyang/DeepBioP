@@ -8,5 +8,6 @@ clean:
 
 build: clean
 	uv sync
+	uv tool maturin develop -r
 	cargo run --bin stub_gen
 	ruff check --fix --unsafe-fixes
