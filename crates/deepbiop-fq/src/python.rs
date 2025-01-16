@@ -1,5 +1,4 @@
 use bstr::BString;
-use numpy::IntoPyArray;
 use std::path::PathBuf;
 
 use crate::{
@@ -15,7 +14,7 @@ use anyhow::Result;
 use log::warn;
 use needletail::Sequence;
 use noodles::fasta;
-use numpy::{PyArray2, PyArray3};
+use numpy::{IntoPyArray, PyArray2, PyArray3};
 use pyo3::prelude::*;
 use rayon::prelude::*;
 
@@ -511,7 +510,7 @@ pub fn py_select_record_from_fq(
     let selected_reads: HashSet<BString> =
         selected_reads.into_par_iter().map(|s| s.into()).collect();
 
-    let records = io::select_record_from_fq(fq, &selected_reads)?;
+    let records = io::select_record_from_fq_by_stream(fq, &selected_reads)?;
     io::write_fq_for_noodle_record(&records, output)?;
     Ok(())
 }

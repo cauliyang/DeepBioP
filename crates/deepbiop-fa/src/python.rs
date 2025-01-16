@@ -193,8 +193,7 @@ pub fn py_select_record_from_fq(
 ) -> Result<()> {
     let selected_reads: HashSet<BString> =
         selected_reads.into_par_iter().map(|s| s.into()).collect();
-
-    let records = io::select_record_from_fa(fq, &selected_reads)?;
+    let records = io::select_record_from_fa_by_stream(fq, &selected_reads)?;
     io::write_fa_for_noodle_record(&records, output)?;
     Ok(())
 }
