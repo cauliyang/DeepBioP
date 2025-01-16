@@ -41,7 +41,7 @@ impl BamToFq {
 
             if self.compressed {
                 let file_path = bam.with_extension("fq.bgz");
-                fq::io::write_bzip_fq_parallel_for_noodle_record(
+                fq::io::write_bgzip_fq_parallel_for_noodle_record(
                     &fq_records,
                     file_path,
                     self.threads,

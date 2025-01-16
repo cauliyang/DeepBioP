@@ -1,10 +1,10 @@
 use anyhow::Result;
 use log::info;
-use needletail::Sequence;
-use rayon::prelude::*;
 use std::path::{Path, PathBuf};
 
 use super::record::RecordData;
+use needletail::Sequence;
+use rayon::prelude::*;
 
 pub trait Encoder {
     type EncodeOutput;
@@ -16,7 +16,7 @@ pub trait Encoder {
 
     fn fetch_records<P: AsRef<Path>>(&mut self, path: P) -> Result<Vec<RecordData>> {
         info!("fetching records from {}", path.as_ref().display());
-        let _records = crate::io::read_noodel_records_from_fa_or_zip_fa(path)?;
+        let _records = crate::io::read_noodle_records(path)?;
 
         let records: Vec<RecordData> = _records
             .into_par_iter()

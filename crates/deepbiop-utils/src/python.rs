@@ -108,8 +108,8 @@ fn generate_unmaped_intervals(
 
 #[gen_stub_pyfunction(module = "deepbiop.utils")]
 #[pyfunction(name = "detect_compression")]
-fn py_detect_compression(path: PathBuf) -> Result<(bool, bool)> {
-    io::detect_compression(path)
+fn py_detect_compression(path: PathBuf) -> Result<io::CompressedType> {
+    io::check_compressed_type(path)
 }
 
 // register utils module
@@ -119,6 +119,7 @@ pub fn register_utils_module(parent_module: &Bound<'_, PyModule>) -> PyResult<()
 
     child_module.add_class::<GenomicInterval>()?;
     child_module.add_class::<PslAlignment>()?;
+    child_module.add_class::<io::CompressedType>()?;
 
     child_module.add_function(wrap_pyfunction!(majority_voting, &child_module)?)?;
     child_module.add_function(wrap_pyfunction!(crate::highlight_targets, &child_module)?)?;
