@@ -16,12 +16,13 @@ deepbiop-fq = { workspace = true }
 deepbiop-bam = { workspace = true }
 deepbiop-utils = { workspace = true }
 deepbiop-fa = { workspace = true }
+deepbiop-core = { workspace = true }
 
 rayon = { workspace = true }
 log = { workspace = true }
 anyhow = { workspace = true }
 ahash = { workspace = true }
-bstr =  {workspace = true }
+bstr = { workspace = true }
 
 clap = { version = "4.5", features = ["derive"] }
 clap_complete = "4.5"

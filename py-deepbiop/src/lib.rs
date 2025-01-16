@@ -3,6 +3,7 @@ mod python_module;
 use pyo3::prelude::*;
 
 use deepbiop_bam::python::register_bam_module;
+use deepbiop_core::python::register_core_module;
 use deepbiop_fa::python::register_fa_module;
 use deepbiop_fq::python::register_fq_module;
 use deepbiop_utils::python::register_utils_module;
@@ -18,6 +19,7 @@ fn deepbiop(m: &Bound<'_, PyModule>) -> PyResult<()> {
     register_bam_module(m)?;
     register_utils_module(m)?;
     register_fa_module(m)?;
+    register_core_module(m)?;
 
     Ok(())
 }

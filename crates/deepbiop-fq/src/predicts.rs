@@ -13,8 +13,8 @@ use serde::Deserialize;
 use serde::Serialize;
 use walkdir::WalkDir;
 
-use crate::default;
 use crate::utils::{ascii_list2str, get_label_region, id_list2seq_i64};
+use deepbiop_core::default;
 
 use deepbiop_utils::highlight_targets;
 use deepbiop_utils::strategy::majority_voting;

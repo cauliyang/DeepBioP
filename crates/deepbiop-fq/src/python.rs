@@ -3,9 +3,8 @@ use std::path::PathBuf;
 
 use crate::{
     encode::{self, Encoder},
-    io, kmer,
+    io,
     predicts::{self, Predict},
-    types::Kmer2IdTable,
     utils,
 };
 
@@ -13,7 +12,6 @@ use ahash::{HashMap, HashSet};
 use anyhow::Result;
 use deepbiop_utils::io::write_parquet;
 use log::warn;
-use needletail::Sequence;
 use noodles::fasta;
 use pyo3::prelude::*;
 use rayon::prelude::*;
@@ -118,59 +116,6 @@ fn write_fq_parallel(
         .collect();
 
     io::write_bzip_fq_parallel(&records, file_path, Some(threads))
-}
-
-#[gen_stub_pyfunction(module = "deepbiop.fq")]
-#[pyfunction]
-fn seq_to_kmers(seq: String, k: usize, overlap: bool) -> Vec<String> {
-    let normalized_seq = seq.as_bytes().normalize(false);
-    kmer::seq_to_kmers(&normalized_seq, k, overlap)
-        .par_iter()
-        .map(|s| String::from_utf8_lossy(s).to_string())
-        .collect()
-}
-
-#[gen_stub_pyfunction(module = "deepbiop.fq")]
-#[pyfunction]
-fn kmers_to_seq(kmers: Vec<String>) -> Result<String> {
-    let kmers_as_bytes: Vec<&[u8]> = kmers.par_iter().map(|s| s.as_bytes()).collect();
-    Ok(String::from_utf8_lossy(&kmer::kmers_to_seq(kmers_as_bytes)?).to_string())
-}
-
-#[gen_stub_pyfunction(module = "deepbiop.fq")]
-#[pyfunction]
-fn generate_kmers_table(base: String, k: usize) -> Kmer2IdTable {
-    let base = base.as_bytes();
-    kmer::generate_kmers_table(base, k as u8)
-}
-
-#[gen_stub_pyfunction(module = "deepbiop.fq")]
-#[pyfunction]
-fn generate_kmers(base: String, k: usize) -> Vec<String> {
-    let base = base.as_bytes();
-    kmer::generate_kmers(base, k as u8)
-        .into_iter()
-        .map(|s| String::from_utf8_lossy(&s).to_string())
-        .collect()
-}
-
-/// Normalize a DNA sequence by converting any non-standard nucleotides to standard ones.
-///
-/// This function takes a DNA sequence as a `String` and a boolean flag `iupac` indicating whether to normalize using IUPAC ambiguity codes.
-/// It returns a normalized DNA sequence as a `String`.
-///
-/// # Arguments
-///
-/// * `seq` - A DNA sequence as a `String`.
-/// * `iupac` - A boolean flag indicating whether to normalize using IUPAC ambiguity codes.
-///
-/// # Returns
-///
-/// A normalized DNA sequence as a `String`.
-#[gen_stub_pyfunction(module = "deepbiop.fq")]
-#[pyfunction]
-fn normalize_seq(seq: String, iupac: bool) -> String {
-    String::from_utf8_lossy(&seq.as_bytes().normalize(iupac)).to_string()
 }
 
 #[gen_stub_pyfunction(module = "deepbiop.fq")]
@@ -360,13 +305,7 @@ pub fn register_fq_module(parent_module: &Bound<'_, PyModule>) -> PyResult<()> {
     child_module.add_function(wrap_pyfunction!(encode_qual, &child_module)?)?;
     child_module.add_function(wrap_pyfunction!(write_fq, &child_module)?)?;
 
-    child_module.add_function(wrap_pyfunction!(kmer::vertorize_target, &child_module)?)?;
-    child_module.add_function(wrap_pyfunction!(normalize_seq, &child_module)?)?;
-
-    child_module.add_function(wrap_pyfunction!(seq_to_kmers, &child_module)?)?;
-    child_module.add_function(wrap_pyfunction!(kmers_to_seq, &child_module)?)?;
-    child_module.add_function(wrap_pyfunction!(generate_kmers, &child_module)?)?;
-    child_module.add_function(wrap_pyfunction!(generate_kmers_table, &child_module)?)?;
+    child_module.add_function(wrap_pyfunction!(utils::vertorize_target, &child_module)?)?;
 
     child_module.add_function(wrap_pyfunction!(write_fq, &child_module)?)?;
     child_module.add_function(wrap_pyfunction!(write_fq_parallel, &child_module)?)?;

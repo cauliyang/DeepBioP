@@ -36,6 +36,8 @@ candle-core = { workspace = true }
 pyo3 = { workspace = true }
 pyo3-stub-gen = { workspace = true }
 
+
+deepbiop-core = { path = "../deepbiop-core", version = "0.1" }
 deepbiop-utils = { path = "../deepbiop-utils", version = "0.1" }
 
 [dev-dependencies]
