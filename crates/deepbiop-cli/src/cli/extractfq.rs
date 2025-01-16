@@ -57,7 +57,7 @@ impl ExtractFq {
         info!("collect {} records", records.len());
 
         if self.compressed {
-            let file_path = self.fq.with_extension("selected.fq.bgz");
+            let file_path = self.fq.with_extension("selected.fq.gz");
             info!("write to {}", &file_path.display());
             fq::io::write_bgzip_fq_parallel_for_noodle_record(&records, file_path, self.threads)?;
         } else {

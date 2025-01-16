@@ -40,7 +40,7 @@ impl BamToFq {
             let fq_records = bam::io::bam2fq(bam, self.threads)?;
 
             if self.compressed {
-                let file_path = bam.with_extension("fq.bgz");
+                let file_path = bam.with_extension("fq.gz");
                 fq::io::write_bgzip_fq_parallel_for_noodle_record(
                     &fq_records,
                     file_path,
