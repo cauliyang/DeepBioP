@@ -21,7 +21,7 @@ pub trait Encoder {
 
     fn fetch_records<P: AsRef<Path>>(&mut self, path: P) -> Result<Vec<RecordData>> {
         info!("fetching records from {}", path.as_ref().display());
-        let _records = io::read_noodel_records_from_fq_or_zip_fq(path)?;
+        let _records = io::read_noodle_records(path)?;
 
         let records: Vec<RecordData> = _records
             .into_par_iter()

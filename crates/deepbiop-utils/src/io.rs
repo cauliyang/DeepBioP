@@ -3,34 +3,181 @@ mod parquet;
 
 use std::path::Path;
 
+use anyhow::Result;
 pub use json::*;
 pub use parquet::*;
 use std::fs::File;
+
+use noodles::bgzf;
+use flate2::read::GzDecoder;
+use pyo3::prelude::*;
+use pyo3_stub_gen::derive::*;
 use std::io;
+use std::io::Read;
 
-use anyhow::Result;
+#[gen_stub_pyclass_enum]
+#[pyclass(eq, eq_int, module = "deepbiop.utils")]
+#[derive(Debug, PartialEq, Clone, Eq, Hash)]
+pub enum CompressedType {
+    Uncompress,
+    Gzip,
+    Bgzip,
+    Zip,
+    Bzip2,
+    Xz,
+    Zstd,
+    Unknown,
+}
 
-/// Check if a file is gzip or bgzip compressed by examining its magic numbers.
-///
-/// This function reads the first few bytes of a file to detect if it's compressed,
-/// without relying on file extensions.
-///
-/// # Arguments
-///
-/// * `path` - Path to the file to check
-///
-/// # Returns
-///
-/// A Result containing a tuple of two booleans (is_gzip, is_bgzip)
-pub fn detect_compression<P: AsRef<Path>>(path: P) -> Result<(bool, bool)> {
-    let mut file = File::open(path)?;
-    let mut buffer = [0; 4];
+pub fn check_compressed_type<P: AsRef<Path>>(file_path: P) -> Result<CompressedType> {
+    let mut file = File::open(file_path)?;
+    let mut buffer = [0u8; 18]; // Large enough for BGZF detection
 
-    // Read first 4 bytes
-    io::Read::read_exact(&mut file, &mut buffer)?;
-    // Check gzip magic numbers (1f 8b)
-    let is_gzip = buffer[0] == 0x1f && buffer[1] == 0x8b;
-    // Check bgzip magic numbers (1f 8b 08 04)
-    let is_bgzip = is_gzip && buffer[2] == 0x08 && buffer[3] == 0x04;
-    Ok((is_gzip, is_bgzip))
+    // Read the first few bytes
+    let bytes_read = file.read(&mut buffer)?;
+    if bytes_read < 2 {
+        return Ok(CompressedType::Uncompress);
+    }
+
+    // Check magic numbers/file signatures
+    match &buffer[..] {
+        // Check for BGZF first (starts with gzip magic number + specific extra fields)
+        [0x1f, 0x8b, 0x08, 0x04, ..] if bytes_read >= 18 => {
+            // Check for BGZF extra field
+            let xlen = u16::from_le_bytes([buffer[10], buffer[11]]) as usize;
+            if xlen >= 6 
+                && buffer[12] == 0x42  // B
+                && buffer[13] == 0x43  // C
+                && buffer[14] == 0x02  // Length of subfield (2)
+                && buffer[15] == 0x00  // Length of subfield (2)
+            {
+                Ok(CompressedType::Bgzip)
+            } else {
+                Ok(CompressedType::Gzip)
+            }
+        }
+
+        // Regular Gzip: starts with 0x1F 0x8B
+        [0x1f, 0x8b, ..] => Ok(CompressedType::Gzip),
+
+        // Zip: starts with "PK\x03\x04" or "PK\x05\x06" (empty archive) or "PK\x07\x08" (spanned archive)
+        [0x50, 0x4b, 0x03, 0x04, ..]
+        | [0x50, 0x4b, 0x05, 0x06, ..]
+        | [0x50, 0x4b, 0x07, 0x08, ..] => Ok(CompressedType::Zip),
+
+        // Bzip2: starts with "BZh"
+        [0x42, 0x5a, 0x68, ..] => Ok(CompressedType::Bzip2),
+
+        // XZ: starts with 0xFD "7zXZ"
+        [0xfd, 0x37, 0x7a, 0x58, 0x5a, 0x00, ..] => Ok(CompressedType::Xz),
+
+        // Zstandard: starts with magic number 0xFD2FB528
+        [0x28, 0xb5, 0x2f, 0xfd, ..] => Ok(CompressedType::Zstd),
+
+        // If no compression signature is found, assume it's a normal file
+        _ => {
+            // Additional check for text/binary content could be added here
+            Ok(CompressedType::Uncompress)
+        }
+    }
+}
+
+pub fn is_compressed<P: AsRef<Path>>(file_path: P) -> Result<bool> {
+    match check_compressed_type(file_path)? {
+        CompressedType::Uncompress => Ok(false),
+        CompressedType::Unknown => Ok(false),
+        _ => Ok(true),
+    }
+}
+
+
+pub fn create_reader<P: AsRef<Path>>(file_path: P) -> Result<Box<dyn io::Read>> {
+    let compressed_type = check_compressed_type(file_path.as_ref())?;
+    let file = File::open(file_path)?;
+
+    Ok(match compressed_type {
+        CompressedType::Uncompress => Box::new(file),
+        CompressedType::Gzip => Box::new(GzDecoder::new(file)),
+        CompressedType::Bgzip => Box::new(bgzf::Reader::new(file)),
+        _ => return Err(anyhow::anyhow!("unsupported compression type")),
+    })
+}
+
+
+#[cfg(test)]
+mod tests{
+    use super::*;
+    use std::io::Write;
+    use tempfile::NamedTempFile;
+
+    #[test] 
+    fn test_check_file_type() -> Result<()> {
+        // Test gzip file
+        let mut gzip_file = NamedTempFile::new()?;
+        gzip_file.write_all(&[0x1f, 0x8b])?;
+        assert_eq!(check_compressed_type(gzip_file.path())?, CompressedType::Gzip);
+
+        // Test bgzip file 
+        let mut bgzip_file = NamedTempFile::new()?;
+        let bgzip_header = [
+            0x1f, 0x8b, 0x08, 0x04, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00,
+            0x06, 0x00, 0x42, 0x43, 0x02, 0x00, 0x00, 0x00
+        ];
+        bgzip_file.write_all(&bgzip_header)?;
+        assert_eq!(check_compressed_type(bgzip_file.path())?, CompressedType::Bgzip);
+
+        // Test zip file
+        let mut zip_file = NamedTempFile::new()?;
+        zip_file.write_all(&[0x50, 0x4b, 0x03, 0x04])?;
+        assert_eq!(check_compressed_type(zip_file.path())?, CompressedType::Zip);
+
+        // Test bzip2 file
+        let mut bzip2_file = NamedTempFile::new()?;
+        bzip2_file.write_all(&[0x42, 0x5a, 0x68])?;
+        assert_eq!(check_compressed_type(bzip2_file.path())?, CompressedType::Bzip2);
+
+        // Test xz file
+        let mut xz_file = NamedTempFile::new()?;
+        xz_file.write_all(&[0xfd, 0x37, 0x7a, 0x58, 0x5a, 0x00])?;
+        assert_eq!(check_compressed_type(xz_file.path())?, CompressedType::Xz);
+
+        // Test zstd file
+        let mut zstd_file = NamedTempFile::new()?;
+        zstd_file.write_all(&[0x28, 0xb5, 0x2f, 0xfd])?;
+        assert_eq!(check_compressed_type(zstd_file.path())?, CompressedType::Zstd);
+
+        // Test normal file
+        let mut normal_file = NamedTempFile::new()?;
+        normal_file.write_all(b"Hello world")?;
+        assert_eq!(check_compressed_type(normal_file.path())?, CompressedType::Uncompress);
+
+        Ok(())
+    }
+
+    #[test]
+    fn test_is_compressed() -> Result<()> {
+        // Test compressed file
+        let mut gzip_file = NamedTempFile::new()?;
+        gzip_file.write_all(&[0x1f, 0x8b])?;
+        assert!(is_compressed(gzip_file.path())?);
+
+        // Test uncompressed file
+        let mut normal_file = NamedTempFile::new()?;
+        normal_file.write_all(b"Hello world")?;
+        assert!(!is_compressed(normal_file.path())?);
+
+        Ok(())
+    }
+
+    #[test] 
+    fn test_real_example() -> Result<()> {
+        let test1 = "./tests/data/test.fastq.gz";
+        let test2 = "./tests/data/test.fastqbgz.gz";
+        let test3 = "./tests/data/test.fastq";
+
+        assert_eq!(check_compressed_type(test1)?, CompressedType::Gzip);
+        assert_eq!(check_compressed_type(test2)?, CompressedType::Bgzip);
+        assert_eq!(check_compressed_type(test3)?, CompressedType::Uncompress);
+        Ok(())
+    }
 }

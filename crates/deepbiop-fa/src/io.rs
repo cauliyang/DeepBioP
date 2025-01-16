@@ -8,192 +8,18 @@ use std::num::NonZeroUsize;
 use std::path::{Path, PathBuf};
 use std::thread;
 
-use flate2::read::GzDecoder;
 use noodles::fasta::record::{Definition, Record as FastaRecord, Sequence};
 use noodles::{bgzf, fasta};
 
 use crate::encode::RecordData;
+use deepbiop_utils as utils;
 
-/// Check if a file is gzip or bgzip compressed by examining its magic numbers.
-///
-/// This function reads the first few bytes of a file to detect if it's compressed,
-/// without relying on file extensions.
-///
-/// # Arguments
-///
-/// * `path` - Path to the file to check
-///
-/// # Returns
-///
-/// A Result containing a tuple of two booleans (is_gzip, is_bgzip)
-pub fn detect_compression<P: AsRef<Path>>(path: P) -> Result<(bool, bool)> {
-    let mut file = File::open(path)?;
-    let mut buffer = [0; 4];
-
-    // Read first 4 bytes
-    io::Read::read_exact(&mut file, &mut buffer)?;
-
-    // Check gzip magic numbers (1f 8b)
-    let is_gzip = buffer[0] == 0x1f && buffer[1] == 0x8b;
-
-    // Check bgzip magic numbers (1f 8b 08 04)
-    let is_bgzip = is_gzip && buffer[2] == 0x08 && buffer[3] == 0x04;
-
-    Ok((is_gzip, is_bgzip))
+pub fn read_noodle_records<P: AsRef<Path>>(file_path: P) -> Result<Vec<FastaRecord>> {
+    let reader = utils::io::create_reader(&file_path)?;
+    let mut reader = fasta::Reader::new(BufReader::new(reader));
+    reader.records().map(|record| Ok(record?)).collect()
 }
 
-/// Read FASTA records from a file, automatically detecting and handling compression.
-///
-/// This function takes a file path and reads FASTA records from it, automatically detecting
-/// whether the file is uncompressed, gzip compressed (.gz), or bgzip compressed (.bgz).
-/// It returns a vector of FASTA records.
-///
-/// # Arguments
-///
-/// * `file_path` - Path to the FASTA file, which may be compressed
-///
-/// # Returns
-///
-/// A Result containing a vector of FastaRecord on success, or an error on failure
-///
-/// # Example
-///
-/// ```no_run
-/// use deepbiop_fa::io::read_noodel_records_from_fa_or_zip_fa;
-/// use std::path::Path;
-///
-/// let records = read_noodel_records_from_fa_or_zip_fa("sequences.fa").unwrap();
-/// let gzipped = read_noodel_records_from_fa_or_zip_fa("sequences.fa.gz").unwrap();
-/// let bgzipped = read_noodel_records_from_fa_or_zip_fa("sequences.fa.bgz").unwrap();
-/// ```
-pub fn read_noodel_records_from_fa_or_zip_fa<P: AsRef<Path>>(
-    file_path: P,
-) -> Result<Vec<FastaRecord>> {
-    let extension = file_path.as_ref().extension().unwrap();
-    if extension == "bgz" {
-        log::debug!("Reading from bgz file");
-        read_noodle_records_from_bzip_fa(file_path)
-    } else if extension == "gz" {
-        log::debug!("Reading from gz file");
-        read_noodle_records_from_gzip_fa(file_path)
-    } else {
-        log::debug!("Reading from fq file");
-        read_noodle_records_from_fa(file_path)
-    }
-}
-
-/// Read FASTA records from an uncompressed FASTA file.
-///
-/// This function reads FASTA records from an uncompressed file using the noodles library.
-/// It processes the records in parallel for improved performance.
-///
-/// # Arguments
-///
-/// * `file_path` - Path to the uncompressed FASTA file
-///
-/// # Returns
-///
-/// A Result containing a vector of FastaRecord on success, or an error on failure
-///
-/// # Example
-///
-/// ```no_run
-/// use deepbiop_fa::io::read_noodle_records_from_fa;
-/// use std::path::Path;
-///
-/// let records = read_noodle_records_from_fa("sequences.fa").unwrap();
-/// ```
-pub fn read_noodle_records_from_fa<P: AsRef<Path>>(file_path: P) -> Result<Vec<FastaRecord>> {
-    let mut reader = File::open(file_path)
-        .map(BufReader::new)
-        .map(fasta::Reader::new)?;
-    let records: Result<Vec<FastaRecord>> = reader
-        .records()
-        .par_bridge()
-        .map(|record| {
-            let record = record?;
-            Ok(record)
-        })
-        .collect();
-    records
-}
-
-/// Read FASTA records from a gzip-compressed FASTA file.
-///
-/// This function reads FASTA records from a gzip-compressed file using the noodles library.
-/// It processes the records in parallel for improved performance.
-///
-/// # Arguments
-///
-/// * `file_path` - Path to the gzip-compressed FASTA file
-///
-/// # Returns
-///
-/// A Result containing a vector of FastaRecord on success, or an error on failure
-///
-/// # Example
-///
-/// ```no_run
-/// use deepbiop_fa::io::read_noodle_records_from_gzip_fa;
-/// use std::path::Path;
-///
-/// let records = read_noodle_records_from_gzip_fa("sequences.fa.gz").unwrap();
-/// ```
-pub fn read_noodle_records_from_gzip_fa<P: AsRef<Path>>(file_path: P) -> Result<Vec<FastaRecord>> {
-    let mut reader = File::open(file_path)
-        .map(GzDecoder::new)
-        .map(BufReader::new)
-        .map(fasta::Reader::new)?;
-
-    let records: Result<Vec<FastaRecord>> = reader
-        .records()
-        .par_bridge()
-        .map(|record| {
-            let record = record?;
-            Ok(record)
-        })
-        .collect();
-    records
-}
-
-/// Read FASTA records from a BGZF-compressed FASTA file.
-///
-/// This function reads FASTA records from a BGZF-compressed file using the noodles library.
-/// It processes the records in parallel for improved performance.
-///
-/// # Arguments
-///
-/// * `file_path` - Path to the BGZF-compressed FASTA file
-///
-/// # Returns
-///
-/// A Result containing a vector of FastaRecord on success, or an error on failure
-///
-/// # Example
-///
-/// ```no_run
-/// use deepbiop_fa::io::read_noodle_records_from_bzip_fa;
-/// use std::path::Path;
-///
-/// let records = read_noodle_records_from_bzip_fa("sequences.fa.bgz").unwrap();
-/// ```
-pub fn read_noodle_records_from_bzip_fa<P: AsRef<Path>>(file_path: P) -> Result<Vec<FastaRecord>> {
-    let decoder = bgzf::Reader::new(File::open(file_path)?);
-    let mut reader = fasta::Reader::new(decoder);
-
-    let records: Result<Vec<FastaRecord>> = reader
-        .records()
-        .par_bridge()
-        .map(|record| {
-            let record = record?;
-            Ok(record)
-        })
-        .collect();
-    records
-}
-
-/// Write FASTA records to a file or stdout.
-///
 /// This function writes FASTA records to either a specified file or standard output.
 /// Each record is written in FASTA format with a header line starting with '>' followed by the sequence.
 ///
@@ -298,12 +124,12 @@ pub fn convert_multiple_fas_to_one_zip_fa<P: AsRef<Path>>(
     let records = if parallel {
         paths
             .par_iter()
-            .flat_map(|path| read_noodle_records_from_fa(path).unwrap())
+            .flat_map(|path| read_noodle_records(path).unwrap())
             .collect::<Vec<FastaRecord>>()
     } else {
         paths
             .iter()
-            .flat_map(|path| read_noodle_records_from_fa(path).unwrap())
+            .flat_map(|path| read_noodle_records(path).unwrap())
             .collect::<Vec<FastaRecord>>()
     };
     write_bzip_fa_parallel_for_noodle_record(&records, result_path.as_ref().to_path_buf(), None)?;
@@ -318,12 +144,12 @@ pub fn convert_multiple_zip_fas_to_one_zip_fa<P: AsRef<Path>>(
     let records = if parallel {
         paths
             .par_iter()
-            .flat_map(|path| read_noodle_records_from_bzip_fa(path).unwrap())
+            .flat_map(|path| read_noodle_records(path).unwrap())
             .collect::<Vec<FastaRecord>>()
     } else {
         paths
             .iter()
-            .flat_map(|path| read_noodle_records_from_bzip_fa(path).unwrap())
+            .flat_map(|path| read_noodle_records(path).unwrap())
             .collect::<Vec<FastaRecord>>()
     };
     write_bzip_fa_parallel_for_noodle_record(&records, result_path.as_ref().to_path_buf(), None)?;
@@ -334,7 +160,7 @@ pub fn select_record_from_fa<P: AsRef<Path>>(
     fa: P,
     selected_records: &HashSet<BString>,
 ) -> Result<Vec<FastaRecord>> {
-    let fa_records = read_noodle_records_from_fa(fa)?;
+    let fa_records = read_noodle_records(fa)?;
 
     Ok(fa_records
         .into_par_iter()
@@ -375,7 +201,7 @@ mod tests {
         let test_file = "tests/data/test.fa";
 
         // Read records
-        let records = read_noodle_records_from_fa(test_file)?;
+        let records = read_noodle_records(test_file)?;
 
         // Check the number of records
         assert_eq!(records.len(), 14);

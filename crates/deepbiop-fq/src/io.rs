@@ -15,72 +15,13 @@ use noodles::fasta;
 use noodles::fastq::record::Record as FastqRecord;
 use rayon::prelude::*;
 
-use flate2::read::GzDecoder;
-
 use crate::encode::RecordData;
+use deepbiop_utils as utils;
 
-pub fn read_noodel_records_from_fq_or_zip_fq<P: AsRef<Path>>(
-    file_path: P,
-) -> Result<Vec<FastqRecord>> {
-    let extension = file_path.as_ref().extension().unwrap();
-    if extension == "bgz" {
-        log::info!("Reading from bgz file");
-        read_noodle_records_from_bzip_fq(file_path)
-    } else if extension == "gz" {
-        log::info!("Reading from gz file");
-        read_noodle_records_from_gzip_fq(file_path)
-    } else {
-        log::info!("Reading from fq file");
-        read_noodle_records_from_fq(file_path)
-    }
-}
-
-pub fn read_noodle_records_from_fq<P: AsRef<Path>>(file_path: P) -> Result<Vec<FastqRecord>> {
-    let mut reader = File::open(file_path)
-        .map(BufReader::new)
-        .map(fastq::Reader::new)?;
-
-    let records: Result<Vec<FastqRecord>> = reader
-        .records()
-        .par_bridge()
-        .map(|record| {
-            let record = record?;
-            Ok(record)
-        })
-        .collect();
-    records
-}
-
-pub fn read_noodle_records_from_gzip_fq<P: AsRef<Path>>(file_path: P) -> Result<Vec<FastqRecord>> {
-    let mut reader = File::open(file_path)
-        .map(GzDecoder::new)
-        .map(BufReader::new)
-        .map(fastq::Reader::new)?;
-
-    let records: Result<Vec<FastqRecord>> = reader
-        .records()
-        .par_bridge()
-        .map(|record| {
-            let record = record?;
-            Ok(record)
-        })
-        .collect();
-    records
-}
-
-pub fn read_noodle_records_from_bzip_fq<P: AsRef<Path>>(file_path: P) -> Result<Vec<FastqRecord>> {
-    let decoder = bgzf::Reader::new(File::open(file_path)?);
-    let mut reader = fastq::Reader::new(decoder);
-
-    let records: Result<Vec<FastqRecord>> = reader
-        .records()
-        .par_bridge()
-        .map(|record| {
-            let record = record?;
-            Ok(record)
-        })
-        .collect();
-    records
+pub fn read_noodle_records<P: AsRef<Path>>(file_path: P) -> Result<Vec<FastqRecord>> {
+    let reader = utils::io::create_reader(&file_path)?;
+    let mut reader = fastq::Reader::new(BufReader::new(reader));
+    reader.records().map(|record| Ok(record?)).collect()
 }
 
 pub fn write_fq(records: &[RecordData], file_path: Option<PathBuf>) -> Result<()> {
@@ -114,7 +55,7 @@ pub fn write_fq_for_noodle_record<P: AsRef<Path>>(data: &[fastq::Record], path: 
     Ok(())
 }
 
-pub fn write_bzip_fq_parallel(
+pub fn write_bgzip_fq_parallel(
     records: &[RecordData],
     file_path: PathBuf,
     threads: Option<usize>,
@@ -139,7 +80,7 @@ pub fn write_bzip_fq_parallel(
     Ok(())
 }
 
-pub fn write_bzip_fq_parallel_for_noodle_record(
+pub fn write_bgzip_fq_parallel_for_noodle_record(
     records: &[FastqRecord],
     file_path: PathBuf,
     threads: Option<usize>,
@@ -159,7 +100,7 @@ pub fn write_bzip_fq_parallel_for_noodle_record(
     Ok(())
 }
 
-pub fn convert_multiple_bzip_fqs_to_one_bzip_fq<P: AsRef<Path>>(
+pub fn convert_multiple_bgzip_fqs_to_one_bgzip_fq<P: AsRef<Path>>(
     paths: &[PathBuf],
     result_path: P,
     parallel: bool,
@@ -167,19 +108,19 @@ pub fn convert_multiple_bzip_fqs_to_one_bzip_fq<P: AsRef<Path>>(
     let records = if parallel {
         paths
             .par_iter()
-            .flat_map(|path| read_noodle_records_from_bzip_fq(path).unwrap())
+            .flat_map(|path| read_noodle_records(path).unwrap())
             .collect::<Vec<FastqRecord>>()
     } else {
         paths
             .iter()
-            .flat_map(|path| read_noodle_records_from_bzip_fq(path).unwrap())
+            .flat_map(|path| read_noodle_records(path).unwrap())
             .collect::<Vec<FastqRecord>>()
     };
-    write_bzip_fq_parallel_for_noodle_record(&records, result_path.as_ref().to_path_buf(), None)?;
+    write_bgzip_fq_parallel_for_noodle_record(&records, result_path.as_ref().to_path_buf(), None)?;
     Ok(())
 }
 
-pub fn convert_multiple_fqs_to_one_bzip_fq<P: AsRef<Path>>(
+pub fn convert_multiple_fqs_to_one_bgzip_fq<P: AsRef<Path>>(
     paths: &[PathBuf],
     result_path: P,
     parallel: bool,
@@ -187,20 +128,20 @@ pub fn convert_multiple_fqs_to_one_bzip_fq<P: AsRef<Path>>(
     let records = if parallel {
         paths
             .par_iter()
-            .flat_map(|path| read_noodle_records_from_fq(path).unwrap())
+            .flat_map(|path| read_noodle_records(path).unwrap())
             .collect::<Vec<FastqRecord>>()
     } else {
         paths
             .iter()
-            .flat_map(|path| read_noodle_records_from_fq(path).unwrap())
+            .flat_map(|path| read_noodle_records(path).unwrap())
             .collect::<Vec<FastqRecord>>()
     };
-    write_bzip_fq_parallel_for_noodle_record(&records, result_path.as_ref().to_path_buf(), None)?;
+    write_bgzip_fq_parallel_for_noodle_record(&records, result_path.as_ref().to_path_buf(), None)?;
     Ok(())
 }
 
 pub fn fastq_to_fasta<P: AsRef<Path>>(fq: P) -> Result<Vec<fasta::Record>> {
-    let fq_records = read_noodel_records_from_fq_or_zip_fq(&fq)?;
+    let fq_records = read_noodle_records(&fq)?;
     log::info!("converting {} records", fq_records.len());
 
     let fa_records: Vec<fasta::Record> = fq_records
@@ -220,27 +161,11 @@ pub fn select_record_from_fq<P: AsRef<Path>>(
     fq: P,
     selected_records: &HashSet<BString>,
 ) -> Result<Vec<FastqRecord>> {
-    let fq_records = read_noodel_records_from_fq_or_zip_fq(&fq)?;
-    log::info!("load {} reads in total", fq_records.len());
-
-    Ok(fq_records
-        .into_par_iter()
-        .filter(|record| {
-            let id: BString = record.name().into();
-            selected_records.contains(&id)
-        })
-        .collect())
-}
-
-pub fn select_record_from_fq_by_stream<P: AsRef<Path>>(
-    fq: P,
-    selected_records: &HashSet<BString>,
-) -> Result<Vec<FastqRecord>> {
-    let mut reader = File::open(fq).map(BufReader::new).map(fastq::Reader::new)?;
+    let reader = utils::io::create_reader(fq)?;
+    let mut reader = fastq::Reader::new(BufReader::new(reader));
 
     reader
         .records()
-        .par_bridge()
         .filter_map(|record| {
             let record = record.unwrap();
             let id: BString = record.definition().name().into();
@@ -258,6 +183,25 @@ mod tests {
     use super::*;
 
     use tempfile::NamedTempFile;
+
+    #[test]
+
+    fn test_read_records() -> Result<()> {
+        let fq = "./tests/data/one_record.fq";
+        let gzip_fq = "./tests/data/one_record.fq.gz";
+        let bgzip_fq = "./tests/data/one_recordbgz.fq.gz";
+
+        let records = read_noodle_records(fq)?;
+        assert_eq!(records.len(), 1);
+
+        let records = read_noodle_records(gzip_fq)?;
+        assert_eq!(records.len(), 1);
+
+        let records = read_noodle_records(bgzip_fq)?;
+        assert_eq!(records.len(), 1);
+
+        Ok(())
+    }
 
     #[test]
     fn test_write_fq_with_file_path() {
@@ -303,7 +247,7 @@ mod tests {
         let file_path = file.path().to_path_buf();
 
         // Call the function being tested
-        write_bzip_fq_parallel(&records, file_path, None).unwrap();
+        write_bgzip_fq_parallel(&records, file_path, None).unwrap();
 
         let decoder = bgzf::Reader::new(file.reopen().unwrap());
         let mut reader = fastq::Reader::new(decoder);

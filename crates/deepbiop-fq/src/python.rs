@@ -115,7 +115,7 @@ fn write_fq_parallel(
         .map(|py_record| py_record.0)
         .collect();
 
-    io::write_bzip_fq_parallel(&records, file_path, Some(threads))
+    io::write_bgzip_fq_parallel(&records, file_path, Some(threads))
 }
 
 #[gen_stub_pyfunction(module = "deepbiop.fq")]
@@ -207,9 +207,9 @@ fn convert_multiple_fqs_to_one_fq(
     let is_zip = paths[0].extension().unwrap() == "gz";
 
     if is_zip {
-        io::convert_multiple_fqs_to_one_bzip_fq(&paths, result_path, parallel)?;
+        io::convert_multiple_fqs_to_one_bgzip_fq(&paths, result_path, parallel)?;
     } else {
-        io::convert_multiple_bzip_fqs_to_one_bzip_fq(&paths, result_path, parallel)?;
+        io::convert_multiple_bgzip_fqs_to_one_bgzip_fq(&paths, result_path, parallel)?;
     }
 
     Ok(())
@@ -284,7 +284,7 @@ pub fn py_select_record_from_fq(
     let selected_reads: HashSet<BString> =
         selected_reads.into_par_iter().map(|s| s.into()).collect();
 
-    let records = io::select_record_from_fq_by_stream(fq, &selected_reads)?;
+    let records = io::select_record_from_fq(fq, &selected_reads)?;
     io::write_fq_for_noodle_record(&records, output)?;
     Ok(())
 }
