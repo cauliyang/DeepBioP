@@ -12,11 +12,11 @@ use deepbiop_utils as utils;
 
 #[derive(Debug, Parser)]
 pub struct FqToParquet {
-    /// path to the fa file
-    #[arg(value_name = "fa")]
+    /// path to the fq file
+    #[arg(value_name = "fq")]
     fq: PathBuf,
 
-    /// if convert the fa file to parquet by chunk or not
+    /// if convert the fq file to parquet by chunk or not
     #[arg(long)]
     chunk: bool,
 
