@@ -11,6 +11,7 @@ use crate::{
 
 use ahash::{HashMap, HashSet};
 use anyhow::Result;
+use deepbiop_utils::io::write_parquet;
 use log::warn;
 use needletail::Sequence;
 use noodles::fasta;
@@ -23,7 +24,7 @@ use pyo3_stub_gen::derive::*;
 #[pymethods]
 impl encode::ParquetEncoder {
     #[new]
-    fn py_new(option: encode::FqEncoderOption) -> Self {
+    fn py_new(option: encode::EncoderOption) -> Self {
         encode::ParquetEncoder::new(option)
     }
 }
@@ -181,7 +182,7 @@ fn encode_fq_path_to_parquet_chunk(
     bases: String,
     qual_offset: usize,
 ) -> Result<()> {
-    let option = encode::FqEncoderOptionBuilder::default()
+    let option = encode::EncoderOptionBuilder::default()
         .bases(bases.as_bytes().to_vec())
         .qual_offset(qual_offset as u8)
         .build()?;
@@ -202,7 +203,7 @@ fn encode_fq_path_to_parquet(
     qual_offset: usize,
     result_path: Option<PathBuf>,
 ) -> Result<()> {
-    let option = encode::FqEncoderOptionBuilder::default()
+    let option = encode::EncoderOptionBuilder::default()
         .bases(bases.as_bytes().to_vec())
         .qual_offset(qual_offset as u8)
         .build()?;
@@ -221,7 +222,7 @@ fn encode_fq_path_to_parquet(
     } else {
         fq_path.with_extension("parquet")
     };
-    io::write_parquet(parquet_path, record_batch, schema)?;
+    write_parquet(parquet_path, record_batch, schema)?;
     Ok(())
 }
 
@@ -349,7 +350,7 @@ pub fn register_fq_module(parent_module: &Bound<'_, PyModule>) -> PyResult<()> {
     let child_module = PyModule::new(parent_module.py(), sub_module_name)?;
 
     child_module.add_class::<PyRecordData>()?;
-    child_module.add_class::<encode::FqEncoderOption>()?;
+    child_module.add_class::<encode::EncoderOption>()?;
     child_module.add_class::<encode::ParquetEncoder>()?;
     child_module.add_class::<predicts::Predict>()?;
 

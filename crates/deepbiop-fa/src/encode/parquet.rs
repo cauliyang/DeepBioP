@@ -13,10 +13,10 @@ use derive_builder::Builder;
 use log::info;
 use serde::{Deserialize, Serialize};
 
-use super::{record::RecordDataBuilder, Element};
+use super::record::RecordDataBuilder;
 use deepbiop_utils::io::write_parquet;
 
-use super::option::FaEncoderOption;
+use super::option::EncoderOption;
 
 use anyhow::{Context, Result};
 use pyo3::prelude::*;
@@ -28,11 +28,11 @@ use pyo3_stub_gen::derive::*;
 #[pyclass(module = "deepbiop.fa")]
 #[derive(Debug, Builder, Default, Clone, Serialize, Deserialize)]
 pub struct ParquetEncoder {
-    pub option: FaEncoderOption,
+    pub option: EncoderOption,
 }
 
 impl ParquetEncoder {
-    pub fn new(option: FaEncoderOption) -> Self {
+    pub fn new(option: EncoderOption) -> Self {
         Self { option }
     }
 
@@ -144,7 +144,6 @@ impl Display for ParquetEncoder {
 }
 
 impl Encoder for ParquetEncoder {
-    type TargetOutput = Result<Vec<Element>>;
     type RecordOutput = Result<RecordData>;
     type EncodeOutput = Result<(RecordBatch, Arc<Schema>)>;
 
@@ -172,12 +171,12 @@ impl Encoder for ParquetEncoder {
 
 #[cfg(test)]
 mod tests {
-    use crate::encode::option::FaEncoderOptionBuilder;
+    use crate::encode::option::EncoderOptionBuilder;
 
     use super::*;
     #[test]
     fn test_encode_fq_for_parquet() {
-        let option = FaEncoderOptionBuilder::default().build().unwrap();
+        let option = EncoderOptionBuilder::default().build().unwrap();
         let mut encoder = ParquetEncoderBuilder::default()
             .option(option)
             .build()

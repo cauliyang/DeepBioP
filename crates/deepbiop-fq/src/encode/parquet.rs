@@ -12,9 +12,10 @@ use derive_builder::Builder;
 use log::info;
 use serde::{Deserialize, Serialize};
 
-use crate::{io::write_parquet, types::Element};
+use crate::types::Element;
+use deepbiop_utils::io::write_parquet;
 
-use super::{triat::Encoder, FqEncoderOption, RecordData};
+use super::{triat::Encoder, EncoderOption, RecordData};
 use anyhow::{Context, Result};
 use pyo3::prelude::*;
 use rayon::prelude::*;
@@ -32,11 +33,11 @@ pub struct ParquetData {
 #[pyclass(module = "deepbiop.fq")]
 #[derive(Debug, Builder, Default, Clone, Serialize, Deserialize)]
 pub struct ParquetEncoder {
-    pub option: FqEncoderOption,
+    pub option: EncoderOption,
 }
 
 impl ParquetEncoder {
-    pub fn new(option: FqEncoderOption) -> Self {
+    pub fn new(option: EncoderOption) -> Self {
         Self { option }
     }
 
@@ -210,12 +211,12 @@ impl Encoder for ParquetEncoder {
 
 #[cfg(test)]
 mod tests {
-    use crate::encode::FqEncoderOptionBuilder;
+    use crate::encode::EncoderOptionBuilder;
 
     use super::*;
     #[test]
     fn test_encode_fq_for_parquet() {
-        let option = FqEncoderOptionBuilder::default().build().unwrap();
+        let option = EncoderOptionBuilder::default().build().unwrap();
 
         let mut encoder = ParquetEncoderBuilder::default()
             .option(option)
