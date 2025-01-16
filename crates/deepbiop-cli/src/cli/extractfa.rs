@@ -57,7 +57,7 @@ impl ExtractFa {
         info!("collect {} records", records.len());
 
         if self.compressed {
-            let file_path = self.fa.with_extension("selected.fa.bgz");
+            let file_path = self.fa.with_extension("selected.fa.gz");
             info!("write to {}", &file_path.display());
             fa::io::write_bzip_fa_parallel_for_noodle_record(&records, file_path, self.threads)?;
         } else {

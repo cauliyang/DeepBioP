@@ -6,17 +6,15 @@ def test_hight_targets():
     print(result)
 
 
-# def test_segment():
-#     print(utils.__all__)
+def test_dectect_compressed_file():
+    file = "./tests/data/test.fastq"
+    result = utils.detect_compression(file)
+    assert result == utils.CompressedType.Uncompress
 
-#     segment = utils.GenomicInterval("chr10", 300, 5000)
-#     segment2 = utils.GenomicInterval("chr10", 300, 5000)
+    file = "./tests/data/test.fastq.gz"
+    result = utils.detect_compression(file)
+    assert result == utils.CompressedType.Gzip
 
-#     assert segment.overlap(segment2)
-
-#     print(segment)
-
-
-def test_reverse_complement():
-    result = utils.reverse_complement("ACTGAACCGAGATCGAGTG")
-    print(result)
+    file = "./tests/data/test.fastqbgz.gz"
+    result = utils.detect_compression(file)
+    assert result == utils.CompressedType.Bgzip

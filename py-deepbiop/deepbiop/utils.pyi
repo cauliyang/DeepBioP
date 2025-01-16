@@ -4,6 +4,7 @@
 import os
 import pathlib
 import typing
+from enum import Enum, auto
 
 class GenomicInterval:
     r"""
@@ -40,7 +41,17 @@ class PslAlignment:
         ...
 
 
-def detect_compression(path:str | os.PathLike | pathlib.Path) -> tuple[bool, bool]:
+class CompressedType(Enum):
+    Uncompress = auto()
+    Gzip = auto()
+    Bgzip = auto()
+    Zip = auto()
+    Bzip2 = auto()
+    Xz = auto()
+    Zstd = auto()
+    Unknown = auto()
+
+def detect_compression(path:str | os.PathLike | pathlib.Path) -> CompressedType:
     ...
 
 def generate_unmaped_intervals(input:typing.Sequence[tuple[int, int]],total_length:int) -> list[tuple[int, int]]:
