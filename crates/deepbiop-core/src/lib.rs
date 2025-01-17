@@ -1,5 +1,4 @@
 //! **deepbiop-core** is a Rust library for deep learning in computational biology.
-//!
 
 pub mod default;
 pub mod error;

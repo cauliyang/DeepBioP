@@ -14,10 +14,11 @@ description = "Deep Learning Processing Library for Biological Data"
 deepbiop-fq = { workspace = true, optional = true }
 deepbiop-bam = { workspace = true, optional = true }
 deepbiop-utils = { workspace = true, optional = true }
-deepbiop-fa = {workspace = true, optional = true}
+deepbiop-fa = { workspace = true, optional = true }
+deepbiop-core = { workspace = true, optional = true }
 
 [features]
-default = []
+default = ["dep:deepbiop-core"]
 fastq = ["dep:deepbiop-fq"]
 bam = ["dep:deepbiop-bam"]
 utils = ["dep:deepbiop-utils"]
