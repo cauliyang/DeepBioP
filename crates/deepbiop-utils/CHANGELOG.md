@@ -6,6 +6,17 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.1.14](https://github.com/cauliyang/DeepBioP/compare/deepbiop-utils-v0.1.13...deepbiop-utils-v0.1.14) - 2025-01-17
+
+### Added
+
+- Enhance compression handling with new functions and improved documentation for file type detection
+
+### Other
+
+- Update function names and improve compression handling in BAM to FASTQ conversion
+- add docs
+
 ## [0.1.12](https://github.com/cauliyang/DeepBioP/compare/deepbiop-utils-v0.1.11...deepbiop-utils-v0.1.12) - 2025-01-06
 
 ### Added

@@ -7,6 +7,28 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.1.14](https://github.com/cauliyang/DeepBioP/compare/deepbiop-cli-v0.1.13...deepbiop-cli-v0.1.14) - 2025-01-17
+
+### Added
+
+- Add tests for k-mer generation and compression detection; update BAM to FASTQ file extension handling
+- Integrate deepbiop-core library and refactor module imports across crates
+- Introduce deepbiop-core library and refactor encoder options across modules
+- Add Fastq to Parquet conversion functionality
+- Add stream-based record selection for FASTA and FASTQ
+- Add logging information for selected reads and records
+- Add extractfq and extractfa commands, and related functionality
+
+### Fixed
+
+- Correct documentation for FqToParquet struct argument names
+
+### Other
+
+- Update function names and improve compression handling in BAM to FASTQ conversion
+- add testing data
+- Update file extensions and logging messages
+
 ## [0.1.13](https://github.com/cauliyang/DeepBioP/compare/deepbiop-cli-v0.1.12...deepbiop-cli-v0.1.13) - 2025-01-07
 
 ### Added

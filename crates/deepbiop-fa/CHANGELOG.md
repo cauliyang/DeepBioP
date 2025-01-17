@@ -7,6 +7,21 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.1.14](https://github.com/cauliyang/DeepBioP/compare/deepbiop-fa-v0.1.13...deepbiop-fa-v0.1.14) - 2025-01-17
+
+### Added
+
+- Introduce deepbiop-core library and refactor encoder options across modules
+- Add stream-based record selection for FASTA and FASTQ
+- Add extractfq and extractfa commands, and related functionality
+
+### Other
+
+- Update function names and improve compression handling in BAM to FASTQ conversion
+- add docs
+- Update function calls for selecting records by stream
+- Update file extensions and logging messages
+
 ## [0.1.13](https://github.com/cauliyang/DeepBioP/compare/deepbiop-fa-v0.1.12...deepbiop-fa-v0.1.13) - 2025-01-07
 
 ### Added
