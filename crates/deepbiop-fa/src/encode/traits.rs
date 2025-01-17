@@ -1,10 +1,14 @@
 use anyhow::Result;
 use log::info;
-use std::path::{Path, PathBuf};
+use noodles::fastq;
+use std::{
+    io::BufReader,
+    path::{Path, PathBuf},
+};
 
 use super::record::RecordData;
+use deepbiop_utils as utils;
 use needletail::Sequence;
-use rayon::prelude::*;
 
 pub trait Encoder {
     type EncodeOutput;
@@ -16,13 +20,16 @@ pub trait Encoder {
 
     fn fetch_records<P: AsRef<Path>>(&mut self, path: P) -> Result<Vec<RecordData>> {
         info!("fetching records from {}", path.as_ref().display());
-        let _records = crate::io::read_noodle_records(path)?;
+        let reader = utils::io::create_reader(path)?;
+        let mut reader = fastq::Reader::new(BufReader::new(reader));
 
-        let records: Vec<RecordData> = _records
-            .into_par_iter()
+        let records: Vec<RecordData> = reader
+            .records()
             .filter_map(|record| {
+                let record = record.ok()?;
+
                 let id = record.definition().name();
-                let seq = record.sequence().as_ref();
+                let seq: &[u8] = record.sequence();
                 let normalized_seq = seq.normalize(false);
                 Some((id.to_vec(), normalized_seq.to_vec()).into())
             })
