@@ -209,7 +209,7 @@ fn convert_multiple_fqs_to_one_fq(
     if is_zip {
         io::convert_multiple_fqs_to_one_bgzip_fq(&paths, result_path, parallel)?;
     } else {
-        io::convert_multiple_bgzip_fqs_to_one_bgzip_fq(&paths, result_path, parallel)?;
+        io::convert_multiple_fqs_to_one_bgzip_fq(&paths, result_path, parallel)?;
     }
 
     Ok(())

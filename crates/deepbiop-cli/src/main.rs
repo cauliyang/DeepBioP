@@ -51,6 +51,12 @@ pub enum Commands {
 
     /// Extract fasta reads from a fasta file.
     ExtractFa(cli::ExtractFa),
+
+    /// Multiple Fastqs to one Fastq conversion.
+    FqsToOne(cli::FqsToOne),
+
+    /// Multiple Fastas to one Fasta conversion.
+    FasToOne(cli::FasToOne),
 }
 
 impl Display for Commands {
@@ -64,6 +70,8 @@ impl Display for Commands {
             Commands::ExtractFq(_) => write!(f, "extractfq"),
             Commands::ExtractFa(_) => write!(f, "extractfa"),
             Commands::FqToParquet(_) => write!(f, "fq2parquet"),
+            Commands::FqsToOne(_) => write!(f, "fqs2one"),
+            Commands::FasToOne(_) => write!(f, "fas2one"),
         }
     }
 }
@@ -130,6 +138,14 @@ fn main() -> Result<()> {
 
         Some(Commands::ExtractFa(extractfa)) => {
             extractfa.run().unwrap();
+        }
+
+        Some(Commands::FqsToOne(fqs2one)) => {
+            fqs2one.run().unwrap();
+        }
+
+        Some(Commands::FasToOne(fas2one)) => {
+            fas2one.run().unwrap();
         }
 
         None => {

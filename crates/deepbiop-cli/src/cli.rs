@@ -16,8 +16,12 @@ pub use extractfq::*;
 pub mod extractfa;
 pub use extractfa::*;
 
-use anyhow::Result;
+pub mod fqs2one;
+pub use fqs2one::*;
+pub mod fas2one;
+pub use fas2one::*;
 
+use anyhow::Result;
 // Set up threads only once, using the common_opts from the top-level Cli struct
 pub fn set_up_threads(threads: Option<usize>) -> Result<()> {
     log::info!("Threads number: {:?}", threads.unwrap());

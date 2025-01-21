@@ -116,27 +116,7 @@ pub fn write_bzip_fa_parallel_for_noodle_record(
     Ok(())
 }
 
-pub fn convert_multiple_fas_to_one_zip_fa<P: AsRef<Path>>(
-    paths: &[PathBuf],
-    result_path: P,
-    parallel: bool,
-) -> Result<()> {
-    let records = if parallel {
-        paths
-            .par_iter()
-            .flat_map(|path| read_noodle_records(path).unwrap())
-            .collect::<Vec<FastaRecord>>()
-    } else {
-        paths
-            .iter()
-            .flat_map(|path| read_noodle_records(path).unwrap())
-            .collect::<Vec<FastaRecord>>()
-    };
-    write_bzip_fa_parallel_for_noodle_record(&records, result_path.as_ref().to_path_buf(), None)?;
-    Ok(())
-}
-
-pub fn convert_multiple_zip_fas_to_one_zip_fa<P: AsRef<Path>>(
+pub fn convert_multiple_fas_to_one_bgzip_fa<P: AsRef<Path>>(
     paths: &[PathBuf],
     result_path: P,
     parallel: bool,
