@@ -203,15 +203,7 @@ fn convert_multiple_fqs_to_one_fq(
     if paths.is_empty() {
         return Ok(());
     }
-
-    let is_zip = paths[0].extension().unwrap() == "gz";
-
-    if is_zip {
-        io::convert_multiple_fqs_to_one_bgzip_fq(&paths, result_path, parallel)?;
-    } else {
-        io::convert_multiple_fqs_to_one_bgzip_fq(&paths, result_path, parallel)?;
-    }
-
+    io::convert_multiple_fqs_to_one_bgzip_fq(&paths, result_path, parallel)?;
     Ok(())
 }
 
