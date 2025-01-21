@@ -28,6 +28,7 @@ lexical = { workspace = true }
 flate2 = { workspace = true }
 bstr = { workspace = true }
 walkdir = { workspace = true }
+rand = { workspace = true }
 
 parquet = { workspace = true }
 arrow = { workspace = true }

@@ -15,6 +15,9 @@ use noodles::fasta;
 use noodles::fastq::record::Record as FastqRecord;
 use rayon::prelude::*;
 
+use rand::seq::SliceRandom;
+use rand::thread_rng;
+
 use crate::encode::RecordData;
 use deepbiop_utils as utils;
 
@@ -176,6 +179,28 @@ pub fn fastq_to_fasta<P: AsRef<Path>>(fq: P) -> Result<Vec<fasta::Record>> {
         .collect();
 
     Ok(fa_records)
+}
+
+pub fn select_record_from_fq_by_random<P: AsRef<Path>>(
+    fq: P,
+    numbers: usize,
+) -> Result<Vec<FastqRecord>> {
+    let reader = utils::io::create_reader(fq)?;
+    let mut reader = fastq::Reader::new(BufReader::new(reader));
+
+    // Collect all records into a vector
+    let records: Vec<FastqRecord> = reader.records().filter_map(|r| r.ok()).collect();
+    if records.len() <= numbers {
+        return Ok(records);
+    }
+
+    // Use rand to randomly select records
+    let mut rng = thread_rng();
+    let selected_records = records
+        .choose_multiple(&mut rng, numbers)
+        .cloned()
+        .collect();
+    Ok(selected_records)
 }
 
 pub fn select_record_from_fq<P: AsRef<Path>>(
