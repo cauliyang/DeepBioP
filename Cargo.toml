@@ -12,10 +12,10 @@ repository = "https://github.com/cauliyang/DeepBioP"
 license = "Apache-2.0"
 
 [workspace.dependencies]
-pyo3 = { version = "0.23.3", features = [
-    "abi3-py39",
-    "extension-module",
-    "anyhow",
+pyo3 = { version = "0.23.4", features = [
+  "abi3-py39",
+  "extension-module",
+  "anyhow",
 ] }
 pyo3-stub-gen = "0.6.2"
 thiserror = "2.0"
@@ -25,13 +25,13 @@ rayon = { version = "1.10" }
 log = "0.4"
 pyo3-log = "0.12.1"
 noodles = { version = "0.87.0", features = [
-    "bgzf",
-    "core",
-    "csi",
-    "fasta",
-    "fastq",
-    "sam",
-    "bam",
+  "bgzf",
+  "core",
+  "csi",
+  "fasta",
+  "fastq",
+  "sam",
+  "bam",
 ] }
 
 bio = "2.0"
@@ -58,7 +58,7 @@ candle-core = { git = "https://github.com/huggingface/candle.git", version = "0.
 colored = "3.0"
 textwrap = "0.16"
 flate2 = { version = "1.0.35", features = [
-    "zlib-ng",
+  "zlib-ng",
 ], default-features = false }
 
 deepbiop-fq = { version = "0.1.14", path = "crates/deepbiop-fq" }
