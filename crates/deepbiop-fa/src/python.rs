@@ -190,6 +190,18 @@ pub fn py_select_record_from_fq(
     Ok(())
 }
 
+#[gen_stub_pyfunction(module = "deepbiop.fa")]
+#[pyfunction(name = "select_record_from_fa_by_random")]
+pub fn py_select_record_from_fq_by_random(
+    fq: PathBuf,
+    number: usize,
+    output: PathBuf,
+) -> Result<()> {
+    let records = io::select_record_from_fq_by_random(fq, number)?;
+    io::write_fa_for_noodle_record(&records, output)?;
+    Ok(())
+}
+
 // register fq sub_module
 pub fn register_fa_module(parent_module: &Bound<'_, PyModule>) -> PyResult<()> {
     let sub_module_name = "fa";
@@ -207,9 +219,14 @@ pub fn register_fa_module(parent_module: &Bound<'_, PyModule>) -> PyResult<()> {
         encode_fa_path_to_parquet_chunk,
         &child_module
     )?)?;
-
     child_module.add_function(wrap_pyfunction!(
         convert_multiple_fas_to_one_fa,
+        &child_module
+    )?)?;
+
+    child_module.add_function(wrap_pyfunction!(py_select_record_from_fq, &child_module)?)?;
+    child_module.add_function(wrap_pyfunction!(
+        py_select_record_from_fq_by_random,
         &child_module
     )?)?;
 

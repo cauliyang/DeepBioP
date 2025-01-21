@@ -281,6 +281,18 @@ pub fn py_select_record_from_fq(
     Ok(())
 }
 
+#[gen_stub_pyfunction(module = "deepbiop.fq")]
+#[pyfunction(name = "select_record_from_fq_by_random")]
+pub fn py_select_record_from_fq_by_random(
+    fq: PathBuf,
+    number: usize,
+    output: PathBuf,
+) -> Result<()> {
+    let records = io::select_record_from_fq_by_random(fq, number)?;
+    io::write_fq_for_noodle_record(&records, output)?;
+    Ok(())
+}
+
 // register fq sub_module
 pub fn register_fq_module(parent_module: &Bound<'_, PyModule>) -> PyResult<()> {
     let sub_module_name = "fq";
@@ -320,6 +332,12 @@ pub fn register_fq_module(parent_module: &Bound<'_, PyModule>) -> PyResult<()> {
     )?)?;
     child_module.add_function(wrap_pyfunction!(
         load_predicts_from_batch_pts,
+        &child_module
+    )?)?;
+
+    child_module.add_function(wrap_pyfunction!(py_select_record_from_fq, &child_module)?)?;
+    child_module.add_function(wrap_pyfunction!(
+        py_select_record_from_fq_by_random,
         &child_module
     )?)?;
 
