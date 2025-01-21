@@ -13,13 +13,17 @@ use std::path::{Path, PathBuf};
 
 #[derive(Debug, Parser)]
 pub struct ExtractFq {
-    /// path to the bam file
+    /// path to the fq file
     #[arg(value_name = "fq")]
     fq: PathBuf,
 
     /// Path to the selected reads
-    #[arg(value_name = "reads")]
-    reads: PathBuf,
+    #[arg(long, value_name = "reads", conflicts_with = "number")]
+    reads: Option<PathBuf>,
+
+    /// The number of selected reads by random
+    #[arg(long, value_name = "number", conflicts_with = "reads")]
+    number: Option<usize>,
 
     /// threads number
     #[arg(short, long, default_value = "2")]
@@ -34,7 +38,6 @@ fn parse_reads<P: AsRef<Path>>(reads: P) -> Result<HashSet<BString>> {
     let file = std::fs::File::open(reads.as_ref())?;
 
     let reader = BufReader::new(file);
-
     let mut reads = HashSet::new();
 
     for line in reader.lines() {
@@ -49,10 +52,22 @@ impl ExtractFq {
     pub fn run(&self) -> Result<()> {
         set_up_threads(self.threads)?;
 
-        let reads = parse_reads(&self.reads)?;
-        info!("load {} selected reads from {:?}", reads.len(), &self.reads);
+        let records = if let Some(reads_path) = &self.reads {
+            let reads = parse_reads(reads_path)?;
+            let records = fq::io::select_record_from_fq(&self.fq, &reads)?;
 
-        let records = fq::io::select_record_from_fq(&self.fq, &reads)?;
+            info!("load {} selected reads from {:?}", reads.len(), reads_path);
+            records
+        } else if let Some(number) = self.number {
+            let records = fq::io::select_record_from_fq_by_random(&self.fq, number)?;
+            info!("select {} reads by random", number);
+            records
+        } else {
+            return Err(anyhow::anyhow!(
+                "Either --reads or --number must be specified"
+            ));
+        };
+
         info!("collect {} records", records.len());
 
         if self.compressed {
