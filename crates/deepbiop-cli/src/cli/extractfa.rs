@@ -19,8 +19,12 @@ pub struct ExtractFa {
     fa: PathBuf,
 
     /// Path to the selected reads
-    #[arg(value_name = "reads")]
-    reads: PathBuf,
+    #[arg(long, value_name = "reads", conflicts_with = "number")]
+    reads: Option<PathBuf>,
+
+    /// The number of selected reads by random
+    #[arg(long, value_name = "number", conflicts_with = "reads")]
+    number: Option<usize>,
 
     /// threads number
     #[arg(short, long, default_value = "2")]
@@ -50,10 +54,21 @@ impl ExtractFa {
     pub fn run(&self) -> Result<()> {
         set_up_threads(self.threads)?;
 
-        let reads = parse_reads(&self.reads)?;
-        info!("load {} selected reads from {:?}", reads.len(), &self.reads);
+        let records = if let Some(reads_path) = &self.reads {
+            let reads = parse_reads(reads_path)?;
+            let records = fa::io::select_record_from_fa(&self.fa, &reads)?;
+            info!("load {} selected reads from {:?}", reads.len(), reads_path);
+            records
+        } else if let Some(number) = self.number {
+            let records = fa::io::select_record_from_fq_by_random(&self.fa, number)?;
+            info!("select {} reads by random", number);
+            records
+        } else {
+            return Err(anyhow::anyhow!(
+                "Either --reads or --number must be specified"
+            ));
+        };
 
-        let records = fa::io::select_record_from_fa_by_stream(&self.fa, &reads)?;
         info!("collect {} records", records.len());
 
         if self.compressed {
