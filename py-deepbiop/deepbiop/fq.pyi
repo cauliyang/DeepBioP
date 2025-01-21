@@ -9,10 +9,10 @@ class EncoderOption:
     qual_offset: int
     bases: list[int]
     threads: int
-    def __new__(cls, qual_offset, bases, threads=...): ...
+    def __new__(cls,qual_offset,bases,threads = ...): ...
 
 class ParquetEncoder:
-    def __new__(cls, option: EncoderOption): ...
+    def __new__(cls,option:EncoderOption): ...
 
 class Predict:
     r"""A struct to store the prediction result."""
@@ -22,23 +22,20 @@ class Predict:
     id: str
     is_truncated: bool
     qual: str | None
-    def __new__(cls, prediction, seq, id, is_truncated, qual=...): ...
-    def __repr__(self) -> str: ...
+    def __new__(cls,prediction,seq,id,is_truncated,qual = ...): ...
+    def __repr__(self) -> str:
+        ...
+
     def prediction_region(self) -> list[tuple[int, int]]:
         r"""Get the prediction region."""
 
-    def smooth_prediction(self, window_size: int) -> list[tuple[int, int]]:
+    def smooth_prediction(self, window_size:int) -> list[tuple[int, int]]:
         r"""Get the smooth prediction region."""
 
-    def smooth_label(self, window_size: int) -> list[int]:
+    def smooth_label(self, window_size:int) -> list[int]:
         r"""Get the smooth label."""
 
-    def smooth_and_select_intervals(
-        self,
-        smooth_window_size: int,
-        min_interval_size: int,
-        append_interval_number: int,
-    ) -> list[tuple[int, int]]:
+    def smooth_and_select_intervals(self, smooth_window_size:int, min_interval_size:int, append_interval_number:int) -> list[tuple[int, int]]:
         r"""Smooth and select intervals."""
 
     def seq_len(self) -> int:
@@ -47,64 +44,70 @@ class Predict:
     def qual_array(self) -> list[int]:
         r"""Get the quality score array."""
 
-    def show_info(self, smooth_interval, text_width=...) -> str:
+    def show_info(self, smooth_interval,text_width = ...) -> str:
         r"""Show the information of the prediction."""
 
-    def __getstate__(self) -> typing.Any: ...
-    def __setstate__(self, state: typing.Any) -> None: ...
+    def __getstate__(self) -> typing.Any:
+        ...
+
+    def __setstate__(self, state:typing.Any) -> None:
+        ...
+
 
 class RecordData:
     id: str
     seq: str
     qual: str
-    def __new__(cls, id: str, seq: str, qual: str): ...
-    def set_id(self, id: str) -> None: ...
-    def set_seq(self, seq: str) -> None: ...
-    def set_qual(self, qual: str) -> None: ...
+    def __new__(cls,id:str, seq:str, qual:str): ...
+    def set_id(self, id:str) -> None:
+        ...
 
-def convert_multiple_fqs_to_one_fq(
-    paths: typing.Sequence[str | os.PathLike | pathlib.Path],
-    result_path: str | os.PathLike | pathlib.Path,
-    parallel: bool,
-) -> None: ...
-def encode_fq_path_to_parquet(fq_path, bases, qual_offset, result_path=...) -> None: ...
-def encode_fq_path_to_parquet_chunk(
-    fq_path: str | os.PathLike | pathlib.Path,
-    chunk_size: int,
-    parallel: bool,
-    bases: str,
-    qual_offset: int,
-) -> None: ...
-def encode_fq_paths_to_parquet(
-    fq_path: typing.Sequence[str | os.PathLike | pathlib.Path],
-    bases: str,
-    qual_offset: int,
-) -> None: ...
-def encode_qual(qual: str, qual_offset: int) -> list[int]:
+    def set_seq(self, seq:str) -> None:
+        ...
+
+    def set_qual(self, qual:str) -> None:
+        ...
+
+
+def convert_multiple_fqs_to_one_fq(paths:typing.Sequence[str | os.PathLike | pathlib.Path],result_path:str | os.PathLike | pathlib.Path,parallel:bool) -> None:
+    ...
+
+def encode_fq_path_to_parquet(fq_path,bases,qual_offset,result_path = ...) -> None:
+    ...
+
+def encode_fq_path_to_parquet_chunk(fq_path:str | os.PathLike | pathlib.Path,chunk_size:int,parallel:bool,bases:str,qual_offset:int) -> None:
+    ...
+
+def encode_fq_paths_to_parquet(fq_path:typing.Sequence[str | os.PathLike | pathlib.Path],bases:str,qual_offset:int) -> None:
+    ...
+
+def encode_qual(qual:str,qual_offset:int) -> list[int]:
     r"""Convert ASCII quality to Phred score for Phred+33 encoding."""
 
-def fastq_to_fasta(
-    fastq_path: str | os.PathLike | pathlib.Path,
-    fasta_path: str | os.PathLike | pathlib.Path,
-) -> None: ...
-def get_label_region(labels: typing.Sequence[int]) -> list[tuple[int, int]]: ...
-def load_predicts_from_batch_pt(
-    pt_path: str | os.PathLike | pathlib.Path,
-    ignore_label: int,
-    id_table: typing.Mapping[int, str],
-) -> dict[str, Predict]: ...
-def load_predicts_from_batch_pts(
-    pt_path, ignore_label, id_table, max_predicts=...
-) -> dict[str, Predict]: ...
-def select_record_from_fq(
-    selected_reads: typing.Sequence[str],
-    fq: str | os.PathLike | pathlib.Path,
-    output: str | os.PathLike | pathlib.Path,
-) -> None: ...
-def test_predicts(predicts: typing.Sequence[Predict]) -> None: ...
-def write_fq(records_data, file_path=...) -> None: ...
-def write_fq_parallel(
-    records_data: typing.Sequence[RecordData],
-    file_path: str | os.PathLike | pathlib.Path,
-    threads: int,
-) -> None: ...
+def fastq_to_fasta(fastq_path:str | os.PathLike | pathlib.Path,fasta_path:str | os.PathLike | pathlib.Path) -> None:
+    ...
+
+def get_label_region(labels:typing.Sequence[int]) -> list[tuple[int, int]]:
+    ...
+
+def load_predicts_from_batch_pt(pt_path:str | os.PathLike | pathlib.Path,ignore_label:int,id_table:typing.Mapping[int, str]) -> dict[str, Predict]:
+    ...
+
+def load_predicts_from_batch_pts(pt_path,ignore_label,id_table,max_predicts = ...) -> dict[str, Predict]:
+    ...
+
+def select_record_from_fq(selected_reads:typing.Sequence[str],fq:str | os.PathLike | pathlib.Path,output:str | os.PathLike | pathlib.Path) -> None:
+    ...
+
+def select_record_from_fq_by_random(fq:str | os.PathLike | pathlib.Path,number:int,output:str | os.PathLike | pathlib.Path) -> None:
+    ...
+
+def test_predicts(predicts:typing.Sequence[Predict]) -> None:
+    ...
+
+def write_fq(records_data,file_path = ...) -> None:
+    ...
+
+def write_fq_parallel(records_data:typing.Sequence[RecordData],file_path:str | os.PathLike | pathlib.Path,threads:int) -> None:
+    ...
+
