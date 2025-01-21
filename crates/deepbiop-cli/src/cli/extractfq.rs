@@ -25,6 +25,10 @@ pub struct ExtractFq {
     #[arg(long, value_name = "number", conflicts_with = "reads")]
     number: Option<usize>,
 
+    /// output bgzip compressed file
+    #[arg(long, value_name = "output")]
+    output: Option<PathBuf>,
+
     /// threads number
     #[arg(short, long, default_value = "2")]
     threads: Option<usize>,
@@ -71,11 +75,27 @@ impl ExtractFq {
         info!("collect {} records", records.len());
 
         if self.compressed {
-            let file_path = self.fq.with_extension("selected.fq.gz");
+            let file_path = if let Some(path) = &self.output {
+                let path = path.with_extension("fq.gz");
+                if path.exists() {
+                    info!("{} already exists, overwriting", path.display());
+                }
+                path
+            } else {
+                self.fq.with_extension("selected.fq.gz")
+            };
             info!("write to {}", &file_path.display());
             fq::io::write_bgzip_fq_parallel_for_noodle_record(&records, file_path, self.threads)?;
         } else {
-            let file_path = self.fq.with_extension("selected.fq");
+            let file_path = if let Some(path) = &self.output {
+                let path = path.with_extension("fq");
+                if path.exists() {
+                    info!("{} already exists, overwriting", path.display());
+                }
+                path
+            } else {
+                self.fq.with_extension("selected.fq")
+            };
             info!("write to {}", &file_path.display());
             fq::io::write_fq_for_noodle_record(&records, file_path)?;
         }
