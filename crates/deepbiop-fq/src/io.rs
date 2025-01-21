@@ -100,6 +100,28 @@ pub fn write_bgzip_fq_parallel_for_noodle_record(
     Ok(())
 }
 
+/// Combines multiple FASTQ files into a single bgzip-compressed FASTQ file
+///
+/// # Arguments
+///
+/// * `paths` - A slice of paths to the input FASTQ files
+/// * `result_path` - Path where the combined bgzip FASTQ file will be written
+/// * `parallel` - Whether to process files in parallel using rayon
+///
+/// # Returns
+///
+/// Returns `Ok(())` if successful, or an error if file operations fail
+///
+/// # Example
+///
+/// ```no_run
+/// use std::path::PathBuf;
+/// use deepbiop_fq::io::convert_multiple_fqs_to_one_bgzip_fq;
+///
+/// let input_files = vec![PathBuf::from("file1.fq"), PathBuf::from("file2.fq")];
+/// let output = PathBuf::from("combined.fq.gz");
+/// convert_multiple_fqs_to_one_bgzip_fq(&input_files, output, true).unwrap();
+/// ```
 pub fn convert_multiple_fqs_to_one_bgzip_fq<P: AsRef<Path>>(
     paths: &[PathBuf],
     result_path: P,
@@ -120,6 +142,25 @@ pub fn convert_multiple_fqs_to_one_bgzip_fq<P: AsRef<Path>>(
     Ok(())
 }
 
+/// Converts a FASTQ file to FASTA records
+///
+/// # Arguments
+///
+/// * `fq` - Path to the input FASTQ file
+///
+/// # Returns
+///
+/// Returns a Result containing a Vec of FASTA records if successful, or an error if file operations fail
+///
+/// # Example
+///
+/// ```no_run
+/// use std::path::PathBuf;
+/// use deepbiop_fq::io::fastq_to_fasta;
+///
+/// let input = PathBuf::from("input.fq");
+/// let fasta_records = fastq_to_fasta(input).unwrap();
+/// ```
 pub fn fastq_to_fasta<P: AsRef<Path>>(fq: P) -> Result<Vec<fasta::Record>> {
     let fq_records = read_noodle_records(&fq)?;
     log::info!("converting {} records", fq_records.len());

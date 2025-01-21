@@ -116,6 +116,28 @@ pub fn write_bzip_fa_parallel_for_noodle_record(
     Ok(())
 }
 
+/// Combines multiple FASTA files into a single bgzip-compressed FASTA file
+///
+/// # Arguments
+///
+/// * `paths` - A slice of paths to the input FASTA files
+/// * `result_path` - Path where the combined bgzip FASTA file will be written
+/// * `parallel` - Whether to process files in parallel using rayon
+///
+/// # Returns
+///
+/// Returns `Ok(())` if successful, or an error if file operations fail
+///
+/// # Example
+///
+/// ```no_run
+/// use std::path::PathBuf;
+/// use deepbiop_fa::io::convert_multiple_fas_to_one_bgzip_fa;
+///
+/// let input_files = vec![PathBuf::from("file1.fa"), PathBuf::from("file2.fa")];
+/// let output = PathBuf::from("combined.fa.gz");
+/// convert_multiple_fas_to_one_bgzip_fa(&input_files, output, true).unwrap();
+/// ```
 pub fn convert_multiple_fas_to_one_bgzip_fa<P: AsRef<Path>>(
     paths: &[PathBuf],
     result_path: P,

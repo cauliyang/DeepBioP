@@ -172,15 +172,7 @@ fn convert_multiple_fas_to_one_fa(
     if paths.is_empty() {
         return Ok(());
     }
-
-    let is_zip = paths[0].extension().unwrap() == "gz";
-
-    if is_zip {
-        io::convert_multiple_fas_to_one_bzip_fa(&paths, result_path, parallel)?;
-    } else {
-        io::convert_multiple_zip_fas_to_one_zip_fa(&paths, result_path, parallel)?;
-    }
-
+    io::convert_multiple_fas_to_one_bgzip_fa(&paths, result_path, parallel)?;
     Ok(())
 }
 
