@@ -100,26 +100,6 @@ pub fn write_bgzip_fq_parallel_for_noodle_record(
     Ok(())
 }
 
-pub fn convert_multiple_bgzip_fqs_to_one_bgzip_fq<P: AsRef<Path>>(
-    paths: &[PathBuf],
-    result_path: P,
-    parallel: bool,
-) -> Result<()> {
-    let records = if parallel {
-        paths
-            .par_iter()
-            .flat_map(|path| read_noodle_records(path).unwrap())
-            .collect::<Vec<FastqRecord>>()
-    } else {
-        paths
-            .iter()
-            .flat_map(|path| read_noodle_records(path).unwrap())
-            .collect::<Vec<FastqRecord>>()
-    };
-    write_bgzip_fq_parallel_for_noodle_record(&records, result_path.as_ref().to_path_buf(), None)?;
-    Ok(())
-}
-
 pub fn convert_multiple_fqs_to_one_bgzip_fq<P: AsRef<Path>>(
     paths: &[PathBuf],
     result_path: P,

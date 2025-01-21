@@ -5,12 +5,11 @@ use bstr::BString;
 use clap::Parser;
 use deepbiop_fq as fq;
 
+use super::set_up_threads;
+use log::info;
 use std::io::BufRead;
 use std::io::BufReader;
 use std::path::{Path, PathBuf};
-
-use super::set_up_threads;
-use log::info;
 
 #[derive(Debug, Parser)]
 pub struct ExtractFq {

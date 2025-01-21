@@ -26,7 +26,7 @@ pub struct FqToParquet {
     chunk_size: usize,
 
     /// result path
-    #[arg(long, value_name = "result")]
+    #[arg(long, value_name = "output")]
     output: Option<PathBuf>,
 
     /// threads number
