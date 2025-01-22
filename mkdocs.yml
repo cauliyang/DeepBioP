@@ -18,6 +18,8 @@ nav:
           - development/versioning.md
   - API reference:
       - api/index.md
+  - CLI:
+      - cli/index.md
   - About:
       - License: license.md
 

@@ -24,6 +24,9 @@ struct Cli {
 
     #[command(flatten)]
     verbose: clap_verbosity_flag::Verbosity,
+
+    #[arg(long, hide = true)]
+    markdown_help: bool,
 }
 
 #[derive(Subcommand, Debug)]
@@ -104,6 +107,11 @@ fn main() -> Result<()> {
         let mut cmd = Cli::command();
         info!("Generating completion file for {generator:?}...");
         print_completions(generator, &mut cmd);
+        return Ok(());
+    }
+
+    if cli.markdown_help {
+        clap_markdown::print_help_markdown::<Cli>();
         return Ok(());
     }
 
