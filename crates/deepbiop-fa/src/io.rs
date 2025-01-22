@@ -198,7 +198,7 @@ pub fn select_record_from_fq_by_random<P: AsRef<Path>>(
     }
 
     // Process remaining elements with reservoir sampling
-    while let Some(record) = records_iter.next() {
+    for record in records_iter {
         count += 1;
         let j = rng.gen_range(0..count);
         if j < numbers {
