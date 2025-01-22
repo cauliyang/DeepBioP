@@ -15,8 +15,7 @@ use noodles::fasta;
 use noodles::fastq::record::Record as FastqRecord;
 use rayon::prelude::*;
 
-use rand::seq::SliceRandom;
-use rand::thread_rng;
+use rand::{thread_rng, Rng};
 
 use crate::encode::RecordData;
 use deepbiop_utils as utils;
@@ -188,18 +187,34 @@ pub fn select_record_from_fq_by_random<P: AsRef<Path>>(
     let reader = utils::io::create_reader(fq)?;
     let mut reader = fastq::Reader::new(BufReader::new(reader));
 
-    // Collect all records into a vector
-    let records: Vec<FastqRecord> = reader.records().filter_map(|r| r.ok()).collect();
-    if records.len() <= numbers {
-        return Ok(records);
+    // Use reservoir sampling algorithm to randomly select records
+    let mut rng = thread_rng();
+    let mut selected_records = Vec::with_capacity(numbers);
+    let mut count = 0;
+
+    let records_iter = reader.records().filter_map(|r| r.ok());
+    let mut records_iter = records_iter.peekable();
+
+    // Fill reservoir with first k elements
+    while selected_records.len() < numbers && records_iter.peek().is_some() {
+        if let Some(record) = records_iter.next() {
+            selected_records.push(record);
+            count += 1;
+        }
     }
 
-    // Use rand to randomly select records
-    let mut rng = thread_rng();
-    let selected_records = records
-        .choose_multiple(&mut rng, numbers)
-        .cloned()
-        .collect();
+    // Process remaining elements with reservoir sampling
+    while let Some(record) = records_iter.next() {
+        count += 1;
+        let j = rng.gen_range(0..count);
+        if j < numbers {
+            selected_records[j] = record;
+        }
+    }
+
+    if count < numbers {
+        selected_records.truncate(count);
+    }
     Ok(selected_records)
 }
 
