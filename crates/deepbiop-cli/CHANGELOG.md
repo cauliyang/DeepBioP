@@ -7,6 +7,17 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.1.15](https://github.com/cauliyang/DeepBioP/compare/deepbiop-cli-v0.1.14...deepbiop-cli-v0.1.15) - 2025-01-22
+
+### Added
+
+- Add markdown help option and documentation for deepbiop-cli
+- Update output file extensions for FasToOne and FqsToOne commands to .fa.gz and .fq.gz respectively
+- Add output option for specifying file paths in ExtractFa and ExtractFq commands
+- Update ExtractFa to support optional read selection by path or random count
+- Enhance ExtractFq command to support random selection of reads and update Cargo.toml dependencies
+- Add fas2one and fqs2one commands for batch file conversion
+
 ## [0.1.14](https://github.com/cauliyang/DeepBioP/compare/deepbiop-cli-v0.1.13...deepbiop-cli-v0.1.14) - 2025-01-17
 
 ### Added
