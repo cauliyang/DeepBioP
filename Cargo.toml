@@ -4,7 +4,7 @@ members = ["crates/*", "py-deepbiop"]
 default-members = ["crates/*"]
 
 [workspace.package]
-version = "0.1.14"
+version = "0.1.15"
 edition = "2021"
 authors = ["Yangyang Li <sunlifeliz5@gmail.com>"]
 homepage = "https://github.com/cauliyang/DeepBioP"
@@ -61,10 +61,10 @@ flate2 = { version = "1.0.35", features = [
   "zlib-ng",
 ], default-features = false }
 
-deepbiop-fq = { version = "0.1.14", path = "crates/deepbiop-fq" }
+deepbiop-fq = { version = "0.1.15", path = "crates/deepbiop-fq" }
 deepbiop-bam = { version = "0.1.11", path = "crates/deepbiop-bam" }
 deepbiop-utils = { version = "0.1.14", path = "crates/deepbiop-utils" }
-deepbiop-fa = { version = "0.1.14", path = "crates/deepbiop-fa" }
+deepbiop-fa = { version = "0.1.15", path = "crates/deepbiop-fa" }
 deepbiop-core = { version = "0.1.14", path = "crates/deepbiop-core" }
 
 [profile.opt-dev]

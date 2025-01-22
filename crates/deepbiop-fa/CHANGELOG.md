@@ -7,6 +7,20 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.1.15](https://github.com/cauliyang/DeepBioP/compare/deepbiop-fa-v0.1.14...deepbiop-fa-v0.1.15) - 2025-01-22
+
+### Added
+
+- Add random selection functionality for FASTQ records and expose it to Python
+- Add functions to combine multiple FASTA and FASTQ files into bgzip-compressed formats
+- Add fas2one and fqs2one commands for batch file conversion
+
+### Other
+
+- ♻️ Optimize record selection in select_record_from_fq_by_random function using for loop
+- ♻️ Refactor select_record_from_fq_by_random function to use reservoir sampling algorithm
+- Update fetch_records method to use fastq reader and improve record handling
+
 ## [0.1.14](https://github.com/cauliyang/DeepBioP/compare/deepbiop-fa-v0.1.13...deepbiop-fa-v0.1.14) - 2025-01-17
 
 ### Added
