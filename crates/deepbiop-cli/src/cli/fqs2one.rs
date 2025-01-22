@@ -23,7 +23,8 @@ pub struct FqsToOne {
 impl FqsToOne {
     pub fn run(&self) -> Result<()> {
         set_up_threads(self.threads)?;
-        fq::io::convert_multiple_fqs_to_one_bgzip_fq(&self.fqs, &self.output, true)?;
+        let output = self.output.with_extension("fq.gz");
+        fq::io::convert_multiple_fqs_to_one_bgzip_fq(&self.fqs, output, true)?;
         Ok(())
     }
 }

@@ -23,7 +23,8 @@ pub struct FasToOne {
 impl FasToOne {
     pub fn run(&self) -> Result<()> {
         set_up_threads(self.threads)?;
-        fa::io::convert_multiple_fas_to_one_bgzip_fa(&self.fas, &self.output, true)?;
+        let output = self.output.with_extension("fa.gz");
+        fa::io::convert_multiple_fas_to_one_bgzip_fa(&self.fas, output, true)?;
         Ok(())
     }
 }
