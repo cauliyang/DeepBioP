@@ -1,7 +1,7 @@
 use ahash::HashSet;
 use anyhow::{Ok, Result};
 use bstr::BString;
-use rand::{thread_rng, Rng};
+use rand::{rng, Rng};
 use rayon::prelude::*;
 use std::fs::File;
 use std::io::{self, BufReader};
@@ -182,7 +182,7 @@ pub fn select_record_from_fq_by_random<P: AsRef<Path>>(
     let mut reader = fasta::Reader::new(BufReader::new(reader));
 
     // Use reservoir sampling algorithm to randomly select records
-    let mut rng = thread_rng();
+    let mut rng = rng();
     let mut selected_records = Vec::with_capacity(numbers);
     let mut count = 0;
 
@@ -200,7 +200,7 @@ pub fn select_record_from_fq_by_random<P: AsRef<Path>>(
     // Process remaining elements with reservoir sampling
     for record in records_iter {
         count += 1;
-        let j = rng.gen_range(0..count);
+        let j = rng.random_range(0..count);
         if j < numbers {
             selected_records[j] = record;
         }
