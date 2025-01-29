@@ -15,7 +15,7 @@ use serde::{Deserialize, Serialize};
 use crate::types::Element;
 use deepbiop_utils::io::write_parquet;
 
-use super::{triat::Encoder, EncoderOption, RecordData};
+use super::{traits::Encoder, EncoderOption, RecordData};
 use anyhow::{Context, Result};
 use pyo3::prelude::*;
 use rayon::prelude::*;

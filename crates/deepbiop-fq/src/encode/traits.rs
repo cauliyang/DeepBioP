@@ -42,7 +42,7 @@ pub trait Encoder {
                 let qual_len = qual.len();
 
                 if seq_len != qual_len {
-                    // NOTE: it seems like log mes does not work well with rayon paralllel iterator  <02-26-24, Yangyang Li>
+                    // NOTE: it seems like log mes does not work well with rayon parallel iterator  <02-26-24, Yangyang Li>
                     // warn!(
                     //     "record: id {} seq_len != qual_len",
                     //     String::from_utf8_lossy(id)

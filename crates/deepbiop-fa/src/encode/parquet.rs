@@ -161,16 +161,11 @@ impl Display for ParquetEncoder {
 }
 
 impl Encoder for ParquetEncoder {
-    type RecordOutput = Result<RecordData>;
     type EncodeOutput = Result<(RecordBatch, Arc<Schema>)>;
+    type RecordOutput = Result<RecordData>;
 
-    fn encode_record(&self, id: &[u8], seq: &[u8]) -> Self::RecordOutput {
-        let result = RecordDataBuilder::default()
-            .id(id.into())
-            .seq(seq.into())
-            .build()
-            .context("Failed to build parquet data")?;
-        Ok(result)
+    fn encode_multiple(&mut self, _paths: &[PathBuf], _parallel: bool) -> Self::EncodeOutput {
+        todo!()
     }
 
     fn encode<P: AsRef<Path>>(&mut self, path: P) -> Self::EncodeOutput {
@@ -181,8 +176,13 @@ impl Encoder for ParquetEncoder {
         Ok((record_batch, schema))
     }
 
-    fn encode_multiple(&mut self, _paths: &[PathBuf], _parallel: bool) -> Self::EncodeOutput {
-        todo!()
+    fn encode_record(&self, id: &[u8], seq: &[u8]) -> Self::RecordOutput {
+        let result = RecordDataBuilder::default()
+            .id(id.into())
+            .seq(seq.into())
+            .build()
+            .context("Failed to build parquet data")?;
+        Ok(result)
     }
 }
 
