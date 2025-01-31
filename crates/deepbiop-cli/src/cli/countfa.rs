@@ -1,5 +1,6 @@
 use std::{
-    io::BufReader,
+    fs::File,
+    io::{BufReader, BufWriter, Write},
     path::{Path, PathBuf},
 };
 
@@ -17,12 +18,24 @@ pub struct CountFa {
     #[arg(value_name = "fa")]
     fa: PathBuf,
 
+    /// if export the result
+    #[arg(long, action=clap::ArgAction::SetTrue)]
+    export: bool,
+
     /// threads number
     #[arg(short, long, default_value = "2")]
     threads: Option<usize>,
 }
 
-fn summary(seq_len: &[usize]) -> Result<()> {
+fn export_json<P: AsRef<Path>>(seq_len: &[usize], output: P) -> Result<()> {
+    // save identities to json file
+    let json_file = File::create(output)?;
+    let mut json_writer = BufWriter::new(json_file);
+    json_writer.write_all(serde_json::to_string(seq_len)?.as_bytes())?;
+    Ok(())
+}
+
+fn summary<P: AsRef<Path>>(seq_len: &[usize], output: P, export: bool) -> Result<()> {
     let total_len: usize = seq_len.par_iter().sum();
     let max_len: usize = *seq_len.par_iter().max().unwrap_or(&0);
     let min_len: usize = *seq_len.par_iter().min().unwrap_or(&0);
@@ -61,26 +74,31 @@ fn summary(seq_len: &[usize]) -> Result<()> {
     println!("The first quartile of sequences: {}", q1);
     println!("The second quartile of sequences: {}", q2);
     println!("The third quartile of sequences: {}", q3);
+
+    if export {
+        export_json(seq_len, output)?;
+    }
+
     Ok(())
 }
 
-fn count_fa<P: AsRef<Path>>(fa: P) -> Result<()> {
-    let reader = utils::io::create_reader(fa)?;
+fn count_fa<P: AsRef<Path>>(fa: P, export: bool) -> Result<()> {
+    let reader = utils::io::create_reader(&fa)?;
     let mut reader = fasta::Reader::new(BufReader::new(reader));
 
     let seq_len: Vec<usize> = reader
         .records()
         .map(|record| record.map(|r| r.sequence().len()))
         .collect::<Result<Vec<_>, _>>()?;
-
-    summary(&seq_len)?;
+    let output = fa.as_ref().with_extension("json");
+    summary(&seq_len, output, export)?;
     Ok(())
 }
 
 impl CountFa {
     pub fn run(&self) -> Result<()> {
         set_up_threads(self.threads)?;
-        count_fa(&self.fa)?;
+        count_fa(&self.fa, self.export)?;
         Ok(())
     }
 }
