@@ -60,6 +60,12 @@ pub enum Commands {
 
     /// Multiple Fastas to one Fasta conversion.
     FasToOne(cli::FasToOne),
+
+    /// Profile sequences in a fasta file.
+    CountFa(cli::CountFa),
+
+    /// Profile sequences in a fastq file.
+    CountFq(cli::CountFq),
 }
 
 impl Display for Commands {
@@ -75,6 +81,8 @@ impl Display for Commands {
             Commands::FqToParquet(_) => write!(f, "fq2parquet"),
             Commands::FqsToOne(_) => write!(f, "fqs2one"),
             Commands::FasToOne(_) => write!(f, "fas2one"),
+            Commands::CountFa(_) => write!(f, "countfa"),
+            Commands::CountFq(_) => write!(f, "countfq"),
         }
     }
 }
@@ -154,6 +162,14 @@ fn main() -> Result<()> {
 
         Some(Commands::FasToOne(fas2one)) => {
             fas2one.run().unwrap();
+        }
+
+        Some(Commands::CountFa(countfa)) => {
+            countfa.run().unwrap();
+        }
+
+        Some(Commands::CountFq(countfq)) => {
+            countfq.run().unwrap();
         }
 
         None => {

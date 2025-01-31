@@ -21,6 +21,11 @@ pub use fqs2one::*;
 pub mod fas2one;
 pub use fas2one::*;
 
+pub mod countfa;
+pub use countfa::*;
+pub mod countfq;
+pub use countfq::*;
+
 use anyhow::Result;
 // Set up threads only once, using the common_opts from the top-level Cli struct
 pub fn set_up_threads(threads: Option<usize>) -> Result<()> {

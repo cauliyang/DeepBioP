@@ -175,10 +175,10 @@ pub fn select_record_from_fa<P: AsRef<Path>>(
 }
 
 pub fn select_record_from_fq_by_random<P: AsRef<Path>>(
-    fq: P,
+    fa: P,
     numbers: usize,
 ) -> Result<Vec<FastaRecord>> {
-    let reader = utils::io::create_reader(fq)?;
+    let reader = utils::io::create_reader(fa)?;
     let mut reader = fasta::Reader::new(BufReader::new(reader));
 
     // Use reservoir sampling algorithm to randomly select records
