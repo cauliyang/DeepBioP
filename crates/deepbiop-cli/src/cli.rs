@@ -11,10 +11,8 @@ pub use fa2parquet::*;
 pub mod fq2parquet;
 pub use fq2parquet::*;
 
-pub mod extractfq;
-pub use extractfq::*;
-pub mod extractfa;
-pub use extractfa::*;
+pub mod extractfx;
+pub use extractfx::*;
 
 pub mod fqs2one;
 pub use fqs2one::*;
