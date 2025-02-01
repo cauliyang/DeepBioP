@@ -14,8 +14,8 @@ use rayon::prelude::*;
 
 #[derive(Debug, Parser)]
 pub struct CountFx {
-    /// path to the fasta or fastq file
-    #[arg(value_name = "fa")]
+    /// path to the fastx file
+    #[arg(value_name = "fx")]
     fx: PathBuf,
 
     /// if export the result

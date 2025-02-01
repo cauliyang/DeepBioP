@@ -6,10 +6,8 @@ pub mod fa2fq;
 pub use fa2fq::*;
 pub mod chimeric_count;
 pub use chimeric_count::*;
-pub mod fa2parquet;
-pub use fa2parquet::*;
-pub mod fq2parquet;
-pub use fq2parquet::*;
+pub mod fx2parquet;
+pub use fx2parquet::*;
 
 pub mod extractfx;
 pub use extractfx::*;

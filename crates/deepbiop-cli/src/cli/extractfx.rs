@@ -16,8 +16,8 @@ use super::set_up_threads;
 
 #[derive(Debug, Parser)]
 pub struct ExtractFx {
-    /// path to the bam file
-    #[arg(value_name = "fa")]
+    /// path to the fastx file
+    #[arg(value_name = "fx")]
     fx: PathBuf,
 
     /// Path to the selected reads

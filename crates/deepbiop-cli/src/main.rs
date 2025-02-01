@@ -44,11 +44,8 @@ pub enum Commands {
     /// Fasta to fastq conversion.
     FaToFq(cli::FaToFq),
 
-    /// Fasta to parquet conversion.
-    FaToParquet(cli::FaToParquet),
-
-    /// Fastq to parquet conversion.
-    FqToParquet(cli::FqToParquet),
+    /// Fastx to parquet conversion.
+    FxToParquet(cli::FxToParquet),
 
     /// Extract reads from a fastx file.
     ExtractFx(cli::ExtractFx),
@@ -70,9 +67,8 @@ impl Display for Commands {
             Commands::BamToFq(_) => write!(f, "bam2fq"),
             Commands::FqToFa(_) => write!(f, "fq2fa"),
             Commands::FaToFq(_) => write!(f, "fa2fq"),
-            Commands::FaToParquet(_) => write!(f, "fa2parquet"),
+            Commands::FxToParquet(_) => write!(f, "fx2parquet"),
             Commands::ExtractFx(_) => write!(f, "extractfx"),
-            Commands::FqToParquet(_) => write!(f, "fq2parquet"),
             Commands::FqsToOne(_) => write!(f, "fqs2one"),
             Commands::FasToOne(_) => write!(f, "fas2one"),
             Commands::CountFx(_) => write!(f, "countfx"),
@@ -133,12 +129,8 @@ fn main() -> Result<()> {
             fa2fq.run().unwrap();
         }
 
-        Some(Commands::FaToParquet(fa2parquet)) => {
-            fa2parquet.run().unwrap();
-        }
-
-        Some(Commands::FqToParquet(fq2parquet)) => {
-            fq2parquet.run().unwrap();
+        Some(Commands::FxToParquet(fx2parquet)) => {
+            fx2parquet.run().unwrap();
         }
 
         Some(Commands::ExtractFx(extractfx)) => {
