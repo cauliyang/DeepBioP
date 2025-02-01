@@ -21,7 +21,7 @@ use crate::encode::RecordData;
 use deepbiop_utils as utils;
 
 pub fn read_noodle_records<P: AsRef<Path>>(file_path: P) -> Result<Vec<FastqRecord>> {
-    let reader = utils::io::create_reader(&file_path)?;
+    let reader = utils::io::create_reader_for_compressed_file(&file_path)?;
     let mut reader = fastq::Reader::new(BufReader::new(reader));
     reader.records().map(|record| Ok(record?)).collect()
 }
@@ -184,7 +184,7 @@ pub fn select_record_from_fq_by_random<P: AsRef<Path>>(
     fq: P,
     numbers: usize,
 ) -> Result<Vec<FastqRecord>> {
-    let reader = utils::io::create_reader(fq)?;
+    let reader = utils::io::create_reader_for_compressed_file(fq)?;
     let mut reader = fastq::Reader::new(BufReader::new(reader));
 
     // Use reservoir sampling algorithm to randomly select records
@@ -222,7 +222,7 @@ pub fn select_record_from_fq<P: AsRef<Path>>(
     fq: P,
     selected_records: &HashSet<BString>,
 ) -> Result<Vec<FastqRecord>> {
-    let reader = utils::io::create_reader(fq)?;
+    let reader = utils::io::create_reader_for_compressed_file(fq)?;
     let mut reader = fastq::Reader::new(BufReader::new(reader));
 
     reader

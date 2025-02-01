@@ -1,6 +1,7 @@
 use clap::{Command, CommandFactory, Parser, Subcommand};
 use env_logger::Builder;
 use human_panic::setup_panic;
+use log::debug;
 use log::info;
 use log::LevelFilter;
 use std::fmt::Display;
@@ -62,10 +63,7 @@ pub enum Commands {
     FasToOne(cli::FasToOne),
 
     /// Profile sequences in a fasta file.
-    CountFa(cli::CountFa),
-
-    /// Profile sequences in a fastq file.
-    CountFq(cli::CountFq),
+    CountFx(cli::CountFx),
 }
 
 impl Display for Commands {
@@ -81,8 +79,7 @@ impl Display for Commands {
             Commands::FqToParquet(_) => write!(f, "fq2parquet"),
             Commands::FqsToOne(_) => write!(f, "fqs2one"),
             Commands::FasToOne(_) => write!(f, "fas2one"),
-            Commands::CountFa(_) => write!(f, "countfa"),
-            Commands::CountFq(_) => write!(f, "countfq"),
+            Commands::CountFx(_) => write!(f, "countfx"),
         }
     }
 }
@@ -101,11 +98,11 @@ fn main() -> Result<()> {
 
     match cli.verbose.log_level() {
         Some(level) => {
-            info!("Verbose mode is on with level {}!", level);
+            debug!("Verbose mode is on with level {}!", level);
             log_builder.filter(None, level.to_level_filter());
         }
         None => {
-            info!("Verbose mode is off!");
+            debug!("Using default info level");
             log_builder.filter(None, LevelFilter::Off);
         }
     }
@@ -164,12 +161,8 @@ fn main() -> Result<()> {
             fas2one.run().unwrap();
         }
 
-        Some(Commands::CountFa(countfa)) => {
-            countfa.run().unwrap();
-        }
-
-        Some(Commands::CountFq(countfq)) => {
-            countfq.run().unwrap();
+        Some(Commands::CountFx(countfx)) => {
+            countfx.run().unwrap();
         }
 
         None => {

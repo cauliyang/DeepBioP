@@ -6,17 +6,17 @@ use std::{
 
 use clap::Parser;
 use deepbiop_utils as utils;
-use noodles::fasta;
+use noodles::{fasta, fastq};
 
 use super::set_up_threads;
 use anyhow::Result;
 use rayon::prelude::*;
 
 #[derive(Debug, Parser)]
-pub struct CountFa {
-    /// path to the bam file
+pub struct CountFx {
+    /// path to the fasta or fastq file
     #[arg(value_name = "fa")]
-    fa: PathBuf,
+    fx: PathBuf,
 
     /// if export the result
     #[arg(long, action=clap::ArgAction::SetTrue)]
@@ -78,27 +78,39 @@ fn summary<P: AsRef<Path>>(seq_len: &[usize], output: P, export: bool) -> Result
     if export {
         export_json(seq_len, output)?;
     }
-
     Ok(())
 }
 
-fn count_fa<P: AsRef<Path>>(fa: P, export: bool) -> Result<()> {
-    let reader = utils::io::create_reader(&fa)?;
-    let mut reader = fasta::Reader::new(BufReader::new(reader));
+fn count_fx<P: AsRef<Path>>(fx: P, export: bool) -> Result<()> {
+    let reader = utils::io::create_reader_for_compressed_file(&fx)?;
 
-    let seq_len: Vec<usize> = reader
-        .records()
-        .map(|record| record.map(|r| r.sequence().len()))
-        .collect::<Result<Vec<_>, _>>()?;
-    let output = fa.as_ref().with_extension("json");
+    let seq_len = match utils::io::check_sequence_file_type(&fx)? {
+        utils::io::SequenceFileType::Fasta => {
+            let mut reader = fasta::Reader::new(BufReader::new(reader));
+            reader
+                .records()
+                .map(|record| record.map(|r| r.sequence().len()))
+                .collect::<Result<Vec<_>, _>>()?
+        }
+        utils::io::SequenceFileType::Fastq => {
+            let mut reader = fastq::Reader::new(BufReader::new(reader));
+            reader
+                .records()
+                .map(|record| record.map(|r| r.sequence().len()))
+                .collect::<Result<Vec<_>, _>>()?
+        }
+        _ => return Err(anyhow::anyhow!("Unsupported file type")),
+    };
+
+    let output = fx.as_ref().with_extension("json");
     summary(&seq_len, output, export)?;
     Ok(())
 }
 
-impl CountFa {
+impl CountFx {
     pub fn run(&self) -> Result<()> {
         set_up_threads(self.threads)?;
-        count_fa(&self.fa, self.export)?;
+        count_fx(&self.fx, self.export)?;
         Ok(())
     }
 }
