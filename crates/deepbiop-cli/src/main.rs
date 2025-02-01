@@ -50,11 +50,8 @@ pub enum Commands {
     /// Extract reads from a fastx file.
     ExtractFx(cli::ExtractFx),
 
-    /// Multiple Fastqs to one Fastq conversion.
-    FqsToOne(cli::FqsToOne),
-
-    /// Multiple Fastas to one Fasta conversion.
-    FasToOne(cli::FasToOne),
+    /// Multiple Fastxs to one Fastx conversion.
+    FxsToOne(cli::FxsToOne),
 
     /// Profile sequences in a fasta file.
     CountFx(cli::CountFx),
@@ -69,8 +66,7 @@ impl Display for Commands {
             Commands::FaToFq(_) => write!(f, "fa2fq"),
             Commands::FxToParquet(_) => write!(f, "fx2parquet"),
             Commands::ExtractFx(_) => write!(f, "extractfx"),
-            Commands::FqsToOne(_) => write!(f, "fqs2one"),
-            Commands::FasToOne(_) => write!(f, "fas2one"),
+            Commands::FxsToOne(_) => write!(f, "fxs2one"),
             Commands::CountFx(_) => write!(f, "countfx"),
         }
     }
@@ -137,12 +133,8 @@ fn main() -> Result<()> {
             extractfx.run().unwrap();
         }
 
-        Some(Commands::FqsToOne(fqs2one)) => {
-            fqs2one.run().unwrap();
-        }
-
-        Some(Commands::FasToOne(fas2one)) => {
-            fas2one.run().unwrap();
+        Some(Commands::FxsToOne(fxs2one)) => {
+            fxs2one.run().unwrap();
         }
 
         Some(Commands::CountFx(countfx)) => {

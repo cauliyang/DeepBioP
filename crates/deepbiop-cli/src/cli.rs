@@ -12,10 +12,8 @@ pub use fx2parquet::*;
 pub mod extractfx;
 pub use extractfx::*;
 
-pub mod fqs2one;
-pub use fqs2one::*;
-pub mod fas2one;
-pub use fas2one::*;
+pub mod fxs2one;
+pub use fxs2one::*;
 
 pub mod countfx;
 pub use countfx::*;
