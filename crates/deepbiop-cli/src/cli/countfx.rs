@@ -82,17 +82,18 @@ fn summary<P: AsRef<Path>>(seq_len: &[usize], output: P, export: bool) -> Result
 }
 
 fn count_fx<P: AsRef<Path>>(fx: P, export: bool) -> Result<()> {
+    use utils::io::SequenceFileType;
     let reader = utils::io::create_reader_for_compressed_file(&fx)?;
 
     let seq_len = match utils::io::check_sequence_file_type(&fx)? {
-        utils::io::SequenceFileType::Fasta => {
+        SequenceFileType::Fasta => {
             let mut reader = fasta::Reader::new(BufReader::new(reader));
             reader
                 .records()
                 .map(|record| record.map(|r| r.sequence().len()))
                 .collect::<Result<Vec<_>, _>>()?
         }
-        utils::io::SequenceFileType::Fastq => {
+        SequenceFileType::Fastq => {
             let mut reader = fastq::Reader::new(BufReader::new(reader));
             reader
                 .records()

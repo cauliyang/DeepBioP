@@ -94,11 +94,11 @@ fn fq_worker(options: &FxToParquet) -> Result<()> {
 
 impl FxToParquet {
     pub fn run(&self) -> Result<()> {
+        use utils::io::SequenceFileType;
         set_up_threads(self.threads)?;
-
         match utils::io::check_sequence_file_type(&self.fx) {
-            Ok(utils::io::SequenceFileType::Fasta) => fa_worker(self),
-            Ok(utils::io::SequenceFileType::Fastq) => fq_worker(self),
+            Ok(SequenceFileType::Fasta) => fa_worker(self),
+            Ok(SequenceFileType::Fastq) => fq_worker(self),
             _ => Err(anyhow::anyhow!("Unsupported file type")),
         }?;
 
