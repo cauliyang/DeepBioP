@@ -43,16 +43,13 @@ pub struct ExtractFx {
 
 fn parse_reads<P: AsRef<Path>>(reads: P) -> Result<HashSet<BString>> {
     let file = std::fs::File::open(reads.as_ref())?;
-
     let reader = BufReader::new(file);
-
     let mut reads = HashSet::new();
 
     for line in reader.lines() {
         let line = line?;
         reads.insert(line.into());
     }
-
     Ok(reads)
 }
 
@@ -71,7 +68,6 @@ fn fa_worker(options: &ExtractFx) -> Result<()> {
             "Either --reads or --number must be specified"
         ));
     };
-
     info!("collect {} records", records.len());
 
     if options.compressed {
@@ -84,7 +80,6 @@ fn fa_worker(options: &ExtractFx) -> Result<()> {
         } else {
             options.fx.with_extension("selected.fa.gz")
         };
-
         info!("write to {}", &file_path.display());
         fa::io::write_bzip_fa_parallel_for_noodle_record(&records, file_path, options.threads)?;
     } else {
@@ -152,10 +147,11 @@ fn fq_worker(options: &ExtractFx) -> Result<()> {
 
 impl ExtractFx {
     pub fn run(&self) -> Result<()> {
+        use utils::io::SequenceFileType;
         set_up_threads(self.threads)?;
         match utils::io::check_sequence_file_type(&self.fx) {
-            Ok(utils::io::SequenceFileType::Fasta) => fa_worker(self),
-            Ok(utils::io::SequenceFileType::Fastq) => fq_worker(self),
+            Ok(SequenceFileType::Fasta) => fa_worker(self),
+            Ok(SequenceFileType::Fastq) => fq_worker(self),
             _ => Err(anyhow::anyhow!("Unsupported file type")),
         }?;
         Ok(())
