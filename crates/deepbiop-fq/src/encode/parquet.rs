@@ -53,7 +53,7 @@ impl ParquetEncoder {
         ]))
     }
 
-    fn generate_batchs(
+    fn generate_batches(
         &self,
         records: &[RecordData],
         schema: &Arc<Schema>,
@@ -101,7 +101,7 @@ impl ParquetEncoder {
     }
 
     fn generate_batch(&self, records: &[RecordData], schema: &Arc<Schema>) -> Result<RecordBatch> {
-        let all_batches = self.generate_batchs(records, schema)?;
+        let all_batches = self.generate_batches(records, schema)?;
         // Concatenate all batches
         arrow::compute::concat_batches(schema, &all_batches)
             .context("Failed to concatenate record batches")
@@ -204,7 +204,7 @@ impl Encoder for ParquetEncoder {
         // Define the schema of the data (one column of integers)
         let schema = self.generate_schema();
         let records = self.fetch_records(path)?;
-        let record_batch = self.generate_batchs(&records, &schema)?;
+        let record_batch = self.generate_batches(&records, &schema)?;
         Ok((record_batch, schema))
     }
 
