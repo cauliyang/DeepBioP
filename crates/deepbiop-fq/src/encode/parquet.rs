@@ -9,7 +9,7 @@ use arrow::datatypes::{DataType, Field, Schema};
 
 use bstr::BString;
 use derive_builder::Builder;
-use log::{debug, info};
+use log::info;
 use serde::{Deserialize, Serialize};
 
 use crate::types::Element;
@@ -54,59 +54,48 @@ impl ParquetEncoder {
     }
 
     fn generate_batch(&self, records: &[RecordData], schema: &Arc<Schema>) -> Result<RecordBatch> {
-        // Create builders for each field
-        let capacity = records.len();
-        let mut id_builder = StringBuilder::with_capacity(capacity, capacity * 50);
-        let mut seq_builder = StringBuilder::with_capacity(capacity, capacity * 200); // Estimate 200 bytes per sequence
-        let mut qual_builder = ListBuilder::new(Int32Builder::with_capacity(capacity * 200)); // Estimate same as sequence
+        // Process smaller batches to avoid 2GB limit
+        const BATCH_SIZE: usize = 10000; // Adjust this value based on your data size
 
-        let data: Vec<ParquetData> = records
-            .into_par_iter()
-            .filter_map(|data| {
-                let id = data.id.as_ref();
-                let seq = data.seq.as_ref();
-                let qual = data.qual.as_ref();
-                match self.encode_record(id, seq, qual).context(format!(
-                    "encode fq read id {} error",
-                    String::from_utf8_lossy(id)
-                )) {
-                    Ok(result) => Some(result),
-                    Err(_e) => None,
+        let all_batches: Vec<_> = records
+            .par_chunks(BATCH_SIZE)
+            .map(|chunk| {
+                let capacity = chunk.len();
+                let mut id_builder = StringBuilder::with_capacity(capacity, capacity * 50);
+                let mut seq_builder = StringBuilder::with_capacity(capacity, capacity * 200);
+                let mut qual_builder =
+                    ListBuilder::new(Int32Builder::with_capacity(capacity * 200));
+
+                for data in chunk {
+                    let record = self
+                        .encode_record(data.id.as_ref(), data.seq.as_ref(), data.qual.as_ref())
+                        .context(format!(
+                            "encode fq read id {} error",
+                            String::from_utf8_lossy(data.id.as_ref())
+                        ))
+                        .unwrap();
+                    id_builder.append_value(record.id.to_string());
+                    seq_builder.append_value(record.seq.to_string());
+                    for qual in record.qual {
+                        qual_builder.values().append_value(qual);
+                    }
+                    qual_builder.append(true);
                 }
+
+                RecordBatch::try_new(
+                    schema.clone(),
+                    vec![
+                        Arc::new(id_builder.finish()) as Arc<dyn Array>,
+                        Arc::new(seq_builder.finish()) as Arc<dyn Array>,
+                        Arc::new(qual_builder.finish()) as Arc<dyn Array>,
+                    ],
+                )
+                .unwrap()
             })
             .collect();
-
-        // Populate builders
-        for parquet_record in data {
-            // Append values directly - no need to recreate builders which would lose previous data
-            debug!("Appending record: {:?}", parquet_record.id);
-            id_builder.append_value(parquet_record.id.to_string());
-
-            debug!("Appending record seq");
-            seq_builder.append_value(parquet_record.seq.to_string());
-            // Append quality values
-            for qual in parquet_record.qual {
-                qual_builder.values().append_value(qual);
-            }
-            qual_builder.append(true);
-        }
-
-        // Build arrays
-        let id_array = Arc::new(id_builder.finish());
-        let seq_array = Arc::new(seq_builder.finish());
-        let qual_array = Arc::new(qual_builder.finish());
-
-        // Create a RecordBatch
-        let record_batch = RecordBatch::try_new(
-            schema.clone(),
-            vec![
-                id_array as Arc<dyn Array>,
-                seq_array as Arc<dyn Array>,
-                qual_array as Arc<dyn Array>,
-            ],
-        )?;
-
-        Ok(record_batch)
+        // Concatenate all batches
+        arrow::compute::concat_batches(schema, &all_batches)
+            .context("Failed to concatenate record batches")
     }
 
     pub fn encode_chunk<P: AsRef<Path>>(
