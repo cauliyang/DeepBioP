@@ -198,7 +198,7 @@ impl Encoder for ParquetEncoder {
 
 #[cfg(test)]
 mod tests {
-    use deepbiop_utils::io::write_parquet_for_batchs;
+    use deepbiop_utils::io::write_parquet_for_batches;
 
     use crate::encode::option::EncoderOptionBuilder;
 
@@ -212,7 +212,7 @@ mod tests {
             .unwrap();
 
         let (record_batch, scheme) = encoder.encode("tests/data/test.fa").unwrap();
-        write_parquet_for_batchs("test.parquet", &record_batch, scheme).unwrap();
+        write_parquet_for_batches("test.parquet", &record_batch, scheme).unwrap();
         // remove test.parquet
         std::fs::remove_file("test.parquet").unwrap();
     }

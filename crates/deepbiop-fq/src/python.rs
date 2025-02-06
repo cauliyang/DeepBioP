@@ -10,7 +10,7 @@ use crate::{
 
 use ahash::{HashMap, HashSet};
 use anyhow::Result;
-use deepbiop_utils::io::write_parquet;
+use deepbiop_utils::io::write_parquet_for_batches;
 use log::warn;
 use noodles::fasta;
 use pyo3::prelude::*;
@@ -167,7 +167,7 @@ fn encode_fq_path_to_parquet(
     } else {
         fq_path.with_extension("parquet")
     };
-    write_parquet(parquet_path, record_batch, schema)?;
+    write_parquet_for_batches(parquet_path, &record_batch, schema)?;
     Ok(())
 }
 

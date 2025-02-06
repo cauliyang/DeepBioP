@@ -21,7 +21,7 @@ pub fn write_parquet<P: AsRef<Path>>(
     Ok(())
 }
 
-pub fn write_parquet_for_batchs<P: AsRef<Path>>(
+pub fn write_parquet_for_batches<P: AsRef<Path>>(
     path: P,
     record_batches: &[RecordBatch],
     schema: Arc<Schema>,
