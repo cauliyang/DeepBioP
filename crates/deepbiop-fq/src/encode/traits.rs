@@ -53,7 +53,6 @@ pub trait Encoder {
                 Some((id.to_vec(), seq.to_vec(), qual.to_vec()).into())
             })
             .collect();
-
         info!("total records: {}", records.len());
         Ok(records)
     }

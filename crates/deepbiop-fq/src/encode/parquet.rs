@@ -54,6 +54,12 @@ impl ParquetEncoder {
     }
 
     fn generate_batch(&self, records: &[RecordData], schema: &Arc<Schema>) -> Result<RecordBatch> {
+        // Create builders for each field
+        let capacity = records.len();
+        let mut id_builder = StringBuilder::with_capacity(capacity, capacity * 50);
+        let mut seq_builder = StringBuilder::with_capacity(capacity, capacity * 200); // Estimate 200 bytes per sequence
+        let mut qual_builder = ListBuilder::new(Int32Builder::with_capacity(capacity * 200)); // Estimate same as sequence
+
         let data: Vec<ParquetData> = records
             .into_par_iter()
             .filter_map(|data| {
@@ -70,21 +76,18 @@ impl ParquetEncoder {
             })
             .collect();
 
-        // Create builders for each field
-        let mut id_builder = StringBuilder::new();
-        let mut seq_builder = StringBuilder::new();
-        let mut qual_builder = ListBuilder::new(Int32Builder::new());
-
         // Populate builders
-        data.into_iter().for_each(|parquet_record| {
+        for parquet_record in data {
+            // Append values directly - no need to recreate builders which would lose previous data
             id_builder.append_value(parquet_record.id.to_string());
             seq_builder.append_value(parquet_record.seq.to_string());
 
-            parquet_record.qual.into_iter().for_each(|qual| {
+            // Append quality values
+            for qual in parquet_record.qual {
                 qual_builder.values().append_value(qual);
-            });
+            }
             qual_builder.append(true);
-        });
+        }
 
         // Build arrays
         let id_array = Arc::new(id_builder.finish());
@@ -100,6 +103,7 @@ impl ParquetEncoder {
                 qual_array as Arc<dyn Array>,
             ],
         )?;
+
         Ok(record_batch)
     }
 
