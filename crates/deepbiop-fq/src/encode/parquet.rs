@@ -9,7 +9,7 @@ use arrow::datatypes::{DataType, Field, Schema};
 
 use bstr::BString;
 use derive_builder::Builder;
-use log::info;
+use log::{debug, info};
 use serde::{Deserialize, Serialize};
 
 use crate::types::Element;
@@ -79,9 +79,11 @@ impl ParquetEncoder {
         // Populate builders
         for parquet_record in data {
             // Append values directly - no need to recreate builders which would lose previous data
+            debug!("Appending record: {:?}", parquet_record.id);
             id_builder.append_value(parquet_record.id.to_string());
-            seq_builder.append_value(parquet_record.seq.to_string());
 
+            debug!("Appending record seq");
+            seq_builder.append_value(parquet_record.seq.to_string());
             // Append quality values
             for qual in parquet_record.qual {
                 qual_builder.values().append_value(qual);
