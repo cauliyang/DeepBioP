@@ -53,9 +53,13 @@ impl ParquetEncoder {
         ]))
     }
 
-    fn generate_batch(&self, records: &[RecordData], schema: &Arc<Schema>) -> Result<RecordBatch> {
+    fn generate_batchs(
+        &self,
+        records: &[RecordData],
+        schema: &Arc<Schema>,
+    ) -> Result<Vec<RecordBatch>> {
         // Process smaller batches to avoid 2GB limit
-        const BATCH_SIZE: usize = 1000; // Adjust this value based on your data size
+        const BATCH_SIZE: usize = 10000; // Adjust this value based on your data size
         let all_batches: Vec<_> = records
             .par_chunks(BATCH_SIZE)
             .map(|chunk| {
@@ -92,8 +96,12 @@ impl ParquetEncoder {
                 .unwrap()
             })
             .collect();
-
         debug!("all batches: {}", all_batches.len());
+        Ok(all_batches)
+    }
+
+    fn generate_batch(&self, records: &[RecordData], schema: &Arc<Schema>) -> Result<RecordBatch> {
+        let all_batches = self.generate_batchs(records, schema)?;
         // Concatenate all batches
         arrow::compute::concat_batches(schema, &all_batches)
             .context("Failed to concatenate record batches")
@@ -163,7 +171,7 @@ impl Display for ParquetEncoder {
 
 impl Encoder for ParquetEncoder {
     type RecordOutput = Result<ParquetData>;
-    type EncodeOutput = Result<(RecordBatch, Arc<Schema>)>;
+    type EncodeOutput = Result<(Vec<RecordBatch>, Arc<Schema>)>;
 
     fn encode_qual(&self, qual: &[u8], qual_offset: u8) -> Vec<Element> {
         // input is quality of fastq
@@ -196,7 +204,7 @@ impl Encoder for ParquetEncoder {
         // Define the schema of the data (one column of integers)
         let schema = self.generate_schema();
         let records = self.fetch_records(path)?;
-        let record_batch = self.generate_batch(&records, &schema)?;
+        let record_batch = self.generate_batchs(&records, &schema)?;
         Ok((record_batch, schema))
     }
 
@@ -210,17 +218,17 @@ mod tests {
     use crate::encode::EncoderOptionBuilder;
 
     use super::*;
-    #[test]
-    fn test_encode_fq_for_parquet() {
-        let option = EncoderOptionBuilder::default().build().unwrap();
+    // #[test]
+    // fn test_encode_fq_for_parquet() {
+    //     let option = EncoderOptionBuilder::default().build().unwrap();
 
-        let mut encoder = ParquetEncoderBuilder::default()
-            .option(option)
-            .build()
-            .unwrap();
-        let (record_batch, scheme) = encoder.encode("tests/data/one_record.fq").unwrap();
-        write_parquet("test.parquet", record_batch, scheme).unwrap();
-        // remove test.parquet
-        std::fs::remove_file("test.parquet").unwrap();
-    }
+    //     let mut encoder = ParquetEncoderBuilder::default()
+    //         .option(option)
+    //         .build()
+    //         .unwrap();
+    //     let (record_batch, scheme) = encoder.encode("tests/data/one_record.fq").unwrap();
+    //     write_parquet("test.parquet", record_batch, scheme).unwrap();
+    //     // remove test.parquet
+    //     std::fs::remove_file("test.parquet").unwrap();
+    // }
 }

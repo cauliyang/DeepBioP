@@ -20,3 +20,19 @@ pub fn write_parquet<P: AsRef<Path>>(
     writer.close()?;
     Ok(())
 }
+
+pub fn write_parquet_for_batchs<P: AsRef<Path>>(
+    path: P,
+    record_batchs: &[RecordBatch],
+    schema: Arc<Schema>,
+) -> Result<()> {
+    let file = File::create(path.as_ref())?;
+    let props = WriterProperties::builder().build();
+    let mut writer = ArrowWriter::try_new(file, schema, Some(props))?;
+
+    for record_batch in record_batchs {
+        writer.write(&record_batch)?;
+    }
+    writer.close()?;
+    Ok(())
+}

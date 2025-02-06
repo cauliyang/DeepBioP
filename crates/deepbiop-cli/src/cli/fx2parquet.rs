@@ -87,7 +87,7 @@ fn fq_worker(options: &FxToParquet) -> Result<()> {
     } else {
         options.fx.with_extension("parquet")
     };
-    utils::io::write_parquet(parquet_path, record_batch, schema)?;
+    utils::io::write_parquet_for_batchs(parquet_path, &record_batch, schema)?;
 
     Ok(())
 }
