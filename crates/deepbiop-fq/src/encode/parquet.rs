@@ -55,14 +55,15 @@ impl ParquetEncoder {
 
     fn generate_batch(&self, records: &[RecordData], schema: &Arc<Schema>) -> Result<RecordBatch> {
         // Process smaller batches to avoid 2GB limit
-        const BATCH_SIZE: usize = 10000; // Adjust this value based on your data size
-
+        const BATCH_SIZE: usize = 1000; // Adjust this value based on your data size
         let all_batches: Vec<_> = records
             .par_chunks(BATCH_SIZE)
             .map(|chunk| {
                 let capacity = chunk.len();
-                let mut id_builder = StringBuilder::with_capacity(capacity, capacity * 50);
-                let mut seq_builder = StringBuilder::with_capacity(capacity, capacity * 200);
+
+                let mut id_builder = StringBuilder::new();
+                let mut seq_builder = StringBuilder::new();
+
                 let mut qual_builder =
                     ListBuilder::new(Int32Builder::with_capacity(capacity * 200));
 
