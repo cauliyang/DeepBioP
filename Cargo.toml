@@ -24,7 +24,7 @@ walkdir = { version = "2.5" }
 rayon = { version = "1.10" }
 log = "0.4"
 pyo3-log = "0.12.1"
-noodles = { version = "0.90.0", features = [
+noodles = { version = "0.91.0", features = [
   "bgzf",
   "core",
   "csi",
