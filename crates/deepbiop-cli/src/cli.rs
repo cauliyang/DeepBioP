@@ -6,20 +6,14 @@ pub mod fa2fq;
 pub use fa2fq::*;
 pub mod chimeric_count;
 pub use chimeric_count::*;
-pub mod fa2parquet;
-pub use fa2parquet::*;
-pub mod fq2parquet;
-pub use fq2parquet::*;
-
-pub mod extractfq;
-pub use extractfq::*;
-pub mod extractfa;
-pub use extractfa::*;
-
-pub mod fqs2one;
-pub use fqs2one::*;
-pub mod fas2one;
-pub use fas2one::*;
+pub mod fx2parquet;
+pub use fx2parquet::*;
+pub mod extractfx;
+pub use extractfx::*;
+pub mod fxs2one;
+pub use fxs2one::*;
+pub mod countfx;
+pub use countfx::*;
 
 use anyhow::Result;
 // Set up threads only once, using the common_opts from the top-level Cli struct

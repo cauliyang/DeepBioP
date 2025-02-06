@@ -1,6 +1,7 @@
 use clap::{Command, CommandFactory, Parser, Subcommand};
 use env_logger::Builder;
 use human_panic::setup_panic;
+use log::debug;
 use log::info;
 use log::LevelFilter;
 use std::fmt::Display;
@@ -43,23 +44,17 @@ pub enum Commands {
     /// Fasta to fastq conversion.
     FaToFq(cli::FaToFq),
 
-    /// Fasta to parquet conversion.
-    FaToParquet(cli::FaToParquet),
+    /// Fastx to parquet conversion.
+    FxToParquet(cli::FxToParquet),
 
-    /// Fastq to parquet conversion.
-    FqToParquet(cli::FqToParquet),
+    /// Extract reads from a fastx file.
+    ExtractFx(cli::ExtractFx),
 
-    /// Extract fastq reads from a fastq file.
-    ExtractFq(cli::ExtractFq),
+    /// Multiple Fastxs to one Fastx conversion.
+    FxsToOne(cli::FxsToOne),
 
-    /// Extract fasta reads from a fasta file.
-    ExtractFa(cli::ExtractFa),
-
-    /// Multiple Fastqs to one Fastq conversion.
-    FqsToOne(cli::FqsToOne),
-
-    /// Multiple Fastas to one Fasta conversion.
-    FasToOne(cli::FasToOne),
+    /// Profile sequences in a fasta file.
+    CountFx(cli::CountFx),
 }
 
 impl Display for Commands {
@@ -69,12 +64,10 @@ impl Display for Commands {
             Commands::BamToFq(_) => write!(f, "bam2fq"),
             Commands::FqToFa(_) => write!(f, "fq2fa"),
             Commands::FaToFq(_) => write!(f, "fa2fq"),
-            Commands::FaToParquet(_) => write!(f, "fa2parquet"),
-            Commands::ExtractFq(_) => write!(f, "extractfq"),
-            Commands::ExtractFa(_) => write!(f, "extractfa"),
-            Commands::FqToParquet(_) => write!(f, "fq2parquet"),
-            Commands::FqsToOne(_) => write!(f, "fqs2one"),
-            Commands::FasToOne(_) => write!(f, "fas2one"),
+            Commands::FxToParquet(_) => write!(f, "fx2parquet"),
+            Commands::ExtractFx(_) => write!(f, "extractfx"),
+            Commands::FxsToOne(_) => write!(f, "fxs2one"),
+            Commands::CountFx(_) => write!(f, "countfx"),
         }
     }
 }
@@ -93,11 +86,11 @@ fn main() -> Result<()> {
 
     match cli.verbose.log_level() {
         Some(level) => {
-            info!("Verbose mode is on with level {}!", level);
+            debug!("Verbose mode is on with level {}!", level);
             log_builder.filter(None, level.to_level_filter());
         }
         None => {
-            info!("Verbose mode is off!");
+            debug!("Using default info level");
             log_builder.filter(None, LevelFilter::Off);
         }
     }
@@ -132,28 +125,20 @@ fn main() -> Result<()> {
             fa2fq.run().unwrap();
         }
 
-        Some(Commands::FaToParquet(fa2parquet)) => {
-            fa2parquet.run().unwrap();
+        Some(Commands::FxToParquet(fx2parquet)) => {
+            fx2parquet.run().unwrap();
         }
 
-        Some(Commands::FqToParquet(fq2parquet)) => {
-            fq2parquet.run().unwrap();
+        Some(Commands::ExtractFx(extractfx)) => {
+            extractfx.run().unwrap();
         }
 
-        Some(Commands::ExtractFq(extractfq)) => {
-            extractfq.run().unwrap();
+        Some(Commands::FxsToOne(fxs2one)) => {
+            fxs2one.run().unwrap();
         }
 
-        Some(Commands::ExtractFa(extractfa)) => {
-            extractfa.run().unwrap();
-        }
-
-        Some(Commands::FqsToOne(fqs2one)) => {
-            fqs2one.run().unwrap();
-        }
-
-        Some(Commands::FasToOne(fas2one)) => {
-            fas2one.run().unwrap();
+        Some(Commands::CountFx(countfx)) => {
+            countfx.run().unwrap();
         }
 
         None => {

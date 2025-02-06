@@ -1,6 +1,6 @@
 use anyhow::Result;
 use log::info;
-use noodles::fastq;
+use noodles::fasta;
 use std::{
     io::BufReader,
     path::{Path, PathBuf},
@@ -20,8 +20,8 @@ pub trait Encoder {
 
     fn fetch_records<P: AsRef<Path>>(&mut self, path: P) -> Result<Vec<RecordData>> {
         info!("fetching records from {}", path.as_ref().display());
-        let reader = utils::io::create_reader(path)?;
-        let mut reader = fastq::Reader::new(BufReader::new(reader));
+        let reader = utils::io::create_reader_for_compressed_file(path)?;
+        let mut reader = fasta::Reader::new(BufReader::new(reader));
 
         let records: Vec<RecordData> = reader
             .records()
@@ -29,7 +29,7 @@ pub trait Encoder {
                 let record = record.ok()?;
 
                 let id = record.definition().name();
-                let seq: &[u8] = record.sequence();
+                let seq: &[u8] = record.sequence().as_ref();
                 let normalized_seq = seq.normalize(false);
                 Some((id.to_vec(), normalized_seq.to_vec()).into())
             })

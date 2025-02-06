@@ -3,7 +3,7 @@
 
 import typing
 
-def generate_kmers(base:str,k:int) -> list[str]:
+def generate_kmers(base: str, k: int) -> list[str]:
     r"""
     Generate all possible k-mers from a set of base characters.
 
@@ -20,7 +20,7 @@ def generate_kmers(base:str,k:int) -> list[str]:
     A vector containing all possible k-mer combinations as strings
     """
 
-def generate_kmers_table(base:str,k:int) -> dict[list[int], int]:
+def generate_kmers_table(base: str, k: int) -> dict[list[int], int]:
     r"""
     Generate a lookup table mapping k-mers to unique IDs.
 
@@ -37,7 +37,7 @@ def generate_kmers_table(base:str,k:int) -> dict[list[int], int]:
     A HashMap mapping k-mer byte sequences to integer IDs
     """
 
-def kmers_to_seq(kmers:typing.Sequence[str]) -> str:
+def kmers_to_seq(kmers: typing.Sequence[str]) -> str:
     r"""
     Convert k-mers back into a DNA sequence.
 
@@ -53,7 +53,7 @@ def kmers_to_seq(kmers:typing.Sequence[str]) -> str:
     The reconstructed DNA sequence as a `String`, wrapped in a `Result`
     """
 
-def normalize_seq(seq:str,iupac:bool) -> str:
+def normalize_seq(seq: str, iupac: bool) -> str:
     r"""
     Normalize a DNA sequence by converting any non-standard nucleotides to standard ones.
 
@@ -70,7 +70,7 @@ def normalize_seq(seq:str,iupac:bool) -> str:
     A normalized DNA sequence as a `String`.
     """
 
-def reverse_complement(seq:str) -> str:
+def reverse_complement(seq: str) -> str:
     r"""
     Generate the reverse complement of a DNA sequence.
 
@@ -97,7 +97,7 @@ def reverse_complement(seq:str) -> str:
     ```
     """
 
-def seq_to_kmers(seq:str,k:int,overlap:bool) -> list[str]:
+def seq_to_kmers(seq: str, k: int, overlap: bool) -> list[str]:
     r"""
     Convert a DNA sequence into k-mers.
 
@@ -114,4 +114,3 @@ def seq_to_kmers(seq:str,k:int,overlap:bool) -> list[str]:
 
     A vector of k-mers as `String`s
     """
-

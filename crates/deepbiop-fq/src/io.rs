@@ -15,13 +15,13 @@ use noodles::fasta;
 use noodles::fastq::record::Record as FastqRecord;
 use rayon::prelude::*;
 
-use rand::{thread_rng, Rng};
+use rand::{rng, Rng};
 
 use crate::encode::RecordData;
 use deepbiop_utils as utils;
 
 pub fn read_noodle_records<P: AsRef<Path>>(file_path: P) -> Result<Vec<FastqRecord>> {
-    let reader = utils::io::create_reader(&file_path)?;
+    let reader = utils::io::create_reader_for_compressed_file(&file_path)?;
     let mut reader = fastq::Reader::new(BufReader::new(reader));
     reader.records().map(|record| Ok(record?)).collect()
 }
@@ -184,11 +184,11 @@ pub fn select_record_from_fq_by_random<P: AsRef<Path>>(
     fq: P,
     numbers: usize,
 ) -> Result<Vec<FastqRecord>> {
-    let reader = utils::io::create_reader(fq)?;
+    let reader = utils::io::create_reader_for_compressed_file(fq)?;
     let mut reader = fastq::Reader::new(BufReader::new(reader));
 
     // Use reservoir sampling algorithm to randomly select records
-    let mut rng = thread_rng();
+    let mut rng = rng();
     let mut selected_records = Vec::with_capacity(numbers);
     let mut count = 0;
 
@@ -206,7 +206,7 @@ pub fn select_record_from_fq_by_random<P: AsRef<Path>>(
     // Process remaining elements with reservoir sampling
     for record in records_iter {
         count += 1;
-        let j = rng.gen_range(0..count);
+        let j = rng.random_range(0..count);
         if j < numbers {
             selected_records[j] = record;
         }
@@ -222,7 +222,7 @@ pub fn select_record_from_fq<P: AsRef<Path>>(
     fq: P,
     selected_records: &HashSet<BString>,
 ) -> Result<Vec<FastqRecord>> {
-    let reader = utils::io::create_reader(fq)?;
+    let reader = utils::io::create_reader_for_compressed_file(fq)?;
     let mut reader = fastq::Reader::new(BufReader::new(reader));
 
     reader

@@ -149,7 +149,7 @@ fn encode_fa_path_to_parquet(
     } else {
         fa_path.with_extension("parquet")
     };
-    deepbiop_io::write_parquet(parquet_path, record_batch, schema)?;
+    deepbiop_io::write_parquet_for_batches(parquet_path, &record_batch, schema)?;
     Ok(())
 }
 

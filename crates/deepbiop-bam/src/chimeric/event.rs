@@ -65,13 +65,13 @@ impl ChimericEvent {
             let mut splits = sa.split(',');
 
             let sa_reference_name = splits.next().unwrap();
-            let sa_start: usize = lexical::parse(splits.next().unwrap()).unwrap();
+            let sa_start: usize = lexical::parse(splits.next().unwrap())?;
             let _sa_strand = splits.next().unwrap();
             let sa_cigar = splits.next().unwrap();
             let _sa_mapq = splits.next().unwrap();
             let _sa_nm = splits.next().unwrap();
 
-            let sa_end = sa_start + Cigar::new(sa_cigar.as_bytes()).alignment_span().unwrap();
+            let sa_end = sa_start + Cigar::new(sa_cigar.as_bytes()).alignment_span()?;
 
             let sa_interval = GenomicIntervalBuilder::default()
                 .chr(sa_reference_name.into())
@@ -84,8 +84,7 @@ impl ChimericEvent {
         Ok(ChimericEventBuilder::default()
             .name(name.as_ref().map(|&x| x.into()))
             .intervals(res)
-            .build()
-            .unwrap())
+            .build()?)
     }
 
     /// Construct a ChimericEvent from a noodle bam record.
@@ -93,11 +92,11 @@ impl ChimericEvent {
         record: &bam::Record,
         references: &sam::header::ReferenceSequences,
     ) -> Result<Self> {
-        let reference_id = record.reference_sequence_id().unwrap().unwrap();
+        let reference_id = record.reference_sequence_id().unwrap()?;
         // get the reference name
         let reference_name = references.get_index(reference_id).unwrap().0;
-        let reference_start = usize::from(record.alignment_start().unwrap().unwrap());
-        let reference_end = reference_start + record.cigar().alignment_span().unwrap();
+        let reference_start = usize::from(record.alignment_start().unwrap()?);
+        let reference_end = reference_start + record.cigar().alignment_span()?;
 
         let record_name = record.name().unwrap();
 

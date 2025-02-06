@@ -15,16 +15,10 @@ class GenomicInterval:
     start: int
     end: int
     chr: str
-    def __new__(cls,chr:str, start:int, end:int): ...
-    def set_chr(self, chr:str) -> None:
-        ...
-
-    def overlap(self, other:GenomicInterval) -> bool:
-        ...
-
-    def __repr__(self) -> str:
-        ...
-
+    def __new__(cls, chr: str, start: int, end: int): ...
+    def set_chr(self, chr: str) -> None: ...
+    def overlap(self, other: GenomicInterval) -> bool: ...
+    def __repr__(self) -> str: ...
 
 class PslAlignment:
     qname: str
@@ -37,9 +31,7 @@ class PslAlignment:
     tstart: int
     tend: int
     identity: float
-    def __repr__(self) -> str:
-        ...
-
+    def __repr__(self) -> str: ...
 
 class CompressedType(Enum):
     r"""
@@ -69,7 +61,14 @@ class CompressedType(Enum):
     Zstd = auto()
     Unknown = auto()
 
-def check_compressed_type(path:str | os.PathLike | pathlib.Path) -> CompressedType:
+class SequenceFileType(Enum):
+    r"""Represents different types of sequence file formats."""
+
+    Fasta = auto()
+    Fastq = auto()
+    Unknown = auto()
+
+def check_compressed_type(path: str | os.PathLike | pathlib.Path) -> CompressedType:
     r"""
     Check the compression type of a file.
 
@@ -85,18 +84,16 @@ def check_compressed_type(path:str | os.PathLike | pathlib.Path) -> CompressedTy
         IOError: If the file cannot be opened or read
     """
 
-def generate_unmaped_intervals(input:typing.Sequence[tuple[int, int]],total_length:int) -> list[tuple[int, int]]:
-    ...
-
-def highlight_targets(sequence,targets,text_width = ...) -> str:
-    ...
-
-def majority_voting(labels:typing.Sequence[int],window_size:int) -> list[int]:
-    ...
-
-def parse_psl_by_qname(file_path:str | os.PathLike | pathlib.Path) -> dict[str, list[PslAlignment]]:
+def generate_unmaped_intervals(
+    input: typing.Sequence[tuple[int, int]], total_length: int
+) -> list[tuple[int, int]]: ...
+def highlight_targets(sequence, targets, text_width=...) -> str: ...
+def majority_voting(labels: typing.Sequence[int], window_size: int) -> list[int]: ...
+def parse_psl_by_qname(
+    file_path: str | os.PathLike | pathlib.Path,
+) -> dict[str, list[PslAlignment]]:
     r"""Parse PSL file by query name."""
 
-def remove_intervals_and_keep_left(seq:str,intervals:typing.Sequence[tuple[int, int]]) -> tuple[list[str], list[tuple[int, int]]]:
-    ...
-
+def remove_intervals_and_keep_left(
+    seq: str, intervals: typing.Sequence[tuple[int, int]]
+) -> tuple[list[str], list[tuple[int, int]]]: ...

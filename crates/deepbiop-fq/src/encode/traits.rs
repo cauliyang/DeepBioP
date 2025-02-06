@@ -26,7 +26,7 @@ pub trait Encoder {
     fn fetch_records<P: AsRef<Path>>(&mut self, path: P) -> Result<Vec<RecordData>> {
         info!("fetching records from {}", path.as_ref().display());
 
-        let reader = utils::io::create_reader(path)?;
+        let reader = utils::io::create_reader_for_compressed_file(path)?;
         let mut reader = fastq::Reader::new(BufReader::new(reader));
 
         let records: Vec<RecordData> = reader
@@ -42,7 +42,7 @@ pub trait Encoder {
                 let qual_len = qual.len();
 
                 if seq_len != qual_len {
-                    // NOTE: it seems like log mes does not work well with rayon paralllel iterator  <02-26-24, Yangyang Li>
+                    // NOTE: it seems like log mes does not work well with rayon parallel iterator  <02-26-24, Yangyang Li>
                     // warn!(
                     //     "record: id {} seq_len != qual_len",
                     //     String::from_utf8_lossy(id)
@@ -53,7 +53,6 @@ pub trait Encoder {
                 Some((id.to_vec(), seq.to_vec(), qual.to_vec()).into())
             })
             .collect();
-
         info!("total records: {}", records.len());
         Ok(records)
     }
