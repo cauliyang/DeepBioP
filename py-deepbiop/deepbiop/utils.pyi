@@ -61,6 +61,13 @@ class CompressedType(Enum):
     Zstd = auto()
     Unknown = auto()
 
+class SequenceFileType(Enum):
+    r"""Represents different types of sequence file formats."""
+
+    Fasta = auto()
+    Fastq = auto()
+    Unknown = auto()
+
 def check_compressed_type(path: str | os.PathLike | pathlib.Path) -> CompressedType:
     r"""
     Check the compression type of a file.
