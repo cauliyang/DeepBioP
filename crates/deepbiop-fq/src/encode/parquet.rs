@@ -9,7 +9,7 @@ use arrow::datatypes::{DataType, Field, Schema};
 
 use bstr::BString;
 use derive_builder::Builder;
-use log::info;
+use log::{debug, info};
 use serde::{Deserialize, Serialize};
 
 use crate::types::Element;
@@ -59,13 +59,11 @@ impl ParquetEncoder {
         let all_batches: Vec<_> = records
             .par_chunks(BATCH_SIZE)
             .map(|chunk| {
-                let capacity = chunk.len();
+                let _capacity = chunk.len();
 
                 let mut id_builder = StringBuilder::new();
                 let mut seq_builder = StringBuilder::new();
-
-                let mut qual_builder =
-                    ListBuilder::new(Int32Builder::with_capacity(capacity * 200));
+                let mut qual_builder = ListBuilder::new(Int32Builder::new());
 
                 for data in chunk {
                     let record = self
@@ -94,6 +92,8 @@ impl ParquetEncoder {
                 .unwrap()
             })
             .collect();
+
+        debug!("all batches: {}", all_batches.len());
         // Concatenate all batches
         arrow::compute::concat_batches(schema, &all_batches)
             .context("Failed to concatenate record batches")
