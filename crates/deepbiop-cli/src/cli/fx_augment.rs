@@ -7,9 +7,9 @@ use super::set_up_threads;
 
 #[derive(Debug, Parser)]
 pub struct FaAugment {
-    /// path to the bam file
-    #[arg(value_name = "fa")]
-    fa: PathBuf,
+    /// path to the fx file
+    #[arg(value_name = "fx")]
+    fx: PathBuf,
 
     /// output bgzip compressed file
     #[arg(long, value_name = "output")]

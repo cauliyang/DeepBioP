@@ -8,13 +8,10 @@ pub mod chimeric_count;
 pub use chimeric_count::*;
 pub mod fx2parquet;
 pub use fx2parquet::*;
-
 pub mod extractfx;
 pub use extractfx::*;
-
 pub mod fxs2one;
 pub use fxs2one::*;
-
 pub mod countfx;
 pub use countfx::*;
 
