@@ -34,7 +34,7 @@ pub fn write_parquet_for_batchs<P: AsRef<Path>>(
     let mut writer = ArrowWriter::try_new(file, schema, Some(props))?;
 
     for record_batch in record_batches {
-        writer.write(&record_batch)?;
+        writer.write(record_batch)?;
     }
     writer.close()?;
     Ok(())
