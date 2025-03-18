@@ -3,7 +3,7 @@ mkdocs-material[imaging]>=9.5.31
 
 mkdocs-macros-plugin==1.2.0
 mkdocs-redirects==1.2.1
-material-plausible-plugin==0.2.0
+material-plausible-plugin==0.3.0
 markdown-exec[ansi]==1.9.3
 pygithub==2.6.1
 mkdocs-git-committers-plugin-2
