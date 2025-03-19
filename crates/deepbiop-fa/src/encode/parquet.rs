@@ -10,7 +10,7 @@ use arrow::array::{Array, RecordBatch, StringBuilder};
 use arrow::datatypes::{DataType, Field, Schema};
 
 use derive_builder::Builder;
-use log::info;
+use log::{debug, info};
 use serde::{Deserialize, Serialize};
 
 use super::record::RecordDataBuilder;
@@ -60,42 +60,52 @@ impl ParquetEncoder {
         ]))
     }
 
-    fn generate_batch(&self, records: &[RecordData], schema: &Arc<Schema>) -> Result<RecordBatch> {
-        let data: Vec<RecordData> = records
-            .into_par_iter()
-            .filter_map(|data| {
-                let id = data.id.as_ref();
-                let seq = data.seq.as_ref();
-                match self.encode_record(id, seq).context(format!(
-                    "encode fq read id {} error",
-                    String::from_utf8_lossy(id)
-                )) {
-                    Ok(result) => Some(result),
-                    Err(_e) => None,
+    fn generate_batches(
+        &self,
+        records: &[RecordData],
+        schema: &Arc<Schema>,
+    ) -> Result<Vec<RecordBatch>> {
+        // Process smaller batches to avoid 2GB limit
+        const BATCH_SIZE: usize = 10000; // Adjust this value based on your data size
+        let all_batches: Vec<_> = records
+            .par_chunks(BATCH_SIZE)
+            .map(|chunk| {
+                let _capacity = chunk.len();
+
+                let mut id_builder = StringBuilder::new();
+                let mut seq_builder = StringBuilder::new();
+
+                for data in chunk {
+                    let record = self
+                        .encode_record(data.id.as_ref(), data.seq.as_ref())
+                        .context(format!(
+                            "encode fq read id {} error",
+                            String::from_utf8_lossy(data.id.as_ref())
+                        ))
+                        .unwrap();
+                    id_builder.append_value(record.id.to_string());
+                    seq_builder.append_value(record.seq.to_string());
                 }
+
+                RecordBatch::try_new(
+                    schema.clone(),
+                    vec![
+                        Arc::new(id_builder.finish()) as Arc<dyn Array>,
+                        Arc::new(seq_builder.finish()) as Arc<dyn Array>,
+                    ],
+                )
+                .unwrap()
             })
             .collect();
+        debug!("all batches: {}", all_batches.len());
+        Ok(all_batches)
+    }
 
-        // Create builders for each field
-        let mut id_builder = StringBuilder::new();
-        let mut seq_builder = StringBuilder::new();
-
-        // Populate builders
-        data.into_iter().for_each(|parquet_record| {
-            id_builder.append_value(parquet_record.id.to_string());
-            seq_builder.append_value(parquet_record.seq.to_string());
-        });
-
-        // Build arrays
-        let id_array = Arc::new(id_builder.finish());
-        let seq_array = Arc::new(seq_builder.finish());
-
-        // Create a RecordBatch
-        let record_batch = RecordBatch::try_new(
-            schema.clone(),
-            vec![id_array as Arc<dyn Array>, seq_array as Arc<dyn Array>],
-        )?;
-        Ok(record_batch)
+    fn generate_batch(&self, records: &[RecordData], schema: &Arc<Schema>) -> Result<RecordBatch> {
+        let all_batches = self.generate_batches(records, schema)?;
+        // Concatenate all batches
+        arrow::compute::concat_batches(schema, &all_batches)
+            .context("Failed to concatenate record batches")
     }
 
     pub fn encode_chunk<P: AsRef<Path>>(
@@ -161,8 +171,20 @@ impl Display for ParquetEncoder {
 }
 
 impl Encoder for ParquetEncoder {
+    type EncodeOutput = Result<(Vec<RecordBatch>, Arc<Schema>)>;
     type RecordOutput = Result<RecordData>;
-    type EncodeOutput = Result<(RecordBatch, Arc<Schema>)>;
+
+    fn encode_multiple(&mut self, _paths: &[PathBuf], _parallel: bool) -> Self::EncodeOutput {
+        todo!()
+    }
+
+    fn encode<P: AsRef<Path>>(&mut self, path: P) -> Self::EncodeOutput {
+        // Define the schema of the data (one column of integers)
+        let schema = self.generate_schema();
+        let records = self.fetch_records(path)?;
+        let record_batch = self.generate_batches(&records, &schema)?;
+        Ok((record_batch, schema))
+    }
 
     fn encode_record(&self, id: &[u8], seq: &[u8]) -> Self::RecordOutput {
         let result = RecordDataBuilder::default()
@@ -172,27 +194,17 @@ impl Encoder for ParquetEncoder {
             .context("Failed to build parquet data")?;
         Ok(result)
     }
-
-    fn encode<P: AsRef<Path>>(&mut self, path: P) -> Self::EncodeOutput {
-        // Define the schema of the data (one column of integers)
-        let schema = self.generate_schema();
-        let records = self.fetch_records(path)?;
-        let record_batch = self.generate_batch(&records, &schema)?;
-        Ok((record_batch, schema))
-    }
-
-    fn encode_multiple(&mut self, _paths: &[PathBuf], _parallel: bool) -> Self::EncodeOutput {
-        todo!()
-    }
 }
 
 #[cfg(test)]
 mod tests {
+    use deepbiop_utils::io::write_parquet_for_batches;
+
     use crate::encode::option::EncoderOptionBuilder;
 
     use super::*;
     #[test]
-    fn test_encode_fq_for_parquet() {
+    fn test_encode_fa_for_parquet() {
         let option = EncoderOptionBuilder::default().build().unwrap();
         let mut encoder = ParquetEncoderBuilder::default()
             .option(option)
@@ -200,7 +212,7 @@ mod tests {
             .unwrap();
 
         let (record_batch, scheme) = encoder.encode("tests/data/test.fa").unwrap();
-        write_parquet("test.parquet", record_batch, scheme).unwrap();
+        write_parquet_for_batches("test.parquet", &record_batch, scheme).unwrap();
         // remove test.parquet
         std::fs::remove_file("test.parquet").unwrap();
     }

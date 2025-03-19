@@ -9,13 +9,13 @@ use arrow::datatypes::{DataType, Field, Schema};
 
 use bstr::BString;
 use derive_builder::Builder;
-use log::info;
+use log::{debug, info};
 use serde::{Deserialize, Serialize};
 
 use crate::types::Element;
 use deepbiop_utils::io::write_parquet;
 
-use super::{triat::Encoder, EncoderOption, RecordData};
+use super::{traits::Encoder, EncoderOption, RecordData};
 use anyhow::{Context, Result};
 use pyo3::prelude::*;
 use rayon::prelude::*;
@@ -53,54 +53,58 @@ impl ParquetEncoder {
         ]))
     }
 
-    fn generate_batch(&self, records: &[RecordData], schema: &Arc<Schema>) -> Result<RecordBatch> {
-        let data: Vec<ParquetData> = records
-            .into_par_iter()
-            .filter_map(|data| {
-                let id = data.id.as_ref();
-                let seq = data.seq.as_ref();
-                let qual = data.qual.as_ref();
-                match self.encode_record(id, seq, qual).context(format!(
-                    "encode fq read id {} error",
-                    String::from_utf8_lossy(id)
-                )) {
-                    Ok(result) => Some(result),
-                    Err(_e) => None,
+    fn generate_batches(
+        &self,
+        records: &[RecordData],
+        schema: &Arc<Schema>,
+    ) -> Result<Vec<RecordBatch>> {
+        // Process smaller batches to avoid 2GB limit
+        const BATCH_SIZE: usize = 10000; // Adjust this value based on your data size
+        let all_batches: Vec<_> = records
+            .par_chunks(BATCH_SIZE)
+            .map(|chunk| {
+                let _capacity = chunk.len();
+
+                let mut id_builder = StringBuilder::new();
+                let mut seq_builder = StringBuilder::new();
+                let mut qual_builder = ListBuilder::new(Int32Builder::new());
+
+                for data in chunk {
+                    let record = self
+                        .encode_record(data.id.as_ref(), data.seq.as_ref(), data.qual.as_ref())
+                        .context(format!(
+                            "encode fq read id {} error",
+                            String::from_utf8_lossy(data.id.as_ref())
+                        ))
+                        .unwrap();
+                    id_builder.append_value(record.id.to_string());
+                    seq_builder.append_value(record.seq.to_string());
+                    for qual in record.qual {
+                        qual_builder.values().append_value(qual);
+                    }
+                    qual_builder.append(true);
                 }
+
+                RecordBatch::try_new(
+                    schema.clone(),
+                    vec![
+                        Arc::new(id_builder.finish()) as Arc<dyn Array>,
+                        Arc::new(seq_builder.finish()) as Arc<dyn Array>,
+                        Arc::new(qual_builder.finish()) as Arc<dyn Array>,
+                    ],
+                )
+                .unwrap()
             })
             .collect();
+        debug!("all batches: {}", all_batches.len());
+        Ok(all_batches)
+    }
 
-        // Create builders for each field
-        let mut id_builder = StringBuilder::new();
-        let mut seq_builder = StringBuilder::new();
-        let mut qual_builder = ListBuilder::new(Int32Builder::new());
-
-        // Populate builders
-        data.into_iter().for_each(|parquet_record| {
-            id_builder.append_value(parquet_record.id.to_string());
-            seq_builder.append_value(parquet_record.seq.to_string());
-
-            parquet_record.qual.into_iter().for_each(|qual| {
-                qual_builder.values().append_value(qual);
-            });
-            qual_builder.append(true);
-        });
-
-        // Build arrays
-        let id_array = Arc::new(id_builder.finish());
-        let seq_array = Arc::new(seq_builder.finish());
-        let qual_array = Arc::new(qual_builder.finish());
-
-        // Create a RecordBatch
-        let record_batch = RecordBatch::try_new(
-            schema.clone(),
-            vec![
-                id_array as Arc<dyn Array>,
-                seq_array as Arc<dyn Array>,
-                qual_array as Arc<dyn Array>,
-            ],
-        )?;
-        Ok(record_batch)
+    fn generate_batch(&self, records: &[RecordData], schema: &Arc<Schema>) -> Result<RecordBatch> {
+        let all_batches = self.generate_batches(records, schema)?;
+        // Concatenate all batches
+        arrow::compute::concat_batches(schema, &all_batches)
+            .context("Failed to concatenate record batches")
     }
 
     pub fn encode_chunk<P: AsRef<Path>>(
@@ -167,7 +171,7 @@ impl Display for ParquetEncoder {
 
 impl Encoder for ParquetEncoder {
     type RecordOutput = Result<ParquetData>;
-    type EncodeOutput = Result<(RecordBatch, Arc<Schema>)>;
+    type EncodeOutput = Result<(Vec<RecordBatch>, Arc<Schema>)>;
 
     fn encode_qual(&self, qual: &[u8], qual_offset: u8) -> Vec<Element> {
         // input is quality of fastq
@@ -200,7 +204,7 @@ impl Encoder for ParquetEncoder {
         // Define the schema of the data (one column of integers)
         let schema = self.generate_schema();
         let records = self.fetch_records(path)?;
-        let record_batch = self.generate_batch(&records, &schema)?;
+        let record_batch = self.generate_batches(&records, &schema)?;
         Ok((record_batch, schema))
     }
 
@@ -211,6 +215,8 @@ impl Encoder for ParquetEncoder {
 
 #[cfg(test)]
 mod tests {
+    use deepbiop_utils::io::write_parquet_for_batches;
+
     use crate::encode::EncoderOptionBuilder;
 
     use super::*;
@@ -223,7 +229,7 @@ mod tests {
             .build()
             .unwrap();
         let (record_batch, scheme) = encoder.encode("tests/data/one_record.fq").unwrap();
-        write_parquet("test.parquet", record_batch, scheme).unwrap();
+        write_parquet_for_batches("test.parquet", &record_batch, scheme).unwrap();
         // remove test.parquet
         std::fs::remove_file("test.parquet").unwrap();
     }

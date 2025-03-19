@@ -161,7 +161,9 @@ pub fn is_compressed<P: AsRef<Path>>(file_path: P) -> Result<bool> {
 /// # Returns
 /// * `Ok(Box<dyn io::Read>)` - A boxed reader appropriate for the file's compression
 /// * `Err` - If the file cannot be opened or has an unsupported compression type
-pub fn create_reader<P: AsRef<Path>>(file_path: P) -> Result<Box<dyn io::Read>> {
+pub fn create_reader_for_compressed_file<P: AsRef<Path>>(
+    file_path: P,
+) -> Result<Box<dyn io::Read>> {
     let compressed_type = check_compressed_type(file_path.as_ref())?;
     let file = File::open(file_path)?;
 
@@ -171,6 +173,47 @@ pub fn create_reader<P: AsRef<Path>>(file_path: P) -> Result<Box<dyn io::Read>> 
         CompressedType::Bgzip => Box::new(bgzf::Reader::new(file)),
         _ => return Err(anyhow::anyhow!("unsupported compression type")),
     })
+}
+
+/// Represents different types of sequence file formats
+#[gen_stub_pyclass_enum]
+#[pyclass(eq, eq_int, module = "deepbiop.utils")]
+#[derive(Debug, PartialEq, Eq, Clone, Hash)]
+pub enum SequenceFileType {
+    Fasta,
+    Fastq,
+    Unknown,
+}
+
+/// Determines if a file is FASTA or FASTQ format by checking its first character
+///
+/// # Arguments
+/// * `file_path` - Path to the sequence file (can be compressed or uncompressed)
+///
+/// # Returns
+/// * `Ok(SequenceFileType)` - The detected sequence file type
+/// * `Err` - If there was an error reading the file
+///
+/// # Example
+/// ```no_run
+/// use deepbiop_utils::io;
+///
+/// let file_type = io::check_sequence_file_type("sample.fq").unwrap();
+/// ```
+pub fn check_sequence_file_type<P: AsRef<Path>>(file_path: P) -> Result<SequenceFileType> {
+    let mut reader = create_reader_for_compressed_file(file_path)?;
+    let mut buffer = [0u8; 1];
+
+    // Read the first byte
+    match reader.read_exact(&mut buffer) {
+        Ok(_) => match buffer[0] as char {
+            '>' => Ok(SequenceFileType::Fasta),
+            '@' => Ok(SequenceFileType::Fastq),
+            _ => Ok(SequenceFileType::Unknown),
+        },
+        Err(e) if e.kind() == io::ErrorKind::UnexpectedEof => Ok(SequenceFileType::Unknown),
+        Err(e) => Err(e.into()),
+    }
 }
 
 #[cfg(test)]
@@ -262,6 +305,22 @@ mod tests {
         assert_eq!(check_compressed_type(test1)?, CompressedType::Gzip);
         assert_eq!(check_compressed_type(test2)?, CompressedType::Bgzip);
         assert_eq!(check_compressed_type(test3)?, CompressedType::Uncompress);
+        Ok(())
+    }
+
+    #[test]
+    fn test_sequence_file_type() -> Result<()> {
+        let test_fq = "./tests/data/test.fastq";
+        assert_eq!(check_sequence_file_type(test_fq)?, SequenceFileType::Fastq);
+
+        let test_fa = "./tests/data/test.fa.gz";
+        assert_eq!(check_sequence_file_type(test_fa)?, SequenceFileType::Fasta);
+
+        let test_compresed_fq = "./tests/data/test.fastq.gz";
+        assert_eq!(
+            check_sequence_file_type(test_compresed_fq)?,
+            SequenceFileType::Fastq
+        );
         Ok(())
     }
 }
