@@ -12,11 +12,7 @@ repository = "https://github.com/cauliyang/DeepBioP"
 license = "Apache-2.0"
 
 [workspace.dependencies]
-pyo3 = { version = "0.23.4", features = [
-  "abi3-py39",
-  "extension-module",
-  "anyhow",
-] }
+pyo3 = { version = "0.23.5", features = ["abi3-py39", "extension-module", "anyhow"] }
 pyo3-stub-gen = "0.6.2"
 thiserror = "2.0"
 anyhow = "1.0"
@@ -24,18 +20,10 @@ walkdir = { version = "2.5" }
 rayon = { version = "1.10" }
 log = "0.4"
 pyo3-log = "0.12.1"
-noodles = { version = "0.92.0", features = [
-  "bgzf",
-  "core",
-  "csi",
-  "fasta",
-  "fastq",
-  "sam",
-  "bam",
-] }
+noodles = { version = "0.94.0", features = ["bgzf", "core", "csi", "fasta", "fastq", "sam", "bam"] }
 
-bio = "2.0"
-needletail = "0.6"
+bio = "2.2"
+needletail = "0.5"
 
 ahash = "0.8.11"
 numpy = "0.23"
@@ -51,15 +39,13 @@ derive_builder = "0.20"
 lexical = "7.0"
 bstr = "1.11.3"
 lazy_static = "1.5.0"
-tempfile = "3.17"
+tempfile = "3.19"
 parquet = "54.2"
 arrow = "54.2"
 candle-core = { git = "https://github.com/huggingface/candle.git", version = "0.8.1" }
 colored = "3.0"
 textwrap = "0.16"
-flate2 = { version = "1.0.35", features = [
-  "zlib-ng",
-], default-features = false }
+flate2 = { version = "1.1.0", features = ["zlib-rs"], default-features = false }
 
 deepbiop-fq = { version = "0.1.15", path = "crates/deepbiop-fq" }
 deepbiop-bam = { version = "0.1.11", path = "crates/deepbiop-bam" }
