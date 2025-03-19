@@ -113,7 +113,7 @@ jobs:
     needs: Formatting
     runs-on: ubuntu-latest
     env:
-      MSRV_VERSION: 1.83.0
+      MSRV_VERSION: 1.85.1
     steps:
       - name: Checkout repository
         uses: actions/checkout@v4
