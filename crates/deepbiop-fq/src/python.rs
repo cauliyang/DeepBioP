@@ -2,6 +2,7 @@ use bstr::BString;
 use std::path::PathBuf;
 
 use crate::{
+    dataset::{FastqDataset, FastqIterator, FastqRecord},
     encode::{self, Encoder},
     io,
     predicts::{self, Predict},
@@ -340,6 +341,10 @@ pub fn register_fq_module(parent_module: &Bound<'_, PyModule>) -> PyResult<()> {
         py_select_record_from_fq_by_random,
         &child_module
     )?)?;
+
+    child_module.add_class::<FastqDataset>()?;
+    child_module.add_class::<FastqIterator>()?;
+    child_module.add_class::<FastqRecord>()?;
 
     parent_module.add_submodule(&child_module)?;
 
