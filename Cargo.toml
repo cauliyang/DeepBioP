@@ -12,7 +12,6 @@ repository = "https://github.com/cauliyang/DeepBioP"
 license = "Apache-2.0"
 readme = "README.md"
 
-
 [workspace.dependencies]
 pyo3 = { version = "0.23.5", features = ["abi3-py39", "extension-module", "anyhow"] }
 pyo3-stub-gen = "0.6.2"
