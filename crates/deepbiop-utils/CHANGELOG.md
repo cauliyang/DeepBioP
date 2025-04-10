@@ -6,6 +6,16 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.1.16](https://github.com/cauliyang/DeepBioP/compare/deepbiop-utils-v0.1.15...deepbiop-utils-v0.1.16) - 2025-04-10
+
+### Added
+
+- add dataset module and integrate with Python bindings
+
+### Other
+
+- Feat ([#57](https://github.com/cauliyang/DeepBioP/pull/57))
+
 ## [0.1.14](https://github.com/cauliyang/DeepBioP/compare/deepbiop-utils-v0.1.13...deepbiop-utils-v0.1.14) - 2025-01-17
 
 ### Added
