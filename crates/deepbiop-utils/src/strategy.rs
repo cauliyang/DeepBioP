@@ -46,7 +46,7 @@ pub fn majority_voting(labels: &[i8], window_size: usize) -> Vec<i8> {
 
             counts
                 .iter()
-                .max_by_key(|(_, &count)| count)
+                .max_by_key(|(_, count)| *count)
                 .map(|(&label, _)| label)
                 .unwrap()
         })

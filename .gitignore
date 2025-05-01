@@ -198,5 +198,3 @@ pyrightconfig.json
 libcairo*
 uv.lock
 _build
-
-.qodo
