@@ -20,7 +20,7 @@ anyhow = "1.0"
 walkdir = { version = "2.5" }
 rayon = { version = "1.10" }
 log = "0.4"
-pyo3-log = "0.12.3"
+pyo3-log = "0.12.1"
 noodles = { version = "0.97.0", features = ["bgzf", "core", "csi", "fasta", "fastq", "sam", "bam"] }
 
 bio = "2.2"
