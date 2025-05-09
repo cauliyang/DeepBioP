@@ -5,6 +5,17 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [0.1.16](https://github.com/cauliyang/DeepBioP/compare/deepbiop-fq-v0.1.15...deepbiop-fq-v0.1.16) - 2025-04-10
+
+### Added
+
+- add dataset module and integrate with Python bindings
+
+### Other
+
+- *(deps)* update dependencies in Cargo.toml and add dataset.rs file
+- Feat ([#57](https://github.com/cauliyang/DeepBioP/pull/57))
+
 ## [0.1.15](https://github.com/cauliyang/DeepBioP/compare/deepbiop-fq-v0.1.14...deepbiop-fq-v0.1.15) - 2025-01-22
 
 ### Added
