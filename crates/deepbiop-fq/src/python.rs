@@ -260,7 +260,7 @@ pub fn load_predicts_from_batch_pts(
 pub fn fastq_to_fasta(fastq_path: PathBuf, fasta_path: PathBuf) -> Result<()> {
     let fa_records = io::fastq_to_fasta(&fastq_path)?;
     let handle = std::fs::File::create(fasta_path)?;
-    let mut writer = fasta::Writer::new(handle);
+    let mut writer = fasta::io::Writer::new(handle);
     for record in fa_records {
         writer.write_record(&record)?;
     }
