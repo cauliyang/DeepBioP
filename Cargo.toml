@@ -13,7 +13,11 @@ license = "Apache-2.0"
 readme = "README.md"
 
 [workspace.dependencies]
-pyo3 = { version = "0.23.5", features = ["abi3-py39", "extension-module", "anyhow"] }
+pyo3 = { version = "0.23.5", features = [
+    "abi3-py39",
+    "extension-module",
+    "anyhow",
+] }
 pyo3-stub-gen = "0.6.2"
 thiserror = "2.0"
 anyhow = "1.0"
@@ -21,7 +25,15 @@ walkdir = { version = "2.5" }
 rayon = { version = "1.10" }
 log = "0.4"
 pyo3-log = "0.12.4"
-noodles = { version = "0.97.0", features = ["bgzf", "core", "csi", "fasta", "fastq", "sam", "bam"] }
+noodles = { version = "0.99.0", features = [
+    "bgzf",
+    "core",
+    "csi",
+    "fasta",
+    "fastq",
+    "sam",
+    "bam",
+] }
 
 bio = "2.3"
 needletail = "0.5"
