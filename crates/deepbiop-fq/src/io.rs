@@ -22,7 +22,7 @@ use deepbiop_utils as utils;
 
 pub fn read_noodle_records<P: AsRef<Path>>(file_path: P) -> Result<Vec<FastqRecord>> {
     let reader = utils::io::create_reader_for_compressed_file(&file_path)?;
-    let mut reader = fastq::Reader::new(BufReader::new(reader));
+    let mut reader = fastq::io::Reader::new(BufReader::new(reader));
     reader.records().map(|record| Ok(record?)).collect()
 }
 
@@ -67,7 +67,7 @@ pub fn write_bgzip_fq_parallel(
         .unwrap();
 
     let sink = File::create(file_path)?;
-    let encoder = bgzf::MultithreadedWriter::with_worker_count(worker_count, sink);
+    let encoder = bgzf::io::MultithreadedWriter::with_worker_count(worker_count, sink);
 
     let mut writer = fastq::io::Writer::new(encoder);
 
@@ -92,7 +92,7 @@ pub fn write_bgzip_fq_parallel_for_noodle_record(
         .unwrap();
 
     let sink = File::create(file_path)?;
-    let encoder = bgzf::MultithreadedWriter::with_worker_count(worker_count, sink);
+    let encoder = bgzf::io::MultithreadedWriter::with_worker_count(worker_count, sink);
 
     let mut writer = fastq::io::Writer::new(encoder);
 
@@ -185,7 +185,7 @@ pub fn select_record_from_fq_by_random<P: AsRef<Path>>(
     numbers: usize,
 ) -> Result<Vec<FastqRecord>> {
     let reader = utils::io::create_reader_for_compressed_file(fq)?;
-    let mut reader = fastq::Reader::new(BufReader::new(reader));
+    let mut reader = fastq::io::Reader::new(BufReader::new(reader));
 
     // Use reservoir sampling algorithm to randomly select records
     let mut rng = rng();
@@ -223,7 +223,7 @@ pub fn select_record_from_fq<P: AsRef<Path>>(
     selected_records: &HashSet<BString>,
 ) -> Result<Vec<FastqRecord>> {
     let reader = utils::io::create_reader_for_compressed_file(fq)?;
-    let mut reader = fastq::Reader::new(BufReader::new(reader));
+    let mut reader = fastq::io::Reader::new(BufReader::new(reader));
 
     reader
         .records()
@@ -310,8 +310,8 @@ mod tests {
         // Call the function being tested
         write_bgzip_fq_parallel(&records, file_path, None).unwrap();
 
-        let decoder = bgzf::Reader::new(file.reopen().unwrap());
-        let mut reader = fastq::Reader::new(decoder);
+        let decoder = bgzf::io::Reader::new(file.reopen().unwrap());
+        let mut reader = fastq::io::Reader::new(decoder);
 
         let actual_result: Vec<RecordData> = reader
             .records()
