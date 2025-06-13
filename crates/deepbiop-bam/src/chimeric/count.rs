@@ -59,7 +59,7 @@ pub fn chimeric_reads_for_bam<P: AsRef<Path>>(
         thread::available_parallelism().unwrap_or(NonZeroUsize::MIN)
     };
 
-    let decoder = bgzf::MultithreadedReader::with_worker_count(worker_count, file);
+    let decoder = bgzf::io::MultithreadedReader::with_worker_count(worker_count, file);
     let mut reader = bam::io::Reader::from(decoder);
     let _header = reader.read_header()?;
 
@@ -103,7 +103,7 @@ pub fn extract_chimeric_reads_name_for_paths(
     threads: Option<usize>,
 ) -> Result<HashMap<PathBuf, Vec<String>>> {
     Ok(bams
-        .iter()
+        .par_iter()
         .filter_map(
             |path| match extract_chimeric_reads_name_for_path(path, threads) {
                 Ok(names) => Some((path.clone(), names)),

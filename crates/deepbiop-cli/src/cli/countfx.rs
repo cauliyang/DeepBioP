@@ -87,14 +87,14 @@ fn count_fx<P: AsRef<Path>>(fx: P, export: bool) -> Result<()> {
 
     let seq_len = match utils::io::check_sequence_file_type(&fx)? {
         SequenceFileType::Fasta => {
-            let mut reader = fasta::Reader::new(BufReader::new(reader));
+            let mut reader = fasta::io::Reader::new(BufReader::new(reader));
             reader
                 .records()
                 .map(|record| record.map(|r| r.sequence().len()))
                 .collect::<Result<Vec<_>, _>>()?
         }
         SequenceFileType::Fastq => {
-            let mut reader = fastq::Reader::new(BufReader::new(reader));
+            let mut reader = fastq::io::Reader::new(BufReader::new(reader));
             reader
                 .records()
                 .map(|record| record.map(|r| r.sequence().len()))

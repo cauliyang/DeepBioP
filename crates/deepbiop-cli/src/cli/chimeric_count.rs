@@ -43,7 +43,7 @@ impl CountChimeric {
                 let file = File::create(file_name)?;
                 let mut writer = BufWriter::new(file);
                 for name in names {
-                    writer.write_all(name.as_bytes())?;
+                    writeln!(writer, "{}", name)?;
                 }
             }
         }
