@@ -39,7 +39,10 @@ impl CountChimeric {
 
             for (path, names) in res {
                 let file_name = format!("{}.chimeric_reads.txt", path.to_string_lossy());
+
+                log::info!("{}: {}", path.to_string_lossy(), names.len());
                 log::info!("Writing chimeric reads name to {}", file_name);
+
                 let file = File::create(file_name)?;
                 let mut writer = BufWriter::new(file);
                 for name in names {
