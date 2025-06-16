@@ -59,7 +59,7 @@ pub fn chimeric_reads_for_bam<P: AsRef<Path>>(
         thread::available_parallelism().unwrap_or(NonZeroUsize::MIN)
     };
 
-    let decoder = bgzf::MultithreadedReader::with_worker_count(worker_count, file);
+    let decoder = bgzf::io::MultithreadedReader::with_worker_count(worker_count, file);
     let mut reader = bam::io::Reader::from(decoder);
     let _header = reader.read_header()?;
 
@@ -84,4 +84,38 @@ pub fn count_chimeric_reads_for_path<P: AsRef<Path>>(
     threads: Option<usize>,
 ) -> Result<usize> {
     Ok(chimeric_reads_for_bam(bam, threads)?.par_iter().count())
+}
+
+/// Extract the chimeric reads name from a BAM file.
+pub fn extract_chimeric_reads_name_for_path<P: AsRef<Path>>(
+    bam: P,
+    threads: Option<usize>,
+) -> Result<Vec<String>> {
+    let records = chimeric_reads_for_bam(bam, threads)?;
+    Ok(records
+        .iter()
+        .map(|record| record.name().unwrap().to_string())
+        .collect())
+}
+
+pub fn extract_chimeric_reads_name_for_paths(
+    bams: &[PathBuf],
+    threads: Option<usize>,
+) -> Result<HashMap<PathBuf, Vec<String>>> {
+    Ok(bams
+        .par_iter()
+        .filter_map(
+            |path| match extract_chimeric_reads_name_for_path(path, threads) {
+                Ok(names) => Some((path.clone(), names)),
+                Err(e) => {
+                    eprintln!(
+                        "Error extracting chimeric reads name for {}: {}",
+                        path.display(),
+                        e
+                    );
+                    None
+                }
+            },
+        )
+        .collect::<HashMap<PathBuf, Vec<String>>>())
 }

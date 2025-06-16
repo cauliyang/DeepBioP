@@ -193,7 +193,7 @@ where
     };
 
     let file = File::open(bam.as_ref())?;
-    let decoder = bgzf::MultithreadedReader::with_worker_count(worker_count, file);
+    let decoder = bgzf::io::MultithreadedReader::with_worker_count(worker_count, file);
     let mut reader = bam::io::Reader::from(decoder);
     let header = reader.read_header()?;
     let references = header.reference_sequences();

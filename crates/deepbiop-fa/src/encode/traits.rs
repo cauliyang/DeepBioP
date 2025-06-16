@@ -21,7 +21,7 @@ pub trait Encoder {
     fn fetch_records<P: AsRef<Path>>(&mut self, path: P) -> Result<Vec<RecordData>> {
         info!("fetching records from {}", path.as_ref().display());
         let reader = utils::io::create_reader_for_compressed_file(path)?;
-        let mut reader = fasta::Reader::new(BufReader::new(reader));
+        let mut reader = fasta::io::Reader::new(BufReader::new(reader));
 
         let records: Vec<RecordData> = reader
             .records()
