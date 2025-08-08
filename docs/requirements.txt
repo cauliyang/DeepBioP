@@ -5,7 +5,7 @@ mkdocs-macros-plugin==1.2.0
 mkdocs-redirects==1.2.1
 material-plausible-plugin==0.2.0
 markdown-exec[ansi]==1.11.0
-pygithub==2.6.1
+pygithub==2.7.0
 mkdocs-git-committers-plugin-2
 mkdocs-git-revision-date-localized-plugin
 mkdocstrings
