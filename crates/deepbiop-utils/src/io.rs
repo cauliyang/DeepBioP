@@ -170,7 +170,7 @@ pub fn create_reader_for_compressed_file<P: AsRef<Path>>(
     Ok(match compressed_type {
         CompressedType::Uncompress => Box::new(file),
         CompressedType::Gzip => Box::new(GzDecoder::new(file)),
-        CompressedType::Bgzip => Box::new(bgzf::Reader::new(file)),
+        CompressedType::Bgzip => Box::new(bgzf::io::Reader::new(file)),
         _ => return Err(anyhow::anyhow!("unsupported compression type")),
     })
 }

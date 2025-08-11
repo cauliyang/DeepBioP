@@ -9,6 +9,7 @@ from enum import Enum, auto
 class GenomicInterval:
     r"""
     A segment is a genomic interval defined by a chromosome, a start position and an end position.
+
     The start position is inclusive and the end position is exclusive.
     """
 

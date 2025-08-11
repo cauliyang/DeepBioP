@@ -151,7 +151,7 @@ impl FastqDataset {
             pyo3::exceptions::PyIOError::new_err(format!("Failed to open file: {}", e))
         })?;
 
-        let mut reader = fastq::Reader::new(BufReader::with_capacity(65536, file)); // Increase buffer size
+        let mut reader = fastq::io::Reader::new(BufReader::with_capacity(65536, file)); // Increase buffer size
         let mut records = Vec::with_capacity(end - start); // Pre-allocate vector
         let mut current_pos = 0;
 
@@ -247,7 +247,7 @@ impl FastqDataset {
             pyo3::exceptions::PyIOError::new_err(format!("Failed to open file: {}", e))
         })?;
 
-        let mut reader = fastq::Reader::new(BufReader::with_capacity(65536, file));
+        let mut reader = fastq::io::Reader::new(BufReader::with_capacity(65536, file));
         let mut records = Vec::with_capacity(end - start); // Pre-allocate vector
 
         // Use enumerate with bounds checking
@@ -389,7 +389,7 @@ fn count_records_efficient(file_path: &str) -> Result<usize> {
 // Original counting function renamed for exact counting
 fn count_records_exact(file_path: &str) -> Result<usize> {
     let file = File::open(file_path)?;
-    let mut reader = fastq::Reader::new(BufReader::with_capacity(65536, file));
+    let mut reader = fastq::io::Reader::new(BufReader::with_capacity(65536, file));
     let count = reader.records().count();
     Ok(count)
 }
