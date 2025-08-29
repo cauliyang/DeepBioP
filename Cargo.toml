@@ -16,7 +16,7 @@ readme = "README.md"
 
 ahash = "0.8.12"
 anyhow = "1.0"
-arrow = "55.2"
+arrow = "56.1"
 
 bio = "2.3"
 bitvec = "1.0"
@@ -37,7 +37,7 @@ lexical = "7.0"
 log = "0.4"
 ndarray = { version = "0.16", features = ["serde", "rayon"] }
 needletail = "0.5"
-noodles = { version = "0.99.0", features = [
+noodles = { version = "0.101.0", features = [
     "bgzf",
     "core",
     "csi",
@@ -48,7 +48,7 @@ noodles = { version = "0.99.0", features = [
 ] }
 num-traits = { version = "0.2" }
 numpy = "0.23"
-parquet = "55.2"
+parquet = "56.1"
 pyo3 = { version = "0.23.5", features = [
     "abi3-py39",
     "extension-module",
