@@ -17,7 +17,7 @@ use deepbiop_utils as utils;
 
 pub fn read_noodle_records<P: AsRef<Path>>(file_path: P) -> Result<Vec<FastaRecord>> {
     let reader = utils::io::create_reader_for_compressed_file(&file_path)?;
-    let mut reader = fasta::Reader::new(BufReader::new(reader));
+    let mut reader = fasta::io::Reader::new(BufReader::new(reader));
     reader.records().map(|record| Ok(record?)).collect()
 }
 
@@ -82,7 +82,7 @@ pub fn write_bzip_fa_parallel(
         .unwrap();
 
     let sink = File::create(file_path)?;
-    let encoder = bgzf::MultithreadedWriter::with_worker_count(worker_count, sink);
+    let encoder = bgzf::io::MultithreadedWriter::with_worker_count(worker_count, sink);
 
     let mut writer = fasta::io::Writer::new(encoder);
 
@@ -107,7 +107,7 @@ pub fn write_bzip_fa_parallel_for_noodle_record(
         .unwrap();
 
     let sink = File::create(file_path)?;
-    let encoder = bgzf::MultithreadedWriter::with_worker_count(worker_count, sink);
+    let encoder = bgzf::io::MultithreadedWriter::with_worker_count(worker_count, sink);
 
     let mut writer = fasta::io::Writer::new(encoder);
 
@@ -179,7 +179,7 @@ pub fn select_record_from_fq_by_random<P: AsRef<Path>>(
     numbers: usize,
 ) -> Result<Vec<FastaRecord>> {
     let reader = utils::io::create_reader_for_compressed_file(fa)?;
-    let mut reader = fasta::Reader::new(BufReader::new(reader));
+    let mut reader = fasta::io::Reader::new(BufReader::new(reader));
 
     // Use reservoir sampling algorithm to randomly select records
     let mut rng = rng();
@@ -216,7 +216,9 @@ pub fn select_record_from_fa_by_stream<P: AsRef<Path>>(
     fa: P,
     selected_records: &HashSet<BString>,
 ) -> Result<Vec<FastaRecord>> {
-    let mut reader = File::open(fa).map(BufReader::new).map(fasta::Reader::new)?;
+    let mut reader = File::open(fa)
+        .map(BufReader::new)
+        .map(fasta::io::Reader::new)?;
 
     reader
         .records()
