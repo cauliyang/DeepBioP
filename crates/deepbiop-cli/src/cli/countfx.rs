@@ -27,7 +27,7 @@ pub struct CountFx {
     threads: Option<usize>,
 
     // query length
-    #[arg(long,  default_value = "0")]
+    #[arg(long, default_value = "0")]
     query_length: usize,
 }
 
@@ -39,7 +39,12 @@ fn export_json<P: AsRef<Path>>(seq_len: &[usize], output: P) -> Result<()> {
     Ok(())
 }
 
-fn summary<P: AsRef<Path>>(seq_len: &[usize], output: P, export: bool, query_length: usize) -> Result<()> {
+fn summary<P: AsRef<Path>>(
+    seq_len: &[usize],
+    output: P,
+    export: bool,
+    query_length: usize,
+) -> Result<()> {
     let total_len: usize = seq_len.par_iter().sum();
     let max_len: usize = *seq_len.par_iter().max().unwrap_or(&0);
     let min_len: usize = *seq_len.par_iter().min().unwrap_or(&0);
@@ -96,10 +101,12 @@ fn summary<P: AsRef<Path>>(seq_len: &[usize], output: P, export: bool, query_len
             Ok(idx) | Err(idx) => {
                 let count = sorted_lens.len() - idx;
                 println!("The number of sequences with length >= {query_length}: {count}");
-                println!("The percentage of sequences with length >= {query_length}: {:.2}%", count as f64 / seq_len.len() as f64 * 100.0);
+                println!(
+                    "The percentage of sequences with length >= {query_length}: {:.2}%",
+                    count as f64 / seq_len.len() as f64 * 100.0
+                );
             }
         }
-
     }
 
     if export {
