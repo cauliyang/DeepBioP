@@ -4,6 +4,7 @@ use std::{
     path::{Path, PathBuf},
 };
 
+use bon::Builder;
 use clap::Parser;
 use deepbiop_utils as utils;
 use noodles::{fasta, fastq};
@@ -15,7 +16,7 @@ use rayon::prelude::*;
 #[derive(Debug, Parser)]
 pub struct CountFx {
     /// path to the fastx file
-    #[arg(value_name = "fx")]
+    #[arg(value_name = "fx", action=clap::ArgAction::Append)]
     fx: PathBuf,
 
     /// if export the result
@@ -31,12 +32,75 @@ pub struct CountFx {
     query_length: usize,
 }
 
-fn export_json<P: AsRef<Path>>(seq_len: &[usize], output: P) -> Result<()> {
-    // save identities to json file
-    let json_file = File::create(output)?;
-    let mut json_writer = BufWriter::new(json_file);
-    json_writer.write_all(serde_json::to_string(seq_len)?.as_bytes())?;
-    Ok(())
+#[derive(Debug, Default, Builder)]
+struct Statistics {
+    sorted_lens: Vec<usize>,
+    total_len: usize,
+    max_len: usize,
+    min_len: usize,
+    mean_len: f64,
+    std_dev: f64,
+    q1: usize,
+    q2: usize,
+    q3: usize,
+    p90: usize,
+    p95: usize,
+    p99: usize,
+    query_length: usize,
+    #[builder(default)]
+    count_query_length: usize,
+    #[builder(default)]
+    percentage_query_length: f64,
+}
+
+impl Statistics {
+    fn json<P: AsRef<Path>>(&self, output: P) -> Result<()> {
+        let json_file = File::create(output)?;
+        let mut json_writer = BufWriter::new(json_file);
+        json_writer.write_all(serde_json::to_string(&self.sorted_lens)?.as_bytes())?;
+        Ok(())
+    }
+
+    fn count_query_length(&mut self) {
+        if self.query_length > 0 {
+            match self.sorted_lens.binary_search(&self.query_length) {
+                Ok(idx) | Err(idx) => {
+                    let count = self.sorted_lens.len() - idx;
+
+                    self.count_query_length = count;
+                    self.percentage_query_length =
+                        count as f64 / self.sorted_lens.len() as f64 * 100.0;
+                }
+            }
+        }
+    }
+    fn print(&self) {
+        println!("The number of sequences                       : {}", self.total_len);
+        println!("The minimum length of sequences               : {}", self.min_len);
+        println!("The maximum length of sequences               : {}", self.max_len);
+        println!("The mean length of sequences                  : {:.2}", self.mean_len);
+        println!("The standard deviation of sequences           : {:.2}", self.std_dev);
+
+        println!("The first quartile of sequences               : {}", self.q1);
+        println!("The second quartile of sequences              : {}", self.q2);
+        println!("The third quartile of sequences               : {}", self.q3);
+
+        println!("The 90th percentile of sequences              : {}", self.p90);
+        println!("The 95th percentile of sequences              : {}", self.p95);
+        println!("The 99th percentile of sequences              : {}", self.p99);
+
+        if self.query_length > 0 {
+            println!(
+                "The number of sequences with length >= {}     : {}",
+                self.query_length, self.count_query_length
+            );
+            println!(
+                "The percentage of sequences with length >= {} : {:.4}%",
+                self.query_length, self.percentage_query_length
+            );
+
+        }
+    }
 }
 
 fn summary<P: AsRef<Path>>(
@@ -82,35 +146,27 @@ fn summary<P: AsRef<Path>>(
         / seq_len.len() as f64;
     let std_dev = variance.sqrt();
 
-    println!("The number of sequences           : {}", seq_len.len());
-    println!("The minimum length of sequences   : {}", min_len);
-    println!("The maximum length of sequences   : {}", max_len);
-    println!("The mean length of sequences      : {:.2}", mean_len);
-    println!("The standard deviation of sequences: {:.2}", std_dev);
+    let mut statistics = Statistics::builder()
+        .sorted_lens(sorted_lens)
+        .total_len(total_len)
+        .max_len(max_len)
+        .min_len(min_len)
+        .mean_len(mean_len)
+        .std_dev(std_dev)
+        .q1(q1)
+        .q2(q2)
+        .q3(q3)
+        .p90(p90)
+        .p95(p95)
+        .p99(p99)
+        .query_length(query_length)
+        .build();
 
-    println!("The first quartile of sequences   : {}", q1);
-    println!("The second quartile of sequences  : {}", q2);
-    println!("The third quartile of sequences   : {}", q3);
-
-    println!("The 90th percentile of sequences  : {}", p90);
-    println!("The 95th percentile of sequences  : {}", p95);
-    println!("The 99th percentile of sequences  : {}", p99);
-
-    if query_length > 0 {
-        match sorted_lens.binary_search(&query_length) {
-            Ok(idx) | Err(idx) => {
-                let count = sorted_lens.len() - idx;
-                println!("The number of sequences with length >= {query_length}: {count}");
-                println!(
-                    "The percentage of sequences with length >= {query_length}: {:.2}%",
-                    count as f64 / seq_len.len() as f64 * 100.0
-                );
-            }
-        }
-    }
+    statistics.count_query_length();
+    statistics.print();
 
     if export {
-        export_json(&sorted_lens, output)?;
+        statistics.json(output)?;
     }
     Ok(())
 }
