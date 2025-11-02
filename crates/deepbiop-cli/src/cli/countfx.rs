@@ -75,19 +75,52 @@ impl Statistics {
         }
     }
     fn print(&self) {
-        println!("The number of sequences                       : {}", self.total_len);
-        println!("The minimum length of sequences               : {}", self.min_len);
-        println!("The maximum length of sequences               : {}", self.max_len);
-        println!("The mean length of sequences                  : {:.2}", self.mean_len);
-        println!("The standard deviation of sequences           : {:.2}", self.std_dev);
+        println!(
+            "The number of sequences                       : {}",
+            self.total_len
+        );
+        println!(
+            "The minimum length of sequences               : {}",
+            self.min_len
+        );
+        println!(
+            "The maximum length of sequences               : {}",
+            self.max_len
+        );
+        println!(
+            "The mean length of sequences                  : {:.2}",
+            self.mean_len
+        );
+        println!(
+            "The standard deviation of sequences           : {:.2}",
+            self.std_dev
+        );
 
-        println!("The first quartile of sequences               : {}", self.q1);
-        println!("The second quartile of sequences              : {}", self.q2);
-        println!("The third quartile of sequences               : {}", self.q3);
+        println!(
+            "The first quartile of sequences               : {}",
+            self.q1
+        );
+        println!(
+            "The second quartile of sequences              : {}",
+            self.q2
+        );
+        println!(
+            "The third quartile of sequences               : {}",
+            self.q3
+        );
 
-        println!("The 90th percentile of sequences              : {}", self.p90);
-        println!("The 95th percentile of sequences              : {}", self.p95);
-        println!("The 99th percentile of sequences              : {}", self.p99);
+        println!(
+            "The 90th percentile of sequences              : {}",
+            self.p90
+        );
+        println!(
+            "The 95th percentile of sequences              : {}",
+            self.p95
+        );
+        println!(
+            "The 99th percentile of sequences              : {}",
+            self.p99
+        );
 
         if self.query_length > 0 {
             println!(
@@ -98,7 +131,6 @@ impl Statistics {
                 "The percentage of sequences with length >= {} : {:.4}%",
                 self.query_length, self.percentage_query_length
             );
-
         }
     }
 }
