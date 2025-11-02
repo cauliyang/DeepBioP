@@ -28,11 +28,19 @@ impl FxsToOne {
         match utils::io::check_sequence_file_type(&self.fxs[0]) {
             Ok(utils::io::SequenceFileType::Fasta) => {
                 let output = self.output.with_extension("fa.gz");
-                fa::io::convert_multiple_fas_to_one_bgzip_fa(&self.fxs, output, true)?;
+                fa::io::convert_multiple_fas_to_one_bgzip_fa_streaming(
+                    &self.fxs,
+                    output,
+                    self.threads,
+                )?;
             }
             Ok(utils::io::SequenceFileType::Fastq) => {
                 let output = self.output.with_extension("fq.gz");
-                fq::io::convert_multiple_fqs_to_one_bgzip_fq(&self.fxs, output, true)?;
+                fq::io::convert_multiple_fqs_to_one_bgzip_fq_streaming(
+                    &self.fxs,
+                    output,
+                    self.threads,
+                )?;
             }
 
             _ => {

@@ -159,6 +159,62 @@ pub fn convert_multiple_fas_to_one_bgzip_fa<P: AsRef<Path>>(
     Ok(())
 }
 
+/// Combines multiple FASTA files into a single bgzip-compressed FASTA file using streaming
+///
+/// This function uses a streaming approach to minimize memory usage. Instead of loading
+/// all records into memory at once, it processes files one at a time in an iterator-like fashion.
+///
+/// # Arguments
+///
+/// * `paths` - A slice of paths to the input FASTA files
+/// * `result_path` - Path where the combined bgzip FASTA file will be written
+/// * `threads` - Optional number of threads for bgzip compression (default: 2)
+///
+/// # Returns
+///
+/// Returns `Ok(())` if successful, or an error if file operations fail
+///
+/// # Example
+///
+/// ```no_run
+/// use std::path::PathBuf;
+/// use deepbiop_fa::io::convert_multiple_fas_to_one_bgzip_fa_streaming;
+///
+/// let paths = vec![
+///     PathBuf::from("file1.fa.gz"),
+///     PathBuf::from("file2.fa.gz"),
+/// ];
+/// convert_multiple_fas_to_one_bgzip_fa_streaming(&paths, "output.fa.gz", None).unwrap();
+/// ```
+pub fn convert_multiple_fas_to_one_bgzip_fa_streaming<P: AsRef<Path>>(
+    paths: &[PathBuf],
+    result_path: P,
+    threads: Option<usize>,
+) -> Result<()> {
+    let worker_count = NonZeroUsize::new(threads.unwrap_or(2))
+        .map(|count| count.min(thread::available_parallelism().unwrap()))
+        .unwrap();
+
+    let sink = File::create(result_path)?;
+    let encoder = bgzf::io::MultithreadedWriter::with_worker_count(worker_count, sink);
+    let mut writer = fasta::io::Writer::new(encoder);
+
+    // Process each file sequentially in a streaming fashion
+    for path in paths {
+        log::info!("Processing file: {:?}", path);
+        let reader = utils::io::create_reader_for_compressed_file(path)?;
+        let mut reader = fasta::io::Reader::new(BufReader::new(reader));
+
+        // Stream records one at a time without loading all into memory
+        for result in reader.records() {
+            let record = result?;
+            writer.write_record(&record)?;
+        }
+    }
+
+    Ok(())
+}
+
 pub fn select_record_from_fa<P: AsRef<Path>>(
     fa: P,
     selected_records: &HashSet<BString>,
