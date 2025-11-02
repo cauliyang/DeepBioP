@@ -16,7 +16,7 @@ readme = "README.md"
 
 ahash = "0.8.12"
 anyhow = "1.0"
-arrow = "56.1"
+arrow = "56.2"
 
 bio = "3.0"
 bitvec = "1.0"
@@ -48,7 +48,7 @@ noodles = { version = "0.101.0", features = [
 ] }
 num-traits = { version = "0.2" }
 numpy = "0.23"
-parquet = "56.1"
+parquet = "56.2"
 pyo3 = { version = "0.23.5", features = [
     "abi3-py39",
     "extension-module",
