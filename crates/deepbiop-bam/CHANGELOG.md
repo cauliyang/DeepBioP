@@ -6,6 +6,12 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.1.16](https://github.com/cauliyang/DeepBioP/compare/deepbiop-bam-v0.1.15...deepbiop-bam-v0.1.16) - 2025-11-02
+
+### Other
+
+- updated the following local packages: deepbiop-utils, deepbiop-fq
+
 ## [0.1.11](https://github.com/cauliyang/DeepBioP/compare/deepbiop-bam-v0.1.10...deepbiop-bam-v0.1.11) - 2024-08-25
 
 ### Added

@@ -6,6 +6,20 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.1.16](https://github.com/cauliyang/DeepBioP/compare/deepbiop-utils-v0.1.15...deepbiop-utils-v0.1.16) - 2025-11-02
+
+### Added
+
+- *(cli)* add query length option and percentile calculations to CountFx
+- add dataset module and integrate with Python bindings
+
+### Other
+
+- update MSRV to 1.90.0 and add bon dependency
+- Feat ([#68](https://github.com/cauliyang/DeepBioP/pull/68))
+- update Minimum Supported Rust Version (MSRV) to 1.85.1 in workflow and README
+- Feat ([#57](https://github.com/cauliyang/DeepBioP/pull/57))
+
 ## [0.1.14](https://github.com/cauliyang/DeepBioP/compare/deepbiop-utils-v0.1.13...deepbiop-utils-v0.1.14) - 2025-01-17
 
 ### Added
