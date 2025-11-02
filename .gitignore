@@ -198,3 +198,4 @@ pyrightconfig.json
 libcairo*
 uv.lock
 _build
+CLAUDE.md
