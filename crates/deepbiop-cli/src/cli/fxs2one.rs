@@ -15,7 +15,7 @@ pub struct FxsToOne {
     fxs: Vec<PathBuf>,
 
     /// output bgzip compressed file
-    #[arg(long, value_name = "output")]
+    #[arg(long, short, value_name = "output")]
     output: PathBuf,
 
     #[arg(short, long, default_value = "2")]
