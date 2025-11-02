@@ -1,4 +1,4 @@
-use pyo3::types::{PyDict, PyList};
+use pyo3::types::{PyAny, PyDict, PyList};
 use std::fs::File;
 use std::path::Path;
 use std::sync::{Arc, Mutex};
@@ -81,7 +81,7 @@ impl FastqDataset {
         Ok(self.records_count.div_ceil(self.chunk_size))
     }
 
-    fn __getitem__(&self, idx: usize, py: Python) -> PyResult<PyObject> {
+    fn __getitem__(&self, idx: usize, py: Python) -> PyResult<Py<PyAny>> {
         if idx >= self.__len__()? {
             return Err(pyo3::exceptions::PyIndexError::new_err(
                 "Index out of bounds",
@@ -107,7 +107,7 @@ impl FastqDataset {
             *pos = 0;
         }
 
-        Python::with_gil(|py| {
+        Python::attach(|py| {
             let dataset_clone = Py::new(py, slf.clone())?;
 
             let iter = FastqIterator {
@@ -125,7 +125,7 @@ impl FastqDataset {
             .map_err(|e| pyo3::exceptions::PyIOError::new_err(e.to_string()))
     }
 
-    fn get_stats(&self, py: Python) -> PyResult<PyObject> {
+    fn get_stats(&self, py: Python) -> PyResult<Py<PyAny>> {
         let dict = PyDict::new(py);
         dict.set_item("total_records", self.records_count)?;
         dict.set_item("batches", self.__len__()?)?;
@@ -305,8 +305,8 @@ impl FastqIterator {
         slf
     }
 
-    fn __next__(mut slf: PyRefMut<'_, Self>) -> PyResult<Option<PyObject>> {
-        Python::with_gil(|py| {
+    fn __next__(mut slf: PyRefMut<'_, Self>) -> PyResult<Option<Py<PyAny>>> {
+        Python::attach(|py| {
             // Use direct field access for better performance
             let current_batch = slf.current_batch;
 
@@ -395,6 +395,7 @@ fn count_records_exact(file_path: &str) -> Result<usize> {
 }
 
 // Legacy function to maintain compatibility
+#[allow(dead_code)]
 fn count_records(file_path: &str) -> PyResult<usize> {
     count_records_efficient(file_path)
         .map_err(|e| pyo3::exceptions::PyIOError::new_err(e.to_string()))

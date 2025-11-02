@@ -9,7 +9,7 @@ readme = "README.md"
 authors = [{ name = "Yangyang Li", email = "sunlifeliz5@gmail.com" }]
 license = { file = "LICENSE" }
 version = "0.1.15"
-requires-python = ">=3.9"
+requires-python = ">=3.10"
 
 keywords = ["deep-learning", "bioinformatics", "biological-data"]
 classifiers = [
@@ -21,7 +21,6 @@ classifiers = [
     "Programming Language :: Python",
     "Programming Language :: Python :: 3",
     "Programming Language :: Python :: 3 :: Only",
-    "Programming Language :: Python :: 3.9",
     "Programming Language :: Python :: 3.10",
     "Programming Language :: Python :: 3.11",
     "Programming Language :: Python :: 3.12",
@@ -29,13 +28,11 @@ classifiers = [
     "Topic :: Scientific/Engineering",
 ]
 
-
 [project.urls]
 Homepage = "https://github.com/cauliyang/DeepBioP"
 Documentation = "https://yangyangli.top/DeepBioP"
 Repository = "https://github.com/cauliyang/DeepBioP"
 Changelog = "https://github.com/cauliyang/DeepBioP/releases"
-
 
 [tool.mypy]
 files = ["deepbiop", "tests"]

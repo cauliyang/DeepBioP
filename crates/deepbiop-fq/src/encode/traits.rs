@@ -84,6 +84,7 @@ mod tests {
     #[test]
     fn test_parse_target_from_id() {
         // Test case 1: Valid input
+        #[allow(dead_code)]
         struct TestEncoder;
         impl Encoder for TestEncoder {
             type RecordOutput = Result<RecordData>;

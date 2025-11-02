@@ -36,9 +36,11 @@ impl From<encode::RecordData> for PyRecordData {
 }
 
 // Implement FromPyObject for PyRecordData
-impl<'py> FromPyObject<'py> for PyRecordData {
-    fn extract_bound(ob: &Bound<'py, PyAny>) -> PyResult<Self> {
-        // Assuming Python objects are tuples of (id, seq, qual)
+impl<'a, 'py> FromPyObject<'a, 'py> for PyRecordData {
+    type Error = PyErr;
+
+    fn extract(ob: pyo3::Borrowed<'a, 'py, PyAny>) -> Result<Self, Self::Error> {
+        // Assuming Python objects are tuples of (id, seq)
         let (id, seq): (String, String) = ob.extract()?;
         Ok(PyRecordData(encode::RecordData {
             id: id.into(),
