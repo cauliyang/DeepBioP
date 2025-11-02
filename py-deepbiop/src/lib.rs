@@ -7,7 +7,6 @@ use deepbiop_core::python::register_core_module;
 use deepbiop_fa::python::register_fa_module;
 use deepbiop_fq::python::register_fq_module;
 use deepbiop_utils::python::register_utils_module;
-
 use pyo3_stub_gen::define_stub_info_gatherer;
 
 #[pymodule]

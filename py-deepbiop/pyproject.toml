@@ -10,7 +10,6 @@ authors = [{ name = "Yangyang Li", email = "sunlifeliz5@gmail.com" }]
 license = { file = "LICENSE" }
 version = "0.1.15"
 requires-python = ">=3.10"
-
 keywords = ["deep-learning", "bioinformatics", "biological-data"]
 classifiers = [
     "Development Status :: 5 - Production/Stable",
@@ -24,8 +23,21 @@ classifiers = [
     "Programming Language :: Python :: 3.10",
     "Programming Language :: Python :: 3.11",
     "Programming Language :: Python :: 3.12",
+    "Programming Language :: Python :: 3.13",
+    "Programming Language :: Python :: 3.14",
     "Programming Language :: Rust",
     "Topic :: Scientific/Engineering",
+]
+
+[dependency-groups]
+dev = [
+    "sphinx>=7.4.7",
+    "interrogate>=1.7.0",
+    "mkdocs>=1.6.0",
+    "mkdocs-material>=9.5.31",
+    "pymdown-extensions>=10.9",
+    "pytest>=8.3.2",
+    "pytest-sugar>=1.0.0",
 ]
 
 [project.urls]
@@ -211,16 +223,4 @@ exclude_lines = [
     "except ImportError",
     "if TYPE_CHECKING:",
     "from typing_extensions import ",
-]
-
-
-[tool.uv]
-dev-dependencies = [
-    "sphinx>=7.4.7",
-    "interrogate>=1.7.0",
-    "mkdocs>=1.6.0",
-    "mkdocs-material>=9.5.31",
-    "pymdown-extensions>=10.9",
-    "pytest>=8.3.2",
-    "pytest-sugar>=1.0.0",
 ]
