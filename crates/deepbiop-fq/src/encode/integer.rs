@@ -309,9 +309,10 @@ pub mod python {
             sequences: Vec<Vec<u8>>,
         ) -> PyResult<Bound<'py, PyArray2<f32>>> {
             let seq_refs: Vec<&[u8]> = sequences.iter().map(|s| s.as_slice()).collect();
-            let encoded = self
-                .inner
-                .encode_batch(&seq_refs)
+
+            // Release GIL for parallel processing with Rayon
+            let encoded = py
+                .allow_threads(|| self.inner.encode_batch(&seq_refs))
                 .map_err(|e| PyErr::new::<pyo3::exceptions::PyValueError, _>(e.to_string()))?;
 
             Ok(PyArray2::from_array(py, &encoded))
