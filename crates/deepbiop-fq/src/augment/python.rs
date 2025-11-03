@@ -36,7 +36,6 @@ impl PyReverseComplement {
     }
 
     /// Apply reverse complement to multiple sequences.
-    #[allow(deprecated)]  // allow_threads is the correct API for GIL release in PyO3 0.27
     fn apply_batch(&mut self, py: Python, sequences: Vec<Vec<u8>>) -> Vec<Vec<u8>> {
         // Release GIL for parallel processing with Rayon
         py.allow_threads(|| self.inner.apply_batch(&sequences))
@@ -84,7 +83,6 @@ impl PyMutator {
     }
 
     /// Apply mutation to multiple sequences.
-    #[allow(deprecated)]  // allow_threads is the correct API for GIL release in PyO3 0.27
     fn apply_batch(&mut self, py: Python, sequences: Vec<Vec<u8>>) -> Vec<Vec<u8>> {
         // Release GIL for parallel processing with Rayon
         py.allow_threads(|| self.inner.apply_batch(&sequences))
