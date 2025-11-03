@@ -312,7 +312,7 @@ pub mod python {
 
             // Release GIL for parallel processing with Rayon
             let encoded = py
-                .allow_threads(|| self.inner.encode_batch(&seq_refs))
+                .detach(|| self.inner.encode_batch(&seq_refs))
                 .map_err(|e| PyErr::new::<pyo3::exceptions::PyValueError, _>(e.to_string()))?;
 
             Ok(PyArray2::from_array(py, &encoded))

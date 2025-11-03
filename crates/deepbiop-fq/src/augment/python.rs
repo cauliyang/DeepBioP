@@ -38,7 +38,7 @@ impl PyReverseComplement {
     /// Apply reverse complement to multiple sequences.
     fn apply_batch(&mut self, py: Python, sequences: Vec<Vec<u8>>) -> Vec<Vec<u8>> {
         // Release GIL for parallel processing with Rayon
-        py.allow_threads(|| self.inner.apply_batch(&sequences))
+        py.detach(|| self.inner.apply_batch(&sequences))
     }
 
     fn __repr__(&self) -> String {
@@ -85,7 +85,7 @@ impl PyMutator {
     /// Apply mutation to multiple sequences.
     fn apply_batch(&mut self, py: Python, sequences: Vec<Vec<u8>>) -> Vec<Vec<u8>> {
         // Release GIL for parallel processing with Rayon
-        py.allow_threads(|| self.inner.apply_batch(&sequences))
+        py.detach(|| self.inner.apply_batch(&sequences))
     }
 
     fn __repr__(&self) -> String {
