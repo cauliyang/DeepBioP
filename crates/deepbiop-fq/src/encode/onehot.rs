@@ -470,6 +470,7 @@ pub mod python {
         ///
         /// Raises:
         ///     ValueError: If any sequence fails to encode
+        #[allow(deprecated)]  // allow_threads is the correct API for GIL release in PyO3 0.27
         #[pyo3(name = "encode_batch")]
         pub fn encode_batch<'py>(
             &self,
