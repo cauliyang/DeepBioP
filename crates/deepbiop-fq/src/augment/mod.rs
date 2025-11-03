@@ -12,7 +12,7 @@
 //! use deepbiop_fq::augment::{ReverseComplement, Mutator, Augmentation};
 //!
 //! // Create augmenters
-//! let rc = ReverseComplement::new();
+//! let mut rc = ReverseComplement::new();
 //! let mutator = Mutator::new(0.01, Some(42)); // 1% mutation rate, seed 42
 //!
 //! // Apply augmentations

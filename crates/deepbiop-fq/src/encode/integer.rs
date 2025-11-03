@@ -23,10 +23,11 @@ use deepbiop_core::types::EncodingType;
 /// ```no_run
 /// use deepbiop_fq::encode::integer::IntegerEncoder;
 /// use deepbiop_core::types::EncodingType;
+/// use ndarray::arr1;
 ///
 /// let encoder = IntegerEncoder::new(EncodingType::DNA);
 /// let encoded = encoder.encode(b"ACGT").unwrap();
-/// assert_eq!(encoded, vec![0.0, 1.0, 2.0, 3.0]);
+/// assert_eq!(encoded, arr1(&[0.0, 1.0, 2.0, 3.0]));
 /// ```
 pub struct IntegerEncoder {
     /// Type of sequence being encoded (DNA, RNA, or Protein)

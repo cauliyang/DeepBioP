@@ -1,7 +1,6 @@
 use crate::types::{GenomicFeature, Strand};
 use anyhow::{Context, Result};
 use noodles::gff;
-use noodles::gff::feature::record::Attributes;
 use std::fs::File;
 use std::io::BufReader;
 use std::path::Path;
@@ -154,65 +153,6 @@ impl GtfReader {
         }
 
         Ok(attributes)
-    }
-
-    /// Convert a noodles GFF record to our GenomicFeature type
-    fn record_to_feature(record: &gff::feature::RecordBuf) -> Result<GenomicFeature> {
-        let seqname = record.reference_sequence_name().to_string();
-        let source = record.source().to_string();
-        let feature_type = record.ty().to_string();
-
-        // Get start and end positions - RecordBuf returns Position directly
-        let start: u64 = usize::from(record.start())
-            .try_into()
-            .context("Start position overflow")?;
-
-        let end: u64 = usize::from(record.end())
-            .try_into()
-            .context("End position overflow")?;
-
-        // Get score - returns Option<f32> directly for RecordBuf
-        let score = record.score();
-
-        // Parse strand - RecordBuf returns Strand directly
-        let strand_char = match record.strand() {
-            gff::feature::record::Strand::Forward => '+',
-            gff::feature::record::Strand::Reverse => '-',
-            gff::feature::record::Strand::None | gff::feature::record::Strand::Unknown => '.',
-        };
-        let strand = Strand::from(strand_char);
-
-        // Parse frame/phase - RecordBuf returns Option<Phase>
-        let frame = match record.phase() {
-            Some(gff::feature::record::Phase::Zero) => Some(0),
-            Some(gff::feature::record::Phase::One) => Some(1),
-            Some(gff::feature::record::Phase::Two) => Some(2),
-            None => None,
-        };
-
-        // Parse attributes - GTF attributes are stored in an IndexMap
-        let mut attributes = ahash::HashMap::default();
-
-        // Iterate through attributes and convert to our format
-        for (key, _value) in record.attributes().iter().flatten() {
-            // Convert BString key to String
-            let key_str = String::from_utf8_lossy(key.as_ref());
-            // For now, store a placeholder for the value
-            // TODO: Properly extract value based on its enum variant
-            attributes.insert(key_str.to_string(), "value".to_string());
-        }
-
-        Ok(GenomicFeature {
-            seqname,
-            source,
-            feature_type,
-            start,
-            end,
-            score,
-            strand,
-            frame,
-            attributes,
-        })
     }
 
     /// Build an index of features by gene ID for fast lookups

@@ -11,9 +11,9 @@ use super::Augmentation;
 /// # Examples
 ///
 /// ```
-/// use deepbiop_fq::augment::{ReverseComplement, Augmentation};
+/// use deepbiop_fa::augment::{ReverseComplement, Augmentation};
 ///
-/// let rc = ReverseComplement::new();
+/// let mut rc = ReverseComplement::new();
 /// let sequence = b"ACGT";
 /// let result = rc.apply(sequence);
 /// assert_eq!(result, b"ACGT"); // Palindrome!
@@ -118,7 +118,7 @@ impl ReverseComplement {
     /// # Example
     ///
     /// ```
-    /// use deepbiop_fq::augment::ReverseComplement;
+    /// use deepbiop_fa::augment::ReverseComplement;
     ///
     /// let mut rc = ReverseComplement::new();
     /// let sequences = vec![b"ACGT".to_vec(), b"TTAA".to_vec()];

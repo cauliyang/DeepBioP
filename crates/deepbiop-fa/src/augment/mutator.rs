@@ -13,7 +13,7 @@ use rand::{Rng, SeedableRng};
 /// # Examples
 ///
 /// ```
-/// use deepbiop_fq::augment::{Mutator, Augmentation};
+/// use deepbiop_fa::augment::{Mutator, Augmentation};
 ///
 /// // 1% mutation rate with seed for reproducibility
 /// let mut mutator = Mutator::new(0.01, Some(42));
@@ -161,7 +161,7 @@ impl Mutator {
     /// # Example
     ///
     /// ```
-    /// use deepbiop_fq::augment::Mutator;
+    /// use deepbiop_fa::augment::Mutator;
     ///
     /// let mut mutator = Mutator::new(0.01, Some(42));
     /// let sequences = vec![b"ACGTACGT".to_vec(), b"TTAATTAA".to_vec()];

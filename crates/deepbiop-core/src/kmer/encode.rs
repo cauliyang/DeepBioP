@@ -24,7 +24,7 @@ use super::seq_to_kmers;
 /// use deepbiop_core::kmer::encode::KmerEncoder;
 /// use deepbiop_core::types::EncodingType;
 ///
-/// let encoder = KmerEncoder::new(3, true, EncodingType::DNA);
+/// let mut encoder = KmerEncoder::new(3, true, EncodingType::DNA);
 /// let encoded = encoder.encode(b"ACGTACGT").unwrap();
 /// ```
 pub struct KmerEncoder {

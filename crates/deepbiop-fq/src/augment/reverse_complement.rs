@@ -13,7 +13,7 @@ use super::Augmentation;
 /// ```
 /// use deepbiop_fq::augment::{ReverseComplement, Augmentation};
 ///
-/// let rc = ReverseComplement::new();
+/// let mut rc = ReverseComplement::new();
 /// let sequence = b"ACGT";
 /// let result = rc.apply(sequence);
 /// assert_eq!(result, b"ACGT"); // Palindrome!
