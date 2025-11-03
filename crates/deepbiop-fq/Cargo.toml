@@ -29,6 +29,7 @@ flate2 = { workspace = true }
 bstr = { workspace = true }
 walkdir = { workspace = true }
 rand = { workspace = true }
+rand_distr = { workspace = true }
 
 parquet = { workspace = true }
 arrow = { workspace = true }

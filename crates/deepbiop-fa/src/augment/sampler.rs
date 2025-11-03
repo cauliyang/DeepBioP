@@ -1,3 +1,5 @@
+//! Random subsequence sampling for FASTA records.
+
 use anyhow::Result;
 use noodles::fasta::record::Definition;
 use noodles::fasta::Record as FastaRecord;
@@ -15,6 +17,19 @@ use rand::Rng;
 /// # Returns
 ///
 /// Returns a vector of new FASTA records containing the cut sequences
+///
+/// # Example
+///
+/// ```no_run
+/// use deepbiop_fa::augment::cut_fa_randomly;
+/// use noodles::fasta::Record;
+///
+/// # fn example(records: &[Record]) -> anyhow::Result<()> {
+/// let augmented = cut_fa_randomly(records, 100, 500, 3)?;
+/// println!("Generated {} augmented sequences", augmented.len());
+/// # Ok(())
+/// # }
+/// ```
 pub fn cut_fa_randomly(
     records: &[FastaRecord],
     min_length: usize,
@@ -60,4 +75,31 @@ pub fn cut_fa_randomly(
     }
 
     Ok(augmented_records)
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    #[test]
+    fn test_cut_fa_randomly() {
+        use noodles::fasta::record::Sequence;
+
+        // Create a test sequence
+        let sequence = b"ACGTACGTACGTACGTACGTACGTACGTACGT".to_vec(); // 32 bases
+        let record = FastaRecord::new(Definition::new(b"test_seq", None), Sequence::from(sequence));
+
+        let records = vec![record];
+        let result = cut_fa_randomly(&records, 10, 20, 2);
+
+        assert!(result.is_ok());
+        let augmented = result.unwrap();
+        assert_eq!(augmented.len(), 2); // 2 cuts from 1 sequence
+
+        // Verify cut lengths are within bounds
+        for aug_record in augmented {
+            let len = aug_record.sequence().len();
+            assert!((10..=20).contains(&len));
+        }
+    }
 }

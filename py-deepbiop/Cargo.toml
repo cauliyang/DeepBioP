@@ -19,6 +19,8 @@ deepbiop-bam = { workspace = true, features = ['python'] }
 deepbiop-utils = { workspace = true, features = ['python'] }
 deepbiop-fa = { workspace = true, features = ['python'] }
 deepbiop-core = { workspace = true, features = ['python'] }
+deepbiop-vcf = { workspace = true, features = ['python'] }
+deepbiop-gtf = { workspace = true, features = ['python'] }
 
 pyo3-stub-gen = { workspace = true }
 pyo3 = { workspace = true }

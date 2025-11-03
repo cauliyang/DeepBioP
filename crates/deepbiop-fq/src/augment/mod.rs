@@ -21,6 +21,7 @@
 //! ```
 
 pub mod mutator;
+pub mod quality;
 pub mod reverse_complement;
 pub mod sampler;
 
@@ -28,6 +29,7 @@ pub mod sampler;
 pub mod python;
 
 pub use mutator::{Mutator, MutatorBuilder};
+pub use quality::{QualityModel, QualitySimulator, QualitySimulatorBuilder};
 pub use reverse_complement::ReverseComplement;
 pub use sampler::{Sampler, SamplerBuilder};
 

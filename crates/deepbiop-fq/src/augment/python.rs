@@ -1,6 +1,9 @@
 //! Python bindings for augmentation operations.
 
-use super::{Augmentation, Mutator, ReverseComplement, Sampler};
+use super::{
+    quality::QualityModel, quality::QualitySimulator, Augmentation, Mutator, ReverseComplement,
+    Sampler,
+};
 use pyo3::prelude::*;
 
 /// Python wrapper for ReverseComplement.
@@ -30,6 +33,11 @@ impl PyReverseComplement {
     /// Apply reverse complement transformation to a sequence.
     fn apply(&mut self, sequence: &[u8]) -> Vec<u8> {
         self.inner.apply(sequence)
+    }
+
+    /// Apply reverse complement to multiple sequences.
+    fn apply_batch(&mut self, sequences: Vec<Vec<u8>>) -> Vec<Vec<u8>> {
+        sequences.iter().map(|seq| self.inner.apply(seq)).collect()
     }
 
     fn __repr__(&self) -> String {
@@ -73,6 +81,11 @@ impl PyMutator {
         self.inner.apply(sequence)
     }
 
+    /// Apply mutation to multiple sequences.
+    fn apply_batch(&mut self, sequences: Vec<Vec<u8>>) -> Vec<Vec<u8>> {
+        sequences.iter().map(|seq| self.inner.apply(seq)).collect()
+    }
+
     fn __repr__(&self) -> String {
         "Mutator()".to_string()
     }
@@ -86,37 +99,30 @@ pub struct PySampler {
 
 #[pymethods]
 impl PySampler {
-    /// Create a sampler that extracts subsequences from random positions.
-    #[staticmethod]
-    #[pyo3(signature = (length, seed=None))]
-    fn random(length: usize, seed: Option<u64>) -> Self {
-        Self {
-            inner: Sampler::random(length, seed),
-        }
-    }
+    /// Create a new sampler.
+    ///
+    /// # Arguments
+    ///
+    /// * `length` - Length of subsequences to extract
+    /// * `strategy` - Sampling strategy: "start", "center", "end", or "random"
+    /// * `seed` - Optional seed for reproducible random sampling
+    #[new]
+    #[pyo3(signature = (length, strategy, seed=None))]
+    fn new(length: usize, strategy: &str, seed: Option<u64>) -> PyResult<Self> {
+        let inner = match strategy {
+            "start" => Sampler::from_start(length),
+            "center" => Sampler::from_center(length),
+            "end" => Sampler::from_end(length),
+            "random" => Sampler::random(length, seed),
+            _ => {
+                return Err(pyo3::exceptions::PyValueError::new_err(format!(
+                    "Invalid strategy '{}'. Must be one of: 'start', 'center', 'end', 'random'",
+                    strategy
+                )))
+            }
+        };
 
-    /// Create a sampler that extracts subsequences from the start.
-    #[staticmethod]
-    fn from_start(length: usize) -> Self {
-        Self {
-            inner: Sampler::from_start(length),
-        }
-    }
-
-    /// Create a sampler that extracts subsequences from the center.
-    #[staticmethod]
-    fn from_center(length: usize) -> Self {
-        Self {
-            inner: Sampler::from_center(length),
-        }
-    }
-
-    /// Create a sampler that extracts subsequences from the end.
-    #[staticmethod]
-    fn from_end(length: usize) -> Self {
-        Self {
-            inner: Sampler::from_end(length),
-        }
+        Ok(Self { inner })
     }
 
     /// Apply sampling to a sequence.
@@ -129,10 +135,136 @@ impl PySampler {
     }
 }
 
+/// Python wrapper for QualityModel.
+#[pyclass(name = "QualityModel")]
+#[derive(Clone)]
+pub struct PyQualityModel {
+    inner: QualityModel,
+}
+
+#[pymethods]
+impl PyQualityModel {
+    /// Create a uniform quality distribution.
+    #[staticmethod]
+    #[pyo3(signature = (min, max))]
+    fn uniform(min: u8, max: u8) -> Self {
+        Self {
+            inner: QualityModel::Uniform { min, max },
+        }
+    }
+
+    /// Create a normal quality distribution.
+    #[staticmethod]
+    #[pyo3(signature = (mean, std_dev))]
+    fn normal(mean: f64, std_dev: f64) -> Self {
+        Self {
+            inner: QualityModel::Normal { mean, std_dev },
+        }
+    }
+
+    /// High quality preset (modern Illumina, mean ~37, std ~2).
+    #[staticmethod]
+    fn high_quality() -> Self {
+        Self {
+            inner: QualityModel::HighQuality,
+        }
+    }
+
+    /// Medium quality preset (older platforms, mean ~28, std ~5).
+    #[staticmethod]
+    fn medium_quality() -> Self {
+        Self {
+            inner: QualityModel::MediumQuality,
+        }
+    }
+
+    /// Degrading quality model (quality decreases along read).
+    #[staticmethod]
+    #[pyo3(signature = (start_mean, end_mean, std_dev))]
+    fn degrading(start_mean: f64, end_mean: f64, std_dev: f64) -> Self {
+        Self {
+            inner: QualityModel::Degrading {
+                start_mean,
+                end_mean,
+                std_dev,
+            },
+        }
+    }
+
+    fn __repr__(&self) -> String {
+        match &self.inner {
+            QualityModel::Uniform { min, max } => {
+                format!("QualityModel.Uniform(min={}, max={})", min, max)
+            }
+            QualityModel::Normal { mean, std_dev } => {
+                format!("QualityModel.Normal(mean={}, std_dev={})", mean, std_dev)
+            }
+            QualityModel::HighQuality => "QualityModel.HighQuality".to_string(),
+            QualityModel::MediumQuality => "QualityModel.MediumQuality".to_string(),
+            QualityModel::Degrading {
+                start_mean,
+                end_mean,
+                std_dev,
+            } => {
+                format!(
+                    "QualityModel.Degrading(start_mean={}, end_mean={}, std_dev={})",
+                    start_mean, end_mean, std_dev
+                )
+            }
+        }
+    }
+}
+
+/// Python wrapper for QualitySimulator.
+#[pyclass(name = "QualitySimulator")]
+pub struct PyQualitySimulator {
+    inner: QualitySimulator,
+}
+
+#[pymethods]
+impl PyQualitySimulator {
+    /// Create a new quality simulator.
+    ///
+    /// # Arguments
+    ///
+    /// * `model` - QualityModel instance
+    /// * `seed` - Optional seed for reproducible quality scores
+    #[new]
+    #[pyo3(signature = (model, seed=None))]
+    fn new(model: PyQualityModel, seed: Option<u64>) -> Self {
+        Self {
+            inner: QualitySimulator::new(model.inner, seed),
+        }
+    }
+
+    /// Generate quality scores for a sequence of given length.
+    ///
+    /// Returns ASCII quality scores (Phred+33 encoding).
+    ///
+    /// # Arguments
+    ///
+    /// * `length` - Number of quality scores to generate
+    fn generate(&mut self, length: usize) -> Vec<u8> {
+        self.inner.generate(length)
+    }
+
+    fn __repr__(&self) -> String {
+        "QualitySimulator()".to_string()
+    }
+}
+
 /// Register augmentation classes with Python module.
 pub fn register_augmentation_classes(m: &Bound<'_, PyModule>) -> PyResult<()> {
     m.add_class::<PyReverseComplement>()?;
     m.add_class::<PyMutator>()?;
     m.add_class::<PySampler>()?;
+    m.add_class::<PyQualityModel>()?;
+    m.add_class::<PyQualitySimulator>()?;
+
+    // Add constants for convenience
+    let quality_model_class = m.getattr("QualityModel")?;
+    quality_model_class.setattr("HighQuality", PyQualityModel::high_quality())?;
+    quality_model_class.setattr("MediumQuality", PyQualityModel::medium_quality())?;
+
     Ok(())
 }

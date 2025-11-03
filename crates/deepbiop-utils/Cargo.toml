@@ -31,6 +31,8 @@ tempfile = { workspace = true }
 arrow = { workspace = true }
 parquet = { workspace = true }
 serde_json = { workspace = true }
+ndarray = { workspace = true }
+ndarray-npy = { workspace = true }
 
 [features]
 python = []

@@ -7,7 +7,6 @@ use rand::rngs::StdRng;
 use rand::{rng, SeedableRng};
 use rayon::prelude::*;
 
-use deepbiop_core::error::DPError;
 use deepbiop_core::types::EncodingType;
 
 #[cfg(feature = "python")]
@@ -130,17 +129,8 @@ impl OneHotEncoder {
             // Check if base is valid
             if !self.encoding_type.is_valid_char(base_upper) {
                 match self.ambiguous_strategy {
-                    AmbiguousStrategy::Skip => {
-                        return Err(DPError::InvalidAlphabet {
-                            character: base as char,
-                            position: i,
-                            expected: String::from_utf8_lossy(self.encoding_type.alphabet())
-                                .to_string(),
-                        }
-                        .into());
-                    }
-                    AmbiguousStrategy::Mask => {
-                        // Leave as zeros
+                    AmbiguousStrategy::Skip | AmbiguousStrategy::Mask => {
+                        // Leave as zeros (skip over the ambiguous base)
                         continue;
                     }
                     AmbiguousStrategy::Random => {
@@ -273,8 +263,14 @@ mod tests {
     #[test]
     fn test_onehot_encode_ambiguous_skip() {
         let encoder = OneHotEncoder::new(EncodingType::DNA, AmbiguousStrategy::Skip);
-        let result = encoder.encode(b"ACGTN");
-        assert!(result.is_err());
+        let encoded = encoder.encode(b"ACGTN").unwrap();
+
+        assert_eq!(encoded.shape(), &[5, 4]);
+        // N should be encoded as zeros (skipped)
+        assert_eq!(encoded[[4, 0]], 0.0);
+        assert_eq!(encoded[[4, 1]], 0.0);
+        assert_eq!(encoded[[4, 2]], 0.0);
+        assert_eq!(encoded[[4, 3]], 0.0);
     }
 
     #[test]

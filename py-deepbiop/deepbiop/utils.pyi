@@ -153,3 +153,95 @@ def remove_intervals_and_keep_left(
 ) -> tuple[
     builtins.list[builtins.str], builtins.list[tuple[builtins.int, builtins.int]]
 ]: ...
+def export_to_parquet(
+    path: builtins.str | os.PathLike | pathlib.Path,
+    ids: typing.Sequence[builtins.str],
+    sequences: typing.Sequence[builtins.bytes],
+    qualities: typing.Sequence[builtins.bytes] | None = None,
+) -> None:
+    r"""
+    Export sequences to Parquet format.
+
+    Args:
+        path: Output Parquet file path
+        ids: Sequence identifiers
+        sequences: Sequence data (as bytes)
+        qualities: Optional quality scores (as bytes)
+
+    Example:
+        >>> export_to_parquet("output.parquet", ["seq1"], [b"ACGT"], [b"IIII"])
+    """
+
+def export_to_numpy_int(
+    path: builtins.str | os.PathLike | pathlib.Path,
+    sequences: typing.Sequence[builtins.bytes],
+    alphabet: builtins.bytes | None = None,
+) -> None:
+    r"""
+    Export sequences to NumPy format (integer encoded).
+
+    Args:
+        path: Output .npy file path
+        sequences: Sequence data (as bytes)
+        alphabet: Encoding alphabet (default: b"ACGT")
+
+    Example:
+        >>> export_to_numpy_int("output.npy", [b"ACGT", b"GGCC"], b"ACGT")
+    """
+
+def export_to_numpy_onehot(
+    path: builtins.str | os.PathLike | pathlib.Path,
+    sequences: typing.Sequence[builtins.bytes],
+    alphabet: builtins.bytes | None = None,
+) -> None:
+    r"""
+    Export sequences to NumPy format (one-hot encoded).
+
+    Args:
+        path: Output .npy file path
+        sequences: Sequence data (as bytes)
+        alphabet: Encoding alphabet (default: b"ACGT")
+
+    Example:
+        >>> export_to_numpy_onehot("output.npy", [b"ACGT"], b"ACGT")
+    """
+
+def export_quality_to_numpy(
+    path: builtins.str | os.PathLike | pathlib.Path,
+    qualities: typing.Sequence[builtins.bytes],
+    offset: builtins.int = 33,
+) -> None:
+    r"""
+    Export quality scores to NumPy format.
+
+    Args:
+        path: Output .npy file path
+        qualities: Quality score strings (as bytes)
+        offset: Phred quality offset (33 for Phred+33, 64 for Phred+64)
+
+    Example:
+        >>> export_quality_to_numpy("qual.npy", [b"IIII"], 33)
+    """
+
+def export_fastq_to_numpy(
+    seq_path: builtins.str | os.PathLike | pathlib.Path,
+    qual_path: builtins.str | os.PathLike | pathlib.Path,
+    sequences: typing.Sequence[builtins.bytes],
+    qualities: typing.Sequence[builtins.bytes],
+    alphabet: builtins.bytes | None = None,
+    offset: builtins.int = 33,
+) -> None:
+    r"""
+    Export FASTQ data to paired NumPy files (sequences + qualities).
+
+    Args:
+        seq_path: Output .npy file for sequences
+        qual_path: Output .npy file for qualities
+        sequences: Sequence data (as bytes)
+        qualities: Quality scores (as bytes)
+        alphabet: Encoding alphabet (default: b"ACGT")
+        offset: Phred quality offset (default: 33)
+
+    Example:
+        >>> export_fastq_to_numpy("seq.npy", "qual.npy", [b"ACGT"], [b"IIII"])
+    """

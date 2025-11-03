@@ -132,8 +132,17 @@ impl KmerEncoder {
     /// - The sequence is shorter than k
     /// - The sequence contains invalid characters
     pub fn encode(&mut self, sequence: &[u8]) -> Result<Array1<f32>> {
+        // Build k-mer index if not already built (needed for dimensions)
+        if self.kmer_to_idx.is_none() {
+            self.build_kmer_index();
+        }
+
+        let kmer_to_idx = self.kmer_to_idx.as_ref().unwrap();
+        let total_kmers = kmer_to_idx.len();
+
+        // If sequence is shorter than k, return a zero vector
         if sequence.len() < self.k {
-            return Err(DPError::SeqShorterThanKmer.into());
+            return Ok(Array1::<f32>::zeros(total_kmers));
         }
 
         // Validate sequence
@@ -148,12 +157,6 @@ impl KmerEncoder {
             }
         }
 
-        // Build k-mer index if not already built
-        if self.kmer_to_idx.is_none() {
-            self.build_kmer_index();
-        }
-
-        let kmer_to_idx = self.kmer_to_idx.as_ref().unwrap();
         let total_kmers = kmer_to_idx.len();
 
         // Extract k-mers
@@ -211,8 +214,9 @@ impl KmerEncoder {
         let encoded_seqs: Result<Vec<Array1<f32>>> = sequences
             .par_iter()
             .map(|sequence| {
+                // If sequence is shorter than k, return a zero vector
                 if sequence.len() < k {
-                    return Err(DPError::SeqShorterThanKmer.into());
+                    return Ok(Array1::<f32>::zeros(total_kmers));
                 }
 
                 // Validate sequence
@@ -294,8 +298,10 @@ mod tests {
         let mut encoder = KmerEncoder::new(5, false, EncodingType::DNA);
         let sequence = b"ACG"; // Shorter than k
 
-        let result = encoder.encode(sequence);
-        assert!(result.is_err());
+        let result = encoder.encode(sequence).unwrap();
+        // Should return a zero vector of correct shape
+        assert_eq!(result.len(), 4_usize.pow(5)); // 4^5 = 1024 for k=5 DNA
+        assert_eq!(result.iter().sum::<f32>(), 0.0);
     }
 
     #[test]

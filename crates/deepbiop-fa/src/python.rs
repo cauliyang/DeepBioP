@@ -11,6 +11,7 @@ use anyhow::Result;
 use bstr::BString;
 use deepbiop_utils::io as deepbiop_io;
 use log::warn;
+use noodles::fastq;
 use pyo3::prelude::*;
 use rayon::prelude::*;
 
@@ -204,6 +205,22 @@ pub fn py_select_record_from_fq_by_random(
     Ok(())
 }
 
+/// Convert FASTA file to FASTQ file with default quality scores.
+///
+/// Since FASTA files don't contain quality information, assigns
+/// default quality score (Phred+33 Q40 = '~') to all bases.
+#[gen_stub_pyfunction(module = "deepbiop.fa")]
+#[pyfunction]
+pub fn fasta_to_fastq(fasta_path: PathBuf, fastq_path: PathBuf) -> Result<()> {
+    let fq_records = io::fasta_to_fastq(&fasta_path)?;
+    let handle = std::fs::File::create(fastq_path)?;
+    let mut writer = fastq::io::Writer::new(handle);
+    for record in fq_records {
+        writer.write_record(&record)?;
+    }
+    Ok(())
+}
+
 // register fq sub_module
 pub fn register_fa_module(parent_module: &Bound<'_, PyModule>) -> PyResult<()> {
     let sub_module_name = "fa";
@@ -231,6 +248,7 @@ pub fn register_fa_module(parent_module: &Bound<'_, PyModule>) -> PyResult<()> {
         py_select_record_from_fq_by_random,
         &child_module
     )?)?;
+    child_module.add_function(wrap_pyfunction!(fasta_to_fastq, &child_module)?)?;
 
     parent_module.add_submodule(&child_module)?;
 
