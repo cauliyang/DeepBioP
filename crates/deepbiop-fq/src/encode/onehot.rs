@@ -30,7 +30,7 @@ pub enum AmbiguousStrategy {
 /// One-hot encoder for biological sequences.
 ///
 /// Encodes sequences as binary matrices where each position is represented
-/// as a one-hot vector. For DNA: A=[1,0,0,0], C=[0,1,0,0], G=[0,0,1,0], T=[0,0,0,1]
+/// as a one-hot vector. For DNA: A=\[1,0,0,0\], C=\[0,1,0,0\], G=\[0,0,1,0\], T=\[0,0,0,1\]
 ///
 /// # Examples
 ///
