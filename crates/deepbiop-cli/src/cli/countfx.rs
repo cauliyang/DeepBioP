@@ -53,6 +53,31 @@ struct Statistics {
     percentage_query_length: f64,
 }
 
+
+fn human_readable_bases(bases: usize) -> String {
+    const UNITS: [&str; 5] = ["", "K", "M", "G", "T"];
+    if bases < 1000 {
+        return format!("{} bp", bases);
+    }
+    let mut size = bases as f64;
+    let mut unit = 0usize;
+    // Find the largest unit without overshooting
+    while size >= 1000.0 && unit < UNITS.len() - 1 {
+        size /= 1000.0;
+        unit += 1;
+    }
+    // Remove unnecessary decimal zeros (e.g., 1.00Kb -> 1Kb)
+    let size_str = if (size * 100.0) % 100.0 == 0.0 {
+        format!("{:.0}", size)
+    } else if (size * 10.0) % 10.0 == 0.0 {
+        format!("{:.1}", size)
+    } else {
+        format!("{:.2}", size)
+    };
+    format!("{}{}b", size_str, UNITS[unit])
+}
+
+
 impl Statistics {
     fn json<P: AsRef<Path>>(&self, output: P) -> Result<()> {
         let json_file = File::create(output)?;
@@ -77,8 +102,15 @@ impl Statistics {
     fn print(&self) {
         println!(
             "The number of sequences                       : {}",
-            self.total_len
+            self.sorted_lens.len()
         );
+
+        println!(
+            "The total bases in sequences                  : {} ({})",
+            self.total_len,
+            human_readable_bases(self.total_len)
+        );
+
         println!(
             "The minimum length of sequences               : {}",
             self.min_len
