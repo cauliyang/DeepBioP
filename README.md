@@ -42,6 +42,64 @@ cargo install deepbiop-cli
 dbp -h
 ```
 
+# Quickstart
+
+## Python: Encode DNA Sequences for Machine Learning
+
+```python
+import deepbiop as dbp
+import numpy as np
+
+# One-hot encoding for CNNs/RNNs
+encoder = dbp.OneHotEncoder("dna", "skip")
+sequences = [b"ACGTACGT", b"TTGGCCAA", b"AAAACCCC"]
+encoded = encoder.encode_batch(sequences)
+print(encoded.shape)  # (3, 8, 4) - [batch, seq_len, alphabet_size]
+
+# K-mer encoding for feature-based models
+kmer_encoder = dbp.KmerEncoder(k=3, canonical=True, encoding_type="dna")
+kmer_features = kmer_encoder.encode_batch(sequences)
+print(kmer_features.shape)  # (3, 64) - [batch, num_kmers]
+
+# Integer encoding for transformers/embeddings
+int_encoder = dbp.IntegerEncoder("dna")
+int_encoded = int_encoder.encode_batch(sequences)
+print(int_encoded.shape)  # (3, 8) - [batch, seq_len]
+
+# Use with PyTorch
+import torch
+tensor = torch.from_numpy(encoded)
+
+# Use with HuggingFace Transformers
+input_ids = torch.from_numpy(int_encoded).long() + 5  # Offset for special tokens
+attention_mask = (input_ids != 4).long()
+```
+
+## Rust: Process FASTQ Files
+
+```rust
+use deepbiop::fq::{OneHotEncoder, IntegerEncoder};
+use deepbiop::core::types::EncodingType;
+use deepbiop::fq::encode::AmbiguousStrategy;
+
+fn main() {
+    // One-hot encoding
+    let encoder = OneHotEncoder::new(EncodingType::DNA, AmbiguousStrategy::Skip);
+    let encoded = encoder.encode(b"ACGTACGT").unwrap();
+    println!("Shape: {:?}", encoded.shape());  // [8, 4]
+
+    // Integer encoding
+    let int_encoder = IntegerEncoder::new(EncodingType::DNA);
+    let int_encoded = int_encoder.encode(b"ACGTACGT").unwrap();
+    println!("Encoded: {:?}", int_encoded);  // [0, 1, 2, 3, 0, 1, 2, 3]
+}
+```
+
+For more examples, see:
+- [PyTorch Integration](examples/pytorch_integration.py)
+- [HuggingFace Transformers Integration](examples/transformers_integration.py)
+- [ML Framework Compatibility Guide](docs/pytorch-hf-compatibility.md)
+
 # Minimum Supported Rust Version (MSRV)
 
 This project adheres to a Minimum Supported Rust Version (MSRV) policy.

@@ -97,6 +97,11 @@ pub fn register_core_module(parent_module: &Bound<'_, PyModule>) -> PyResult<()>
     let sub_module_name = "core";
     let child_module = PyModule::new(parent_module.py(), sub_module_name)?;
 
+    // Add classes
+    child_module.add_class::<seq::SequenceRecord>()?;
+    child_module.add_class::<kmer::encode::python::PyKmerEncoder>()?;
+
+    // Add functions
     child_module.add_function(wrap_pyfunction!(seq::normalize_seq, &child_module)?)?;
     child_module.add_function(wrap_pyfunction!(seq_to_kmers, &child_module)?)?;
     child_module.add_function(wrap_pyfunction!(kmers_to_seq, &child_module)?)?;

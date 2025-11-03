@@ -1,9 +1,13 @@
+pub mod integer;
+pub mod onehot;
 mod option;
 mod parquet;
 mod record;
 mod traits;
 
 pub use self::parquet::*;
+pub use integer::IntegerEncoder;
+pub use onehot::{AmbiguousStrategy, OneHotEncoder};
 pub use option::*;
 pub use record::*;
 pub use traits::*;

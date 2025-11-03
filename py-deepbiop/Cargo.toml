@@ -7,6 +7,12 @@ edition = { workspace = true }
 name = "deepbiop"
 crate-type = ["cdylib", "rlib"]
 
+[[bin]]
+name = "stub_gen"
+path = "src/bin/stub_gen.rs"
+# Note: stub_gen has linking issues on macOS due to extension-module feature
+# Stubs are maintained manually in deepbiop/*.pyi files
+
 [dependencies]
 deepbiop-fq = { workspace = true, features = ['python'] }
 deepbiop-bam = { workspace = true, features = ['python'] }
@@ -26,4 +32,4 @@ numpy = { workspace = true }
 parquet = { workspace = true }
 
 [build-dependencies]
-pyo3-build-config = "0.23"
+pyo3-build-config = "0.27"

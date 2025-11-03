@@ -1,3 +1,5 @@
+pub mod encode;
+
 use itertools::Itertools;
 use rayon::prelude::*;
 use std::ops::Range;
@@ -8,6 +10,8 @@ use crate::{
 };
 use anyhow::Error;
 use anyhow::Result;
+
+pub use encode::KmerEncoder;
 
 /// Convert a sequence of k-mer IDs back into a DNA sequence.
 ///

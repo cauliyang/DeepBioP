@@ -55,6 +55,9 @@ pub enum Commands {
 
     /// Profile sequences in a fasta file.
     CountFx(cli::CountFx),
+
+    /// Encode sequences for machine learning (one-hot, k-mer, integer).
+    Encode(cli::Encode),
 }
 
 impl Display for Commands {
@@ -68,6 +71,7 @@ impl Display for Commands {
             Commands::ExtractFx(_) => write!(f, "extractfx"),
             Commands::FxsToOne(_) => write!(f, "fxs2one"),
             Commands::CountFx(_) => write!(f, "countfx"),
+            Commands::Encode(_) => write!(f, "encode"),
         }
     }
 }
@@ -139,6 +143,10 @@ fn main() -> Result<()> {
 
         Some(Commands::CountFx(countfx)) => {
             countfx.run().unwrap();
+        }
+
+        Some(Commands::Encode(encode)) => {
+            encode.run().unwrap();
         }
 
         None => {

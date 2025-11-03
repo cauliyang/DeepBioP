@@ -4,7 +4,7 @@ use std::path::PathBuf;
 use crate::{
     dataset::{FastqDataset, FastqIterator, FastqRecord},
     encode::{self, Encoder},
-    io,
+    filter, io,
     predicts::{self, Predict},
     utils,
 };
@@ -305,6 +305,19 @@ pub fn register_fq_module(parent_module: &Bound<'_, PyModule>) -> PyResult<()> {
     child_module.add_class::<encode::EncoderOption>()?;
     child_module.add_class::<encode::ParquetEncoder>()?;
     child_module.add_class::<predicts::Predict>()?;
+
+    // Add encoding classes
+    child_module.add_class::<encode::onehot::python::PyOneHotEncoder>()?;
+    child_module.add_class::<encode::integer::python::PyIntegerEncoder>()?;
+
+    // Add filter classes
+    child_module.add_class::<filter::python::PyLengthFilter>()?;
+    child_module.add_class::<filter::python::PyQualityFilter>()?;
+    child_module.add_class::<filter::python::PyDeduplicator>()?;
+    child_module.add_class::<filter::python::PySubsampler>()?;
+
+    // Add augmentation classes
+    crate::augment::python::register_augmentation_classes(&child_module)?;
 
     child_module.add_function(wrap_pyfunction!(py_select_record_from_fq, &child_module)?)?;
     child_module.add_function(wrap_pyfunction!(fastq_to_fasta, &child_module)?)?;
