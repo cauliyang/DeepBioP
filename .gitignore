@@ -199,3 +199,6 @@ libcairo*
 uv.lock
 _build
 CLAUDE.md
+.claude
+.specify
+specs
