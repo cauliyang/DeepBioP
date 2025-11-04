@@ -30,8 +30,8 @@ jobs:
             target: x86
           - runner: ubuntu-latest
             target: aarch64
-          - runner: ubuntu-latest
-            target: armv7
+          # armv7 removed due to cross-compilation issues with PyO3/maturin
+          # Most modern ARM devices use aarch64 (ARM64) instead
     steps:
       - uses: actions/checkout@v5
       - uses: actions/setup-python@v6
@@ -86,8 +86,8 @@ jobs:
             target: x86
           - runner: ubuntu-latest
             target: aarch64
-          - runner: ubuntu-latest
-            target: armv7
+          # armv7 removed due to cross-compilation issues with PyO3/maturin
+          # Most modern ARM devices use aarch64 (ARM64) instead
     steps:
       - uses: actions/checkout@v5
       - uses: actions/setup-python@v6
