@@ -54,7 +54,8 @@ jobs:
         shell: bash
         run: |
           set -e
-          python3 -m pip install deepbiop --find-links dist --force-reinstall
+          python3 -m pip install --upgrade pip
+          python3 -m pip install deepbiop --find-links dist --force-reinstall --no-cache-dir
           python3 -m pip install pytest pytest-sugar
           cd py-deepbiop && python3 -m pytest -vls
       - name: pytest
@@ -102,7 +103,8 @@ jobs:
         shell: bash
         run: |
           set -e
-          python3 -m pip install deepbiop --find-links dist --force-reinstall
+          python3 -m pip install --upgrade pip
+          python3 -m pip install deepbiop --find-links dist --force-reinstall --no-cache-dir
           python3 -m pip install pytest pytest-sugar
           cd py-deepbiop && python3 -m pytest -vls
 
@@ -134,7 +136,8 @@ jobs:
       - name: pytest
         run: |
           set -e
-          python3 -m pip install deepbiop --find-links dist --force-reinstall
+          python3 -m pip install --upgrade pip
+          python3 -m pip install deepbiop --find-links dist --force-reinstall --no-cache-dir
           python3 -m pip install pytest pytest-sugar
           cd py-deepbiop && python3 -m pytest -vls
 
