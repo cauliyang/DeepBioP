@@ -14,7 +14,6 @@ Usage:
 
 try:
     import torch
-    import torch.nn as nn
     from transformers import BertConfig, BertModel, BertForSequenceClassification
     from transformers import TrainingArguments, Trainer
 except ImportError:

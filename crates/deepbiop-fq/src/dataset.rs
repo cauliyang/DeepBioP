@@ -15,11 +15,11 @@ use pyo3_stub_gen::derive::*;
 #[pyclass(name = "FastqRecord", module = "deepbiop.fq")]
 pub struct FastqRecord {
     #[pyo3(get)]
-    header: String,
+    pub header: String,
     #[pyo3(get)]
-    sequence: String,
+    pub sequence: String,
     #[pyo3(get)]
-    quality: String,
+    pub quality: String,
 }
 
 #[gen_stub_pymethods]
@@ -57,7 +57,7 @@ pub struct FastqDataset {
 #[pymethods]
 impl FastqDataset {
     #[new]
-    fn new(file_path: String, chunk_size: usize) -> Result<Self> {
+    pub fn new(file_path: String, chunk_size: usize) -> Result<Self> {
         if !Path::new(&file_path).exists() {
             return Err(anyhow::anyhow!("File does not exist: {}", file_path));
         }
@@ -134,7 +134,7 @@ impl FastqDataset {
         Ok(dict.into())
     }
 
-    fn get_records(&self, start: usize, end: usize) -> PyResult<Vec<FastqRecord>> {
+    pub fn get_records(&self, start: usize, end: usize) -> PyResult<Vec<FastqRecord>> {
         // Validate input parameters to prevent bugs
         if end < start {
             return Err(pyo3::exceptions::PyValueError::new_err(
@@ -338,6 +338,14 @@ impl FastqIterator {
 
             batch_result
         })
+    }
+}
+
+// Non-Python methods for FastqDataset
+impl FastqDataset {
+    /// Get total number of records in the dataset.
+    pub fn records_count(&self) -> usize {
+        self.records_count
     }
 }
 

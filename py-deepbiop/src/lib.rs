@@ -1,4 +1,5 @@
 mod python_module;
+mod pytorch;
 
 use pyo3::prelude::*;
 
@@ -23,6 +24,7 @@ fn deepbiop(m: &Bound<'_, PyModule>) -> PyResult<()> {
     register_core_module(m)?;
     register_vcf_module(m)?;
     register_gtf_module(m)?;
+    pytorch::register_pytorch_module(m)?;
 
     // Re-export commonly used classes at top level for convenience
     // Augmentation classes

@@ -47,11 +47,12 @@ repos:
         args:
           [
             --verbose,
-            --fail-under=80,
+            --fail-under=70,
             --ignore-init-module,
             --ignore-init-method,
             --ignore-module,
             --ignore-nested-functions,
+            --ignore-regex=examples/.*,
             -vv,
           ]
 

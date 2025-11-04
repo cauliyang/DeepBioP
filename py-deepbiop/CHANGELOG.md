@@ -5,6 +5,20 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [Unreleased]
+
+### Added
+
+- **PyTorch-Style Python API**: New `deepbiop.pytorch` module for PyTorch-compatible data loading
+  - `Dataset` class for lazy loading of FASTQ/FASTA files with familiar PyTorch interface
+  - `DataLoader` class with batching, shuffling, and iteration support
+  - Transform classes: `OneHotEncoder`, `IntegerEncoder`, `KmerEncoder` for sequence encoding
+  - Augmentation transforms: `Compose`, `ReverseComplement`, `Mutator`, `Sampler`
+  - `default_collate` function for variable-length sequence batching with padding
+  - Full NumPy/PyTorch tensor compatibility with zero-copy conversion
+  - Comprehensive test coverage (21 tests) and working examples
+  - Documentation and quickstart guide
+
 ## [0.1.4](https://github.com/cauliyang/DeepBioP/compare/py-deepbiop-v0.1.3...py-deepbiop-v0.1.4) - 2024-08-05
 
 ### Added
