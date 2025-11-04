@@ -49,16 +49,18 @@ jobs:
         with:
           name: wheels-linux-${{ matrix.platform.target }}
           path: dist
+      - name: Install uv
+        if: ${{ startsWith(matrix.platform.target, 'x86_64') }}
+        uses: astral-sh/setup-uv@v5
       - name: pytest
         if: ${{ startsWith(matrix.platform.target, 'x86_64') }}
         shell: bash
         run: |
           set -e
-          python3 -m venv .venv
-          source .venv/bin/activate
-          pip install deepbiop --find-links dist --force-reinstall
-          pip install pytest
-          cd py-deepbiop && pytest  -vls
+          cd py-deepbiop
+          uv pip install --system deepbiop --find-links ../dist --force-reinstall
+          uv pip install --system pytest pytest-sugar
+          uv run pytest -vls
       - name: pytest
         if: ${{ !startsWith(matrix.platform.target, 'x86') && matrix.platform.target != 'ppc64' }}
         uses: uraimo/run-on-arch-action@v2
@@ -74,20 +76,6 @@ jobs:
             set -e
             pip3 install deepbiop --find-links dist --force-reinstall
             cd py-deepbiop && pytest  -vls
-
-  # musllinux builds disabled due to cross-compilation issues with cargo metadata
-  # Regular manylinux builds cover most Linux use cases
-  # musllinux:
-  #   runs-on: ${{ matrix.platform.runner }}
-  #   strategy:
-  #     matrix:
-  #       platform:
-  #         - runner: ubuntu-latest
-  #           target: x86_64
-  #         - runner: ubuntu-latest
-  #           target: x86
-  #         - runner: ubuntu-latest
-  #           target: aarch64
 
   windows:
     runs-on: ${{ matrix.platform.runner }}
@@ -113,16 +101,18 @@ jobs:
         with:
           name: wheels-windows-${{ matrix.platform.target }}
           path: dist
+      - name: Install uv
+        if: ${{ !startsWith(matrix.platform.target, 'aarch64') }}
+        uses: astral-sh/setup-uv@v5
       - name: pytest
         if: ${{ !startsWith(matrix.platform.target, 'aarch64') }}
         shell: bash
         run: |
           set -e
-          python3 -m venv .venv
-          source .venv/Scripts/activate
-          pip install deepbiop --find-links dist --force-reinstall
-          pip install pytest
-          cd py-deepbiop && pytest  -vls
+          cd py-deepbiop
+          uv pip install --system deepbiop --find-links ../dist --force-reinstall
+          uv pip install --system pytest pytest-sugar
+          uv run pytest -vls
 
   macos:
     runs-on: ${{ matrix.platform.runner }}
@@ -149,14 +139,15 @@ jobs:
         with:
           name: wheels-macos-${{ matrix.platform.target }}
           path: dist
+      - name: Install uv
+        uses: astral-sh/setup-uv@v5
       - name: pytest
         run: |
           set -e
-          python3 -m venv .venv
-          source .venv/bin/activate
-          pip install deepbiop --find-links dist --force-reinstall
-          pip install pytest
-          cd py-deepbiop && pytest  -vls
+          cd py-deepbiop
+          uv pip install --system deepbiop --find-links ../dist --force-reinstall
+          uv pip install --system pytest pytest-sugar
+          uv run pytest -vls
 
   sdist:
     runs-on: ubuntu-latest
