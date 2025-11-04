@@ -49,17 +49,14 @@ jobs:
         with:
           name: wheels-linux-${{ matrix.platform.target }}
           path: dist
-      - name: Install uv
-        if: ${{ startsWith(matrix.platform.target, 'x86_64') }}
-        uses: astral-sh/setup-uv@v5
       - name: pytest
         if: ${{ startsWith(matrix.platform.target, 'x86_64') }}
         shell: bash
         run: |
           set -e
-          uv pip install --system deepbiop --find-links dist --force-reinstall
-          uv pip install --system pytest pytest-sugar
-          cd py-deepbiop && pytest -vls
+          python3 -m pip install deepbiop --find-links dist --force-reinstall
+          python3 -m pip install pytest pytest-sugar
+          cd py-deepbiop && python3 -m pytest -vls
       - name: pytest
         if: ${{ !startsWith(matrix.platform.target, 'x86') && matrix.platform.target != 'ppc64' }}
         uses: uraimo/run-on-arch-action@v2
@@ -100,17 +97,14 @@ jobs:
         with:
           name: wheels-windows-${{ matrix.platform.target }}
           path: dist
-      - name: Install uv
-        if: ${{ !startsWith(matrix.platform.target, 'aarch64') }}
-        uses: astral-sh/setup-uv@v5
       - name: pytest
         if: ${{ !startsWith(matrix.platform.target, 'aarch64') }}
         shell: bash
         run: |
           set -e
-          uv pip install --system deepbiop --find-links dist --force-reinstall
-          uv pip install --system pytest pytest-sugar
-          cd py-deepbiop && pytest -vls
+          python3 -m pip install deepbiop --find-links dist --force-reinstall
+          python3 -m pip install pytest pytest-sugar
+          cd py-deepbiop && python3 -m pytest -vls
 
   macos:
     runs-on: ${{ matrix.platform.runner }}
@@ -137,14 +131,12 @@ jobs:
         with:
           name: wheels-macos-${{ matrix.platform.target }}
           path: dist
-      - name: Install uv
-        uses: astral-sh/setup-uv@v5
       - name: pytest
         run: |
           set -e
-          uv pip install --system deepbiop --find-links dist --force-reinstall
-          uv pip install --system pytest pytest-sugar
-          cd py-deepbiop && pytest -vls
+          python3 -m pip install deepbiop --find-links dist --force-reinstall
+          python3 -m pip install pytest pytest-sugar
+          cd py-deepbiop && python3 -m pytest -vls
 
   sdist:
     runs-on: ubuntu-latest
