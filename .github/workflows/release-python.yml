@@ -59,7 +59,7 @@ jobs:
           set -e
           cd py-deepbiop
           uv pip install --system deepbiop --find-links ../dist --force-reinstall
-          uv sync --frozen
+          uv pip install --system pytest pytest-sugar
           uv run pytest -vls
       - name: pytest
         if: ${{ !startsWith(matrix.platform.target, 'x86') && matrix.platform.target != 'ppc64' }}
@@ -111,7 +111,7 @@ jobs:
           set -e
           cd py-deepbiop
           uv pip install --system deepbiop --find-links ../dist --force-reinstall
-          uv sync --frozen
+          uv pip install --system pytest pytest-sugar
           uv run pytest -vls
 
   macos:
@@ -146,7 +146,7 @@ jobs:
           set -e
           cd py-deepbiop
           uv pip install --system deepbiop --find-links ../dist --force-reinstall
-          uv sync --frozen
+          uv pip install --system pytest pytest-sugar
           uv run pytest -vls
 
   sdist:
