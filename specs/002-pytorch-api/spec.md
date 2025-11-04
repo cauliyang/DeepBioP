@@ -5,6 +5,16 @@
 **Status**: Draft
 **Input**: User description: "We want the project provide convenient and user friendly Python API. The design of Python API mimic PyTorch and its extension, as well as transformer. Also implement necessary features that provide complete features to help researchers use biological data in deep learning"
 
+## Clarifications
+
+### Session 2025-11-03
+
+- Q: How should the Dataset/DataLoader components leverage existing DeepBioP functionality (encoders, augmentations, file readers)? → A: Wrapper pattern - Dataset wraps existing encoders/readers, delegates to them
+- Q: How should collate functions be implemented to avoid duplicating batching logic? → A: Thin adapters - Default collate functions delegate to existing DeepBioP batching/padding utilities with minimal orchestration logic
+- Q: How should dataset caching be implemented to avoid duplicating export/serialization logic? → A: Leverage existing export/import - Cache uses existing Parquet/HDF5 export as storage format with lightweight metadata tracking for invalidation
+- Q: How should transform composition be implemented to avoid custom orchestration code? → A: Simple function chaining - Transforms implement __call__, composition uses standard Python patterns with optional minimal Compose helper (under 20 lines) if needed
+- Q: How should validation and inspection be implemented to avoid custom statistics/validation logic? → A: NumPy/Pandas-based - Use standard library functions (np.unique, np.histogram, etc.) with minimal custom code; delegate to existing DeepBioP validation if available
+
 ## User Scenarios & Testing *(mandatory)*
 
 ### User Story 1 - Intuitive Dataset Loading and Preprocessing (Priority: P1)
@@ -106,37 +116,39 @@ A researcher wants to inspect dataset properties (sequence lengths, class distri
 
 ### Functional Requirements
 
-- **FR-001**: System MUST provide a Dataset class that loads biological sequence data from common file formats (FASTQ, FASTA) without manual parsing
+- **FR-001**: System MUST provide a Dataset class that wraps existing DeepBioP file readers to load biological sequence data from FASTQ and FASTA formats without manual parsing
 - **FR-002**: System MUST support lazy loading where sequences are read from disk only when accessed, not all at once
-- **FR-003**: System MUST provide encoding methods (one-hot, integer, k-mer) accessible through dataset transformations
+- **FR-003**: System MUST provide Transform wrappers that delegate to existing DeepBioP encoders (one-hot, integer, k-mer) for sequence-to-numerical conversion
 - **FR-004**: System MUST provide a DataLoader class that generates batches with configurable size, shuffling, and parallel loading
-- **FR-005**: System MUST implement augmentation transformations (reverse complement, mutation, sampling) that can be composed in pipelines
+- **FR-005**: System MUST provide Transform wrappers that delegate to existing DeepBioP augmentation classes (ReverseComplement, Mutator, Sampler), implementing __call__ for function chaining; composition uses standard Python patterns with optional minimal Compose helper (under 20 lines)
 - **FR-006**: System MUST handle variable-length sequences through automatic padding or truncation when batching
 - **FR-007**: System MUST support random seeds for reproducible shuffling and augmentation
 - **FR-008**: System MUST return data in formats compatible with PyTorch tensors (NumPy arrays that convert seamlessly)
-- **FR-009**: System MUST provide export functions for processed datasets in Parquet and HDF5 formats
+- **FR-009**: System MUST delegate to existing Parquet/HDF5 export functionality for dataset persistence
 - **FR-010**: System MUST support optional quality score preservation and filtering for FASTQ data
-- **FR-011**: System MUST implement caching mechanisms for commonly accessed datasets to avoid redundant disk I/O
-- **FR-012**: System MUST validate sequence data (checking for invalid characters based on sequence type)
-- **FR-013**: System MUST provide dataset inspection methods (length distribution, summary statistics, sample preview)
+- **FR-011**: System MUST implement caching mechanisms using existing Parquet/HDF5 export as storage format, with lightweight metadata tracking (dataset hash, transformations, timestamps) for cache invalidation
+- **FR-012**: System MUST validate sequence data using existing DeepBioP validation if available, otherwise delegate to encoding type validation (checking for invalid characters based on sequence type)
+- **FR-013**: System MUST provide dataset inspection methods using NumPy/Pandas functions (np.unique for class counts, np.histogram for length distribution, etc.) with minimal custom code
 - **FR-014**: System MUST handle metadata and labels through optional companion files or embedded formats
 - **FR-015**: System MUST support stratified sampling for imbalanced datasets
 - **FR-016**: System MUST allow custom transformation functions defined by users
-- **FR-017**: System MUST implement collate functions for batching that handle sequences, labels, and metadata together
+- **FR-017**: System MUST provide default collate functions that delegate to existing DeepBioP batching/padding utilities, using minimal orchestration logic to handle sequences, labels, and metadata together
 - **FR-018**: System MUST provide progress indicators for long-running operations (loading, encoding, export)
 - **FR-019**: System MUST support both single-sequence and paired-end sequence data (for paired FASTQ files)
 - **FR-020**: System MUST implement memory-efficient batch generation using iterators rather than loading all data upfront
+- **FR-021**: System MUST NOT duplicate existing encoder/augmentation logic; all transformations must delegate to existing DeepBioP implementations
+- **FR-022**: System MUST allow users to provide custom collate functions to override default batching behavior when needed
 
 ### Key Entities
 
-- **Dataset**: Represents a collection of biological sequences with optional labels and metadata. Provides indexing, length, and transformation capabilities. Can be created from file paths or in-memory data.
-- **DataLoader**: Manages batch generation from a Dataset with shuffling, parallel loading (using multiple workers), and custom collate functions. Similar to torch.utils.data.DataLoader.
-- **Transform**: Represents a data transformation operation (encoding, augmentation). Can be a single operation or a composition pipeline. Applied to individual samples or batches.
-- **Encoder**: Converts biological sequences to numerical representations (one-hot, integer, k-mer). Each encoder type has specific parameters (k-mer size, canonical mode, unknown base handling).
-- **Augmentation**: Biological sequence transformations that preserve validity (reverse complement, mutation, subsequence sampling). Each has configurable parameters (mutation rate, sample length, random seed).
+- **Dataset**: Represents a collection of biological sequences with optional labels and metadata. Wraps existing file readers (FASTQ/FASTA parsers). Provides indexing, length, and transformation capabilities. Can be created from file paths or in-memory data.
+- **DataLoader**: Manages batch generation from a Dataset with shuffling, parallel loading (using multiple workers), and collate functions (default implementations delegate to existing batching utilities, custom functions supported). Similar to torch.utils.data.DataLoader.
+- **Transform**: Wrapper around existing DeepBioP encoders and augmentations. Implements __call__ for callable interface. Composition uses standard Python function chaining (e.g., lambda x: t2(t1(x))) with optional minimal Compose helper. Applied to individual samples or batches.
+- **Encoder**: Wrapper that delegates to existing DeepBioP encoding classes (OneHotEncoder, IntegerEncoder, KmerEncoder) to convert biological sequences to numerical representations. Each encoder type has specific parameters (k-mer size, canonical mode, unknown base handling).
+- **Augmentation**: Wrapper that delegates to existing DeepBioP augmentation classes (ReverseComplement, Mutator, Sampler) for biological sequence transformations. Each has configurable parameters (mutation rate, sample length, random seed).
 - **Sample**: A single data point containing a sequence (string or bytes), optional quality scores, optional label, and optional metadata dictionary.
-- **Batch**: A collection of samples formatted for model input, with padded/truncated sequences of uniform length, stacked labels, and combined metadata.
-- **Cache**: Persistent storage of processed datasets to avoid recomputation. Tracks dataset version, transformations applied, and source file modification times.
+- **Batch**: A collection of samples formatted for model input, with padded/truncated sequences of uniform length, stacked labels, and combined metadata. Created by collate functions that delegate to existing batching/padding utilities.
+- **Cache**: Thin layer on top of existing Parquet/HDF5 export functionality for persistent storage of processed datasets. Consists of exported dataset file plus metadata file (dataset hash, transformations applied, source file modification times) for invalidation logic. No custom serialization code.
 
 ## Success Criteria *(mandatory)*
 
@@ -152,6 +164,11 @@ A researcher wants to inspect dataset properties (sequence lengths, class distri
 - **SC-008**: The API reduces typical data preprocessing code from 100+ lines to under 20 lines
 - **SC-009**: Users report 80%+ satisfaction with API intuitiveness in user testing
 - **SC-010**: Integration with existing PyTorch models requires zero code changes to the model architecture
+- **SC-011**: Zero encoding or augmentation logic is duplicated between the PyTorch API and existing DeepBioP implementations
+- **SC-012**: Default collate functions contain less than 50 lines of orchestration code, with all batching/padding logic delegated to existing utilities
+- **SC-013**: Cache implementation contains zero custom serialization code, reusing existing Parquet/HDF5 export/import with only metadata tracking added
+- **SC-014**: If a Compose helper is provided, it contains under 20 lines of code with no custom orchestration logic beyond function chaining
+- **SC-015**: Dataset inspection methods contain minimal custom statistics code, delegating computation to NumPy/Pandas standard library functions
 
 ### Non-Functional Outcomes
 
@@ -173,6 +190,7 @@ A researcher wants to inspect dataset properties (sequence lengths, class distri
 8. **Quality scores**: Phred+33 encoding is the standard for FASTQ quality scores
 9. **Augmentation philosophy**: Augmentations preserve biological plausibility (valid sequences, realistic quality degradation)
 10. **Caching strategy**: Disk-based caching is preferred over memory caching due to dataset sizes
+11. **Code reuse strategy**: Wrapper pattern maximizes reuse of existing DeepBioP functionality while providing PyTorch-compatible interfaces
 
 ## Constraints
 
@@ -182,6 +200,7 @@ A researcher wants to inspect dataset properties (sequence lengths, class distri
 4. **Cross-platform**: Must work on Linux, macOS, and Windows
 5. **Python versions**: Must support Python 3.9-3.12
 6. **Dependencies**: Should minimize new dependencies; prefer extending existing libraries (NumPy, PyTorch)
+7. **Code duplication**: Must NOT duplicate existing encoder, augmentation, or file I/O logic
 
 ## Dependencies
 
@@ -203,3 +222,4 @@ A researcher wants to inspect dataset properties (sequence lengths, class distri
 - Visualization of sequences or training progress
 - Integration with workflow engines (Nextflow, Snakemake)
 - Cloud storage integration (S3, GCS) - users handle this externally
+- Reimplementation of any existing DeepBioP encoding, augmentation, or I/O functionality
