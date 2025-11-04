@@ -56,7 +56,7 @@ jobs:
           set -e
           python3 -m pip install --upgrade pip
           python3 -m pip install numpy pytest pytest-sugar
-          python3 -m pip install deepbiop --no-index --find-links dist --force-reinstall --no-deps
+          python3 -m pip install deepbiop --no-index --find-links dist --force-reinstall
           cd py-deepbiop && python3 -m pytest -vls
       - name: pytest
         if: ${{ !startsWith(matrix.platform.target, 'x86') && matrix.platform.target != 'ppc64' }}
@@ -72,7 +72,7 @@ jobs:
             pip3 install numpy pytest pytest-sugar
           run: |
             set -e
-            pip3 install deepbiop --no-index --find-links dist --force-reinstall --no-deps
+            pip3 install deepbiop --no-index --find-links dist --force-reinstall
             cd py-deepbiop && pytest -vls
 
   windows:
@@ -106,7 +106,7 @@ jobs:
           set -e
           python3 -m pip install --upgrade pip
           python3 -m pip install numpy pytest pytest-sugar
-          python3 -m pip install deepbiop --no-index --find-links dist --force-reinstall --no-deps
+          python3 -m pip install deepbiop --no-index --find-links dist --force-reinstall
           cd py-deepbiop && python3 -m pytest -vls
 
   macos:
@@ -139,7 +139,7 @@ jobs:
           set -e
           python3 -m pip install --upgrade pip
           python3 -m pip install numpy pytest pytest-sugar
-          python3 -m pip install deepbiop --no-index --find-links dist --force-reinstall --no-deps
+          python3 -m pip install deepbiop --no-index --find-links dist --force-reinstall
           cd py-deepbiop && python3 -m pytest -vls
 
   sdist:
