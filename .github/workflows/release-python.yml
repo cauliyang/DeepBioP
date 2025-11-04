@@ -55,8 +55,8 @@ jobs:
         run: |
           set -e
           python3 -m pip install --upgrade pip
-          python3 -m pip install deepbiop --find-links dist --force-reinstall --no-cache-dir
-          python3 -m pip install pytest pytest-sugar
+          python3 -m pip install numpy pytest pytest-sugar
+          python3 -m pip install deepbiop --no-index --find-links dist --force-reinstall --no-deps
           cd py-deepbiop && python3 -m pytest -vls
       - name: pytest
         if: ${{ !startsWith(matrix.platform.target, 'x86') && matrix.platform.target != 'ppc64' }}
@@ -68,11 +68,12 @@ jobs:
           install: |
             apt-get update
             apt-get install -y --no-install-recommends python3 python3-pip
-            pip3 install -U pip pytest
+            pip3 install -U pip
+            pip3 install numpy pytest pytest-sugar
           run: |
             set -e
-            pip3 install deepbiop --find-links dist --force-reinstall
-            cd py-deepbiop && pytest  -vls
+            pip3 install deepbiop --no-index --find-links dist --force-reinstall --no-deps
+            cd py-deepbiop && pytest -vls
 
   windows:
     runs-on: ${{ matrix.platform.runner }}
@@ -104,8 +105,8 @@ jobs:
         run: |
           set -e
           python3 -m pip install --upgrade pip
-          python3 -m pip install deepbiop --find-links dist --force-reinstall --no-cache-dir
-          python3 -m pip install pytest pytest-sugar
+          python3 -m pip install numpy pytest pytest-sugar
+          python3 -m pip install deepbiop --no-index --find-links dist --force-reinstall --no-deps
           cd py-deepbiop && python3 -m pytest -vls
 
   macos:
@@ -137,8 +138,8 @@ jobs:
         run: |
           set -e
           python3 -m pip install --upgrade pip
-          python3 -m pip install deepbiop --find-links dist --force-reinstall --no-cache-dir
-          python3 -m pip install pytest pytest-sugar
+          python3 -m pip install numpy pytest pytest-sugar
+          python3 -m pip install deepbiop --no-index --find-links dist --force-reinstall --no-deps
           cd py-deepbiop && python3 -m pytest -vls
 
   sdist:
