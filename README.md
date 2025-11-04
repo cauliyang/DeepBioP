@@ -119,6 +119,208 @@ input_ids = torch.from_numpy(int_encoded).long() + 5  # Offset for special token
 attention_mask = (input_ids != 4).long()
 ```
 
+## Python: PyTorch-Style API for Deep Learning
+
+DeepBioP provides a PyTorch-compatible `Dataset` and `DataLoader` interface for seamless deep learning workflows:
+
+```python
+from deepbiop import pytorch
+from pathlib import Path
+
+# 1. Load FASTQ data with lazy loading (memory efficient)
+dataset = pytorch.Dataset("sequences.fastq")
+print(f"Loaded {len(dataset)} sequences")  # Fast - doesn't load all data
+
+# 2. Create transforms for data preprocessing
+transform = pytorch.Compose([
+    pytorch.Sampler(length=150, strategy="start"),  # Extract fixed-length windows
+    pytorch.OneHotEncoder(encoding_type="dna"),     # Encode as one-hot arrays
+])
+
+# Apply transform to a sample
+sample = dataset[0]
+transformed = transform(sample)
+print(f"Shape: {transformed['sequence'].shape}")  # (150, 4) - ready for CNN
+
+# 3. Create DataLoader for batching
+loader = pytorch.DataLoader(
+    dataset,
+    batch_size=32,
+    shuffle=True,  # Shuffle for training
+)
+
+# 4. Iterate through batches (PyTorch-style)
+for batch in loader:
+    # batch is a list of samples (dicts with 'sequence', 'quality' keys)
+    encoded_samples = [transform(sample) for sample in batch]
+
+    # Collate into batch tensors with padding
+    batch_dict = pytorch.default_collate(encoded_samples)
+
+    sequences = batch_dict['sequences']  # Shape: [batch_size, max_len, 4]
+    lengths = batch_dict['lengths']      # Original lengths before padding
+
+    # Convert to PyTorch tensors (zero-copy)
+    import torch
+    tensor = torch.from_numpy(sequences)
+
+    # Ready for model training!
+    # output = model(tensor)
+    break  # Just show first batch
+```
+
+### Data Augmentation Pipeline
+
+```python
+from deepbiop import pytorch
+
+# Create augmentation pipeline
+augmentation = pytorch.Compose([
+    pytorch.Sampler(length=100, strategy="random"),     # Random 100bp windows
+    pytorch.Mutator(mutation_rate=0.02, seed=42),       # 2% random mutations
+    pytorch.ReverseComplement(),                         # 50% chance flip strand
+    pytorch.OneHotEncoder(encoding_type="dna"),         # Encode to array
+])
+
+# Apply to dataset
+dataset = pytorch.Dataset("reads.fastq")
+augmented_sample = augmentation(dataset[0])
+print(f"Augmented shape: {augmented_sample['sequence'].shape}")  # (100, 4)
+
+# Use in training loop
+loader = pytorch.DataLoader(dataset, batch_size=64, shuffle=True)
+for batch in loader:
+    # Each iteration gives different augmentations (if using random strategies)
+    augmented_batch = [augmentation(sample) for sample in batch]
+    collated = pytorch.default_collate(augmented_batch)
+    # Train model...
+```
+
+### Dataset Caching for 10x Speedup
+
+```python
+from deepbiop import pytorch
+
+# Process and save to cache (first time - slow)
+dataset = pytorch.Dataset("large_dataset.fastq")
+encoder = pytorch.OneHotEncoder(encoding_type="dna")
+
+processed = []
+for sample in dataset:
+    encoded = encoder(sample)
+    processed.append(encoded)
+    if len(processed) >= 1000:  # Process first 1000
+        break
+
+# Save to cache
+pytorch.save_cache(processed, "processed_data.npz", source_file="large_dataset.fastq")
+
+# Load from cache (subsequent times - 10x faster!)
+cached_data = pytorch.load_cache("processed_data.npz")
+print(f"Loaded {len(cached_data)} samples from cache")
+
+# Automatic cache invalidation
+is_valid = pytorch.is_cache_valid("processed_data.npz", source_file="large_dataset.fastq")
+if not is_valid:
+    print("Source file changed - need to regenerate cache")
+```
+
+### Dataset Inspection & Quality Validation
+
+```python
+from deepbiop import pytorch
+
+dataset = pytorch.Dataset("reads.fastq")
+
+# Get summary statistics
+summary = dataset.summary()
+print(f"Num samples: {summary['num_samples']}")
+print(f"Length stats: {summary['length_stats']}")
+# Output: {'min': 50, 'max': 300, 'mean': 150.5, 'median': 151.0}
+print(f"Memory footprint: {summary['memory_footprint']/1e6:.1f} MB")
+
+# Validate data quality
+validation = dataset.validate()
+print(f"Is valid: {validation['is_valid']}")
+print(f"Warnings: {validation['warnings']}")
+print(f"Errors: {validation['errors']}")
+
+# Example output:
+# Is valid: True
+# Warnings: ['Validated 10 of 1000 sequences (sample validation)']
+# Errors: []
+```
+
+### Complete Training Example
+
+```python
+from deepbiop import pytorch
+import torch
+import torch.nn as nn
+
+# 1. Setup data pipeline
+dataset = pytorch.Dataset("training_data.fastq")
+
+# 2. Define transform pipeline
+transform = pytorch.Compose([
+    pytorch.Sampler(length=200, strategy="random"),
+    pytorch.Mutator(mutation_rate=0.01, seed=None),  # Different each epoch
+    pytorch.OneHotEncoder(encoding_type="dna"),
+])
+
+# 3. Create data loader
+train_loader = pytorch.DataLoader(dataset, batch_size=32, shuffle=True)
+
+# 4. Define a simple CNN model
+class DNAClassifier(nn.Module):
+    def __init__(self, num_classes=2):
+        super().__init__()
+        self.conv1 = nn.Conv1d(4, 32, kernel_size=7, padding=3)
+        self.pool = nn.MaxPool1d(2)
+        self.conv2 = nn.Conv1d(32, 64, kernel_size=5, padding=2)
+        self.fc = nn.Linear(64 * 50, num_classes)  # 200 / 2 / 2 = 50
+
+    def forward(self, x):
+        # x: [batch, length, 4] -> [batch, 4, length] for Conv1d
+        x = x.permute(0, 2, 1)
+        x = torch.relu(self.conv1(x))
+        x = self.pool(x)
+        x = torch.relu(self.conv2(x))
+        x = self.pool(x)
+        x = x.view(x.size(0), -1)
+        return self.fc(x)
+
+# 5. Training loop
+model = DNAClassifier(num_classes=2)
+criterion = nn.CrossEntropyLoss()
+optimizer = torch.optim.Adam(model.parameters())
+
+for epoch in range(3):
+    for batch in train_loader:
+        # Transform and collate batch
+        transformed = [transform(sample) for sample in batch]
+        batch_dict = pytorch.default_collate(transformed)
+
+        # Convert to tensors
+        sequences = torch.from_numpy(batch_dict['sequences'])
+        labels = torch.randint(0, 2, (len(sequences),))  # Dummy labels
+
+        # Forward pass
+        outputs = model(sequences)
+        loss = criterion(outputs, labels)
+
+        # Backward pass
+        optimizer.zero_grad()
+        loss.backward()
+        optimizer.step()
+
+    print(f"Epoch {epoch+1}/3 - Loss: {loss.item():.4f}")
+```
+
+For complete examples, see:
+- [PyTorch Quickstart](py-deepbiop/examples/pytorch_quickstart.py) - Complete workflow demonstration
+- [PyTorch API Tests](py-deepbiop/tests/test_pytorch_api.py) - All features with usage examples
+
 ## Rust: Process FASTQ Files
 
 ```rust
