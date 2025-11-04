@@ -35,10 +35,6 @@ pub fn save_cache(
     // Import numpy
     let np = py.import("numpy")?;
     let json_module = py.import("json")?;
-    let pathlib = py.import("pathlib")?;
-
-    // Ensure cache_path ends with appropriate extension
-    let cache_path_obj = pathlib.getattr("Path")?.call1((cache_path.clone(),))?;
 
     // Prepare data for saving
     // Extract sequences and other fields from samples
@@ -58,7 +54,7 @@ pub fn save_cache(
     let mut has_quality = false;
 
     for (idx, sample) in samples.iter().enumerate() {
-        let sample_dict = sample.downcast::<PyDict>()?;
+        let sample_dict = sample.cast::<PyDict>()?;
 
         // Get sequence array
         if let Some(seq) = sample_dict.get_item("sequence")? {
@@ -229,7 +225,7 @@ pub fn is_cache_valid(
 
     let loads_fn = json_module.getattr("loads")?;
     let metadata = loads_fn.call1((meta_content,))?;
-    let metadata_dict = metadata.downcast::<PyDict>()?;
+    let metadata_dict = metadata.cast::<PyDict>()?;
 
     // Compare source file mtime
     if let Ok(Some(cached_source)) = metadata_dict.get_item("source_file") {

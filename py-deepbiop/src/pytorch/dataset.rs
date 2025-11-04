@@ -21,7 +21,8 @@ pub struct Dataset {
     inner: InnerFastqDataset,
     /// Total number of records
     num_records: usize,
-    /// File path for repr
+    /// File path for repr (kept for future __repr__ enhancement)
+    #[allow(dead_code)]
     file_path: String,
 }
 

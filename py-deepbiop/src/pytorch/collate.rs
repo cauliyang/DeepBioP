@@ -42,7 +42,7 @@ pub fn default_collate(py: Python, samples: &Bound<'_, PyList>) -> PyResult<Py<P
     // Convert samples to vector of dicts
     let sample_dicts: Vec<Bound<'_, PyDict>> = samples
         .iter()
-        .map(|s| s.downcast_into::<PyDict>())
+        .map(|s| s.cast_into::<PyDict>())
         .collect::<Result<Vec<_>, _>>()?;
 
     if sample_dicts.is_empty() {
@@ -63,7 +63,7 @@ pub fn default_collate(py: Python, samples: &Bound<'_, PyList>) -> PyResult<Py<P
         })?;
 
         // Get sequence as NumPy array
-        let seq_array = sequence.downcast_into::<numpy::PyArrayDyn<f32>>()?;
+        let seq_array = sequence.cast_into::<numpy::PyArrayDyn<f32>>()?;
         let shape = seq_array.shape();
 
         if shape.len() != 2 {

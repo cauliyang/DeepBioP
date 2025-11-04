@@ -13,11 +13,13 @@ use pyo3::prelude::*;
 // - Provide actionable error messages for common issues
 
 /// Convert a generic error to PyRuntimeError with context.
+#[allow(dead_code)]
 pub fn to_py_runtime_error<E: std::fmt::Display>(err: E) -> PyErr {
     PyErr::new::<PyRuntimeError, _>(format!("{}", err))
 }
 
 /// Convert a file not found error with path context.
+#[allow(dead_code)]
 pub fn to_py_file_not_found<S: AsRef<str>>(path: S, err: impl std::fmt::Display) -> PyErr {
     PyErr::new::<PyFileNotFoundError, _>(format!(
         "FASTQ/FASTA file '{}' not found. Check path and permissions. Error: {}",
@@ -27,6 +29,7 @@ pub fn to_py_file_not_found<S: AsRef<str>>(path: S, err: impl std::fmt::Display)
 }
 
 /// Convert a validation error with context.
+#[allow(dead_code)]
 pub fn to_py_value_error<S: AsRef<str>>(context: S, err: impl std::fmt::Display) -> PyErr {
     PyErr::new::<PyValueError, _>(format!("{}: {}", context.as_ref(), err))
 }
