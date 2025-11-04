@@ -11,7 +11,10 @@ import deepbiop as dbp
 # Skip all GTF tests on Windows due to SIMD/CPU instruction compatibility issues
 # Error: Windows fatal exception: code 0xc000001d (Illegal instruction)
 # This is a known issue with noodles GTF parsing on Windows CI runners
-pytestmark = pytest.mark.skipif(sys.platform == "win32", reason="GTF tests fail on Windows CI with illegal instruction error")
+pytestmark = pytest.mark.skipif(
+    sys.platform == "win32",
+    reason="GTF tests fail on Windows CI with illegal instruction error",
+)
 
 
 @pytest.fixture
