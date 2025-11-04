@@ -57,10 +57,9 @@ jobs:
         shell: bash
         run: |
           set -e
-          cd py-deepbiop
-          uv pip install --system deepbiop --find-links ../dist --force-reinstall
+          uv pip install --system deepbiop --find-links dist --force-reinstall
           uv pip install --system pytest pytest-sugar
-          uv run pytest -vls
+          cd py-deepbiop && pytest -vls
       - name: pytest
         if: ${{ !startsWith(matrix.platform.target, 'x86') && matrix.platform.target != 'ppc64' }}
         uses: uraimo/run-on-arch-action@v2
@@ -109,10 +108,9 @@ jobs:
         shell: bash
         run: |
           set -e
-          cd py-deepbiop
-          uv pip install --system deepbiop --find-links ../dist --force-reinstall
+          uv pip install --system deepbiop --find-links dist --force-reinstall
           uv pip install --system pytest pytest-sugar
-          uv run pytest -vls
+          cd py-deepbiop && pytest -vls
 
   macos:
     runs-on: ${{ matrix.platform.runner }}
@@ -144,10 +142,9 @@ jobs:
       - name: pytest
         run: |
           set -e
-          cd py-deepbiop
-          uv pip install --system deepbiop --find-links ../dist --force-reinstall
+          uv pip install --system deepbiop --find-links dist --force-reinstall
           uv pip install --system pytest pytest-sugar
-          uv run pytest -vls
+          cd py-deepbiop && pytest -vls
 
   sdist:
     runs-on: ubuntu-latest
