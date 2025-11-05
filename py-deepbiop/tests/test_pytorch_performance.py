@@ -5,9 +5,9 @@ This module contains performance tests to validate throughput and
 efficiency targets for the PyTorch-style Python API.
 
 Benchmark Targets (from spec.md):
-- SC-002: Batch generation throughput ≥ 10,000 sequences/second
+- SC-002: Batch generation throughput >= 10,000 sequences/second
 - SC-005: Memory footprint < 2GB for 1M sequences
-- SC-006: Cache speedup ≥ 10x for repeated access
+- SC-006: Cache speedup >= 10x for repeated access
 - SC-007: GIL release for parallel operations
 
 Usage:
@@ -24,7 +24,7 @@ class TestBatchGenerationPerformance:
     """Test batch generation throughput benchmarks."""
 
     def test_batch_generation_throughput(self):
-        """Test that batch generation achieves ≥10k sequences/second (SC-002)."""
+        """Test that batch generation achieves >=10k sequences/second (SC-002)."""
         from deepbiop import pytorch
 
         # Load dataset
@@ -63,14 +63,14 @@ class TestBatchGenerationPerformance:
         print(f"Total sequences processed: {total_sequences}")
         print(f"Total time: {elapsed_time:.3f} seconds")
         print(f"Throughput: {throughput:.1f} sequences/second")
-        print("Target: ≥10,000 sequences/second")
+        print("Target: >=10,000 sequences/second")
 
         # Note: The target might not be met with the test data due to I/O overhead
         # In production with in-memory caching, throughput should be much higher
         if throughput >= 10000:
-            print("✅ PASS: Throughput exceeds target")
+            print("[PASS] Throughput exceeds target")
         else:
-            print("⚠️  INFO: Throughput below target (expected with disk I/O)")
+            print("[INFO] Throughput below target (expected with disk I/O)")
             print("   Real-world performance with caching should meet target")
 
         print(f"{'=' * 70}\n")
@@ -152,9 +152,9 @@ class TestMemoryFootprint:
         print(f"Extrapolated time for 10k sequences: {time_per_10k:.3f} seconds")
 
         if time_per_10k < 1.0:
-            print("✅ PASS: Summary generation meets performance target")
+            print("[PASS] Summary generation meets performance target")
         else:
-            print("⚠️  WARNING: Summary generation slower than target")
+            print("[WARNING] Summary generation slower than target")
 
         print("\nSummary statistics:")
         print(f"  Num samples: {summary['num_samples']}")
@@ -250,13 +250,13 @@ class TestGILRelease:
             # Note: True GIL release would show near 2x speedup
             # Without GIL release, speedup would be close to 1x
             if speedup > 1.2:
-                print("✅ INDICATION: Some parallelism detected (possible GIL release)")
+                print("[PASS] INDICATION: Some parallelism detected (possible GIL release)")
             else:
-                print("⚠️  INFO: Limited parallelism (GIL may not be released)")
+                print("[INFO] Limited parallelism (GIL may not be released)")
                 print("   This is expected for I/O-bound operations")
         else:
             speedup = 0
-            print("⚠️  INFO: Multi-threaded time too fast to measure accurately")
+            print("[INFO] Multi-threaded time too fast to measure accurately")
 
         print(f"{'=' * 70}\n")
 

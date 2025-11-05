@@ -62,8 +62,8 @@ jobs:
           cd py-deepbiop && python3 -m pytest -vls
           # Restore source directory
           mv deepbiop.bak deepbiop
-      - name: pytest
-        if: ${{ !startsWith(matrix.platform.target, 'x86') && matrix.platform.target != 'ppc64' }}
+      - name: Test wheel install
+        if: ${{ !startsWith(matrix.platform.target, 'x86') }}
         uses: uraimo/run-on-arch-action@v2
         with:
           arch: ${{ matrix.platform.target }}
@@ -107,8 +107,7 @@ jobs:
         with:
           name: wheels-windows-${{ matrix.platform.target }}
           path: dist
-      - name: pytest
-        if: ${{ !startsWith(matrix.platform.target, 'aarch64') }}
+      - name: Test wheel install
         shell: bash
         run: |
           set -e
@@ -126,7 +125,7 @@ jobs:
     strategy:
       matrix:
         platform:
-          - runner: macos-13
+          - runner: macos-14
             target: x86_64
           - runner: macos-14
             target: aarch64
@@ -146,7 +145,8 @@ jobs:
         with:
           name: wheels-macos-${{ matrix.platform.target }}
           path: dist
-      - name: pytest
+      - name: Test wheel install
+        if: ${{ !startsWith(matrix.platform.target, 'x86_64') }}
         run: |
           set -e
           python3 -m pip install --upgrade pip
