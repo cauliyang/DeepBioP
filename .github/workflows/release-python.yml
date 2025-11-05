@@ -57,7 +57,7 @@ jobs:
           python3 -m pip install --upgrade pip
           python3 -m pip install numpy pytest pytest-sugar
           python3 -m pip install deepbiop --find-links dist --force-reinstall --no-deps --no-cache-dir
-          cd py-deepbiop && python3 -m pytest -vls
+          python3 -m pytest py-deepbiop/tests -vls
       - name: pytest
         if: ${{ !startsWith(matrix.platform.target, 'x86') && matrix.platform.target != 'ppc64' }}
         uses: uraimo/run-on-arch-action@v2
@@ -73,7 +73,7 @@ jobs:
           run: |
             set -e
             pip3 install deepbiop --find-links dist --force-reinstall --no-deps --no-cache-dir
-            cd py-deepbiop && pytest -vls
+            pytest py-deepbiop/tests -vls
 
   windows:
     runs-on: ${{ matrix.platform.runner }}
@@ -107,7 +107,7 @@ jobs:
           python3 -m pip install --upgrade pip
           python3 -m pip install numpy pytest pytest-sugar
           python3 -m pip install deepbiop --find-links dist --force-reinstall --no-deps --no-cache-dir
-          cd py-deepbiop && python3 -m pytest -vls
+          python3 -m pytest py-deepbiop/tests -vls
 
   macos:
     runs-on: ${{ matrix.platform.runner }}
@@ -140,7 +140,7 @@ jobs:
           python3 -m pip install --upgrade pip
           python3 -m pip install numpy pytest pytest-sugar
           python3 -m pip install deepbiop --find-links dist --force-reinstall --no-deps --no-cache-dir
-          cd py-deepbiop && python3 -m pytest -vls
+          python3 -m pytest py-deepbiop/tests -vls
 
   sdist:
     runs-on: ubuntu-latest
