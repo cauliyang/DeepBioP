@@ -57,7 +57,11 @@ jobs:
           python3 -m pip install --upgrade pip
           python3 -m pip install numpy pytest pytest-sugar
           python3 -m pip install deepbiop --find-links dist --force-reinstall --no-deps --no-cache-dir
-          python3 -m pytest py-deepbiop/tests -vls
+          # Remove source deepbiop directory to prevent import conflicts
+          mv py-deepbiop/deepbiop py-deepbiop/deepbiop.bak
+          cd py-deepbiop && python3 -m pytest -vls
+          # Restore source directory
+          mv deepbiop.bak deepbiop
       - name: pytest
         if: ${{ !startsWith(matrix.platform.target, 'x86') && matrix.platform.target != 'ppc64' }}
         uses: uraimo/run-on-arch-action@v2
@@ -73,7 +77,11 @@ jobs:
           run: |
             set -e
             pip3 install deepbiop --find-links dist --force-reinstall --no-deps --no-cache-dir
-            pytest py-deepbiop/tests -vls
+            # Remove source deepbiop directory to prevent import conflicts
+            mv py-deepbiop/deepbiop py-deepbiop/deepbiop.bak
+            cd py-deepbiop && pytest -vls
+            # Restore source directory
+            mv deepbiop.bak deepbiop
 
   windows:
     runs-on: ${{ matrix.platform.runner }}
@@ -107,7 +115,11 @@ jobs:
           python3 -m pip install --upgrade pip
           python3 -m pip install numpy pytest pytest-sugar
           python3 -m pip install deepbiop --find-links dist --force-reinstall --no-deps --no-cache-dir
-          python3 -m pytest py-deepbiop/tests -vls
+          # Remove source deepbiop directory to prevent import conflicts
+          mv py-deepbiop/deepbiop py-deepbiop/deepbiop.bak
+          cd py-deepbiop && python3 -m pytest -vls
+          # Restore source directory
+          mv deepbiop.bak deepbiop
 
   macos:
     runs-on: ${{ matrix.platform.runner }}
@@ -140,7 +152,11 @@ jobs:
           python3 -m pip install --upgrade pip
           python3 -m pip install numpy pytest pytest-sugar
           python3 -m pip install deepbiop --find-links dist --force-reinstall --no-deps --no-cache-dir
-          python3 -m pytest py-deepbiop/tests -vls
+          # Remove source deepbiop directory to prevent import conflicts
+          mv py-deepbiop/deepbiop py-deepbiop/deepbiop.bak
+          cd py-deepbiop && python3 -m pytest -vls
+          # Restore source directory
+          mv deepbiop.bak deepbiop
 
   sdist:
     runs-on: ubuntu-latest
