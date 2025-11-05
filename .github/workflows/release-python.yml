@@ -126,7 +126,7 @@ jobs:
     strategy:
       matrix:
         platform:
-          - runner: macos-14
+          - runner: macos-13
             target: x86_64
           - runner: macos-14
             target: aarch64
@@ -147,8 +147,6 @@ jobs:
           name: wheels-macos-${{ matrix.platform.target }}
           path: dist
       - name: pytest
-        # Skip x86_64 tests on ARM64 runner (can't test cross-compiled wheel)
-        if: ${{ matrix.platform.target != 'x86_64' }}
         run: |
           set -e
           python3 -m pip install --upgrade pip
