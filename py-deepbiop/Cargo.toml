@@ -7,11 +7,11 @@ edition = { workspace = true }
 name = "deepbiop"
 crate-type = ["cdylib", "rlib"]
 
-[[bin]]
-name = "stub_gen"
-path = "src/bin/stub_gen.rs"
-# Note: stub_gen has linking issues on macOS due to extension-module feature
+# Binary disabled due to linking issues with extension-module feature
 # Stubs are maintained manually in deepbiop/*.pyi files
+# [[bin]]
+# name = "stub_gen"
+# path = "src/bin/stub_gen.rs"
 
 [dependencies]
 deepbiop-fq = { workspace = true, features = ['python'] }
