@@ -19,9 +19,11 @@ use deepbiop_utils::io::write_parquet;
 use super::option::EncoderOption;
 
 use anyhow::{Context, Result};
+#[cfg(feature = "python")]
 use pyo3::prelude::*;
 use rayon::prelude::*;
 
+#[cfg(feature = "python")]
 use pyo3_stub_gen::derive::*;
 
 /// An encoder for converting FASTA records to Parquet format.
@@ -41,8 +43,8 @@ use pyo3_stub_gen::derive::*;
 /// let options = EncoderOption::default();
 /// let encoder = ParquetEncoder::new(options);
 /// ```
-#[gen_stub_pyclass]
-#[pyclass(module = "deepbiop.fa")]
+#[cfg_attr(feature = "python", gen_stub_pyclass)]
+#[cfg_attr(feature = "python", pyclass(module = "deepbiop.fa"))]
 #[derive(Debug, Builder, Default, Clone, Serialize, Deserialize)]
 pub struct ParquetEncoder {
     pub option: EncoderOption,

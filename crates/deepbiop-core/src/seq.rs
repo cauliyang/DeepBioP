@@ -1,5 +1,7 @@
 use needletail::Sequence;
+#[cfg(feature = "python")]
 use pyo3::prelude::*;
+#[cfg(feature = "python")]
 use pyo3_stub_gen::derive::*;
 
 use crate::error::DPError;
@@ -18,8 +20,8 @@ use crate::types::EncodingType;
 /// # Returns
 ///
 /// A normalized DNA sequence as a `String`.
-#[gen_stub_pyfunction(module = "deepbiop.core")]
-#[pyfunction]
+#[cfg_attr(feature = "python", gen_stub_pyfunction(module = "deepbiop.core"))]
+#[cfg_attr(feature = "python", pyfunction)]
 pub fn normalize_seq(seq: String, iupac: bool) -> String {
     String::from_utf8_lossy(&seq.as_bytes().normalize(iupac)).to_string()
 }
@@ -47,8 +49,8 @@ pub fn normalize_seq(seq: String, iupac: bool) -> String {
 /// let rev_comp = reverse_complement(seq);
 /// assert_eq!(rev_comp, "CGAT");
 /// ```
-#[gen_stub_pyfunction(module = "deepbiop.core")]
-#[pyfunction]
+#[cfg_attr(feature = "python", gen_stub_pyfunction(module = "deepbiop.core"))]
+#[cfg_attr(feature = "python", pyfunction)]
 pub fn reverse_complement(seq: String) -> String {
     String::from_utf8(seq.as_bytes().reverse_complement()).unwrap()
 }
@@ -58,21 +60,17 @@ pub fn reverse_complement(seq: String) -> String {
 /// This struct represents a single biological sequence, which could be DNA, RNA, or protein.
 /// It includes the sequence identifier, the sequence data itself, optional quality scores
 /// (for FASTQ format), and an optional description string.
-#[gen_stub_pyclass(module = "deepbiop.core")]
-#[pyclass]
+#[cfg_attr(feature = "python", gen_stub_pyclass(module = "deepbiop.core"))]
+#[cfg_attr(feature = "python", pyclass(get_all, set_all))]
 #[derive(Debug, Clone, PartialEq, Eq)]
 pub struct SequenceRecord {
     /// Sequence identifier (e.g., read name, accession number)
-    #[pyo3(get, set)]
     pub id: String,
     /// The biological sequence data
-    #[pyo3(get, set)]
     pub sequence: Vec<u8>,
     /// Optional Phred quality scores (same length as sequence)
-    #[pyo3(get, set)]
     pub quality_scores: Option<Vec<u8>>,
     /// Optional description from the header line
-    #[pyo3(get, set)]
     pub description: Option<String>,
 }
 
@@ -114,6 +112,7 @@ impl SequenceRecord {
     }
 }
 
+#[cfg(feature = "python")]
 #[pymethods]
 impl SequenceRecord {
     /// Create a new sequence record.

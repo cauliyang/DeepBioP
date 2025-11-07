@@ -18,7 +18,7 @@ rayon = { workspace = true }
 log = { workspace = true }
 needletail = { workspace = true }
 ahash = { workspace = true }
-numpy = { workspace = true }
+numpy = { workspace = true, optional = true }
 ndarray = { workspace = true }
 serde = { workspace = true }
 serde_json = { workspace = true }
@@ -34,8 +34,8 @@ parquet = { workspace = true }
 arrow = { workspace = true }
 candle-core = { workspace = true }
 
-pyo3 = { workspace = true }
-pyo3-stub-gen = { workspace = true }
+pyo3 = { workspace = true, optional = true }
+pyo3-stub-gen = { workspace = true, optional = true }
 
 deepbiop-core = { workspace = true }
 deepbiop-utils = { path = "../deepbiop-utils", version = "0.1" }
@@ -46,4 +46,4 @@ tempfile = { workspace = true }
 
 
 [features]
-python = []
+python = ["dep:pyo3", "dep:pyo3-stub-gen", "dep:numpy"]

@@ -10,7 +10,9 @@ use std::fs::File;
 
 use flate2::read::GzDecoder;
 use noodles::bgzf;
+#[cfg(feature = "python")]
 use pyo3::prelude::*;
+#[cfg(feature = "python")]
 use pyo3_stub_gen::derive::*;
 use std::io;
 use std::io::Read;
@@ -30,8 +32,8 @@ use std::io::Read;
 /// * `Xz` - XZ compression format (LZMA2)
 /// * `Zstd` - Zstandard compression format
 /// * `Unknown` - Unknown or unrecognized compression format
-#[gen_stub_pyclass_enum]
-#[pyclass(eq, eq_int, module = "deepbiop.utils")]
+#[cfg_attr(feature = "python", gen_stub_pyclass_enum)]
+#[cfg_attr(feature = "python", pyclass(eq, eq_int, module = "deepbiop.utils"))]
 #[derive(Debug, PartialEq, Clone, Eq, Hash)]
 pub enum CompressedType {
     Uncompress,
@@ -176,8 +178,8 @@ pub fn create_reader_for_compressed_file<P: AsRef<Path>>(
 }
 
 /// Represents different types of sequence file formats
-#[gen_stub_pyclass_enum]
-#[pyclass(eq, eq_int, module = "deepbiop.utils")]
+#[cfg_attr(feature = "python", gen_stub_pyclass_enum)]
+#[cfg_attr(feature = "python", pyclass(eq, eq_int, module = "deepbiop.utils"))]
 #[derive(Debug, PartialEq, Eq, Clone, Hash)]
 pub enum SequenceFileType {
     Fasta,

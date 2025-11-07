@@ -17,9 +17,11 @@ use deepbiop_utils::io::write_parquet;
 
 use super::{traits::Encoder, EncoderOption, RecordData};
 use anyhow::{Context, Result};
+#[cfg(feature = "python")]
 use pyo3::prelude::*;
 use rayon::prelude::*;
 
+#[cfg(feature = "python")]
 use pyo3_stub_gen::derive::*;
 
 #[derive(Debug, Builder, Default)]
@@ -29,8 +31,8 @@ pub struct ParquetData {
     pub qual: Vec<Element>, // kmer_qual
 }
 
-#[gen_stub_pyclass]
-#[pyclass(module = "deepbiop.fq")]
+#[cfg_attr(feature = "python", gen_stub_pyclass)]
+#[cfg_attr(feature = "python", pyclass(module = "deepbiop.fq"))]
 #[derive(Debug, Builder, Default, Clone, Serialize, Deserialize)]
 pub struct ParquetEncoder {
     pub option: EncoderOption,

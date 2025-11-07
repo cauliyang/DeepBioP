@@ -1,3 +1,4 @@
+#[cfg(feature = "python")]
 use pyo3::PyErr;
 use thiserror::Error;
 
@@ -38,6 +39,7 @@ pub enum DPError {
     InvalidValue(String),
 }
 
+#[cfg(feature = "python")]
 impl From<DPError> for PyErr {
     fn from(error: DPError) -> PyErr {
         use DPError::*;

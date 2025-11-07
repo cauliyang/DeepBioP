@@ -17,7 +17,7 @@ use std::sync::Arc;
 /// use deepbiop_fq::augment::{Mutator, Augmentation};
 ///
 /// // 1% mutation rate with seed for reproducibility
-/// let mut mutator = Mutator::new(0.01, Some(42));
+/// let mut mutator = Mutator::new(0.01, Some(42)).unwrap();
 /// let sequence = b"AAAAAAAAAA"; // 10 bases
 /// let mutated = mutator.apply(sequence);
 /// // Expect ~0-2 mutations with 1% rate
@@ -190,7 +190,7 @@ impl Mutator {
     /// ```
     /// use deepbiop_fq::augment::Mutator;
     ///
-    /// let mut mutator = Mutator::new(0.01, Some(42));
+    /// let mutator = Mutator::new(0.01, Some(42)).unwrap();
     /// let sequences = vec![b"ACGTACGT".to_vec(), b"TTAATTAA".to_vec()];
     /// let results = mutator.apply_batch(&sequences);
     /// assert_eq!(results.len(), 2);

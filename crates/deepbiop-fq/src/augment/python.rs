@@ -4,14 +4,16 @@ use super::{
     quality::QualityModel, quality::QualitySimulator, Augmentation, Mutator, ReverseComplement,
     Sampler,
 };
+#[cfg(feature = "python")]
 use pyo3::prelude::*;
 
 /// Python wrapper for ReverseComplement.
-#[pyclass(name = "ReverseComplement")]
+#[cfg_attr(feature = "python", pyclass(name = "ReverseComplement"))]
 pub struct PyReverseComplement {
     inner: ReverseComplement,
 }
 
+#[cfg(feature = "python")]
 #[pymethods]
 impl PyReverseComplement {
     /// Create a new reverse complement transformer for DNA.
@@ -47,11 +49,12 @@ impl PyReverseComplement {
 }
 
 /// Python wrapper for Mutator.
-#[pyclass(name = "Mutator")]
+#[cfg_attr(feature = "python", pyclass(name = "Mutator"))]
 pub struct PyMutator {
     inner: Mutator,
 }
 
+#[cfg(feature = "python")]
 #[pymethods]
 impl PyMutator {
     /// Create a new mutator with specified rate and optional seed.
@@ -92,11 +95,12 @@ impl PyMutator {
 }
 
 /// Python wrapper for Sampler.
-#[pyclass(name = "Sampler")]
+#[cfg_attr(feature = "python", pyclass(name = "Sampler"))]
 pub struct PySampler {
     inner: Sampler,
 }
 
+#[cfg(feature = "python")]
 #[pymethods]
 impl PySampler {
     /// Create a new sampler.
@@ -136,12 +140,13 @@ impl PySampler {
 }
 
 /// Python wrapper for QualityModel.
-#[pyclass(name = "QualityModel")]
+#[cfg_attr(feature = "python", pyclass(name = "QualityModel"))]
 #[derive(Clone)]
 pub struct PyQualityModel {
     inner: QualityModel,
 }
 
+#[cfg(feature = "python")]
 #[pymethods]
 impl PyQualityModel {
     /// Create a uniform quality distribution.
@@ -216,11 +221,12 @@ impl PyQualityModel {
 }
 
 /// Python wrapper for QualitySimulator.
-#[pyclass(name = "QualitySimulator")]
+#[cfg_attr(feature = "python", pyclass(name = "QualitySimulator"))]
 pub struct PyQualitySimulator {
     inner: QualitySimulator,
 }
 
+#[cfg(feature = "python")]
 #[pymethods]
 impl PyQualitySimulator {
     /// Create a new quality simulator.
@@ -254,6 +260,7 @@ impl PyQualitySimulator {
 }
 
 /// Register augmentation classes with Python module.
+#[cfg(feature = "python")]
 pub fn register_augmentation_classes(m: &Bound<'_, PyModule>) -> PyResult<()> {
     m.add_class::<PyReverseComplement>()?;
     m.add_class::<PyMutator>()?;

@@ -2,17 +2,21 @@
 
 use super::{Deduplicator, Filter, LengthFilter, QualityFilter, Subsampler};
 use noodles::fastq;
+#[cfg(feature = "python")]
 use pyo3::prelude::*;
+#[cfg(feature = "python")]
 use pyo3_stub_gen::derive::*;
 
 /// Python wrapper for LengthFilter.
-#[gen_stub_pyclass(module = "deepbiop.fq")]
-#[pyclass(name = "LengthFilter")]
+#[cfg_attr(feature = "python", gen_stub_pyclass(module = "deepbiop.fq"))]
+#[cfg_attr(feature = "python", pyclass(name = "LengthFilter"))]
 pub struct PyLengthFilter {
     inner: LengthFilter,
 }
 
+#[cfg(feature = "python")]
 #[gen_stub_pymethods]
+#[cfg(feature = "python")]
 #[pymethods]
 impl PyLengthFilter {
     /// Create a new length filter.
@@ -90,13 +94,15 @@ impl PyLengthFilter {
 }
 
 /// Python wrapper for QualityFilter.
-#[gen_stub_pyclass(module = "deepbiop.fq")]
-#[pyclass(name = "QualityFilter")]
+#[cfg_attr(feature = "python", gen_stub_pyclass(module = "deepbiop.fq"))]
+#[cfg_attr(feature = "python", pyclass(name = "QualityFilter"))]
 pub struct PyQualityFilter {
     inner: QualityFilter,
 }
 
+#[cfg(feature = "python")]
 #[gen_stub_pymethods]
+#[cfg(feature = "python")]
 #[pymethods]
 impl PyQualityFilter {
     /// Create a new quality filter.
@@ -200,8 +206,8 @@ impl PyQualityFilter {
 }
 
 /// Python wrapper for Deduplicator.
-#[gen_stub_pyclass(module = "deepbiop.fq")]
-#[pyclass(name = "Deduplicator")]
+#[cfg_attr(feature = "python", gen_stub_pyclass(module = "deepbiop.fq"))]
+#[cfg_attr(feature = "python", pyclass(name = "Deduplicator"))]
 pub struct PyDeduplicator {
     inner: Deduplicator,
 }
@@ -212,7 +218,9 @@ impl Default for PyDeduplicator {
     }
 }
 
+#[cfg(feature = "python")]
 #[gen_stub_pymethods]
+#[cfg(feature = "python")]
 #[pymethods]
 impl PyDeduplicator {
     /// Create a new deduplicator.
@@ -277,13 +285,15 @@ impl PyDeduplicator {
 }
 
 /// Python wrapper for Subsampler.
-#[gen_stub_pyclass(module = "deepbiop.fq")]
-#[pyclass(name = "Subsampler")]
+#[cfg_attr(feature = "python", gen_stub_pyclass(module = "deepbiop.fq"))]
+#[cfg_attr(feature = "python", pyclass(name = "Subsampler"))]
 pub struct PySubsampler {
     inner: Subsampler,
 }
 
+#[cfg(feature = "python")]
 #[gen_stub_pymethods]
+#[cfg(feature = "python")]
 #[pymethods]
 impl PySubsampler {
     /// Create a subsampler that keeps a random fraction of records.
@@ -347,6 +357,7 @@ impl PySubsampler {
 }
 
 /// Helper function to create a dummy FASTQ record for filtering.
+#[cfg(feature = "python")]
 fn create_dummy_record(sequence: &[u8]) -> fastq::Record {
     let quality = vec![b'I'; sequence.len()];
     fastq::Record::new(

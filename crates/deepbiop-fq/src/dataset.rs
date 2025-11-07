@@ -1,28 +1,35 @@
+#[cfg(feature = "python")]
 use pyo3::types::{PyAny, PyDict, PyList};
 use std::fs::File;
+#[cfg(feature = "python")]
 use std::path::Path;
 use std::sync::{Arc, Mutex};
 
 use anyhow::Result;
 use noodles::fastq;
+#[cfg(feature = "python")]
 use pyo3::prelude::*;
+#[cfg(feature = "python")]
 use rayon::prelude::*;
 use std::io::{BufReader, Read};
 
+#[cfg(feature = "python")]
 use pyo3_stub_gen::derive::*;
 
-#[gen_stub_pyclass]
-#[pyclass(name = "FastqRecord", module = "deepbiop.fq")]
+#[cfg_attr(feature = "python", gen_stub_pyclass)]
+#[cfg_attr(
+    feature = "python",
+    pyclass(get_all, name = "FastqRecord", module = "deepbiop.fq")
+)]
 pub struct FastqRecord {
-    #[pyo3(get)]
     pub header: String,
-    #[pyo3(get)]
     pub sequence: String,
-    #[pyo3(get)]
     pub quality: String,
 }
 
+#[cfg(feature = "python")]
 #[gen_stub_pymethods]
+#[cfg(feature = "python")]
 #[pymethods]
 impl FastqRecord {
     #[new]
@@ -43,9 +50,13 @@ impl FastqRecord {
     }
 }
 
-#[gen_stub_pyclass]
-#[pyclass(name = "FastqDataset", module = "deepbiop.fq")]
+#[cfg_attr(feature = "python", gen_stub_pyclass)]
+#[cfg_attr(
+    feature = "python",
+    pyclass(name = "FastqDataset", module = "deepbiop.fq")
+)]
 #[derive(Clone)]
+#[allow(dead_code)]
 pub struct FastqDataset {
     file_path: String,
     records_count: usize,
@@ -53,7 +64,9 @@ pub struct FastqDataset {
     current_position: Arc<Mutex<usize>>,
 }
 
+#[cfg(feature = "python")]
 #[gen_stub_pymethods]
+#[cfg(feature = "python")]
 #[pymethods]
 impl FastqDataset {
     #[new]
@@ -291,14 +304,21 @@ impl FastqDataset {
     }
 }
 
-#[gen_stub_pyclass]
-#[pyclass(name = "FastqIterator", module = "deepbiop.fq")]
+#[cfg_attr(feature = "python", gen_stub_pyclass)]
+#[cfg_attr(
+    feature = "python",
+    pyclass(name = "FastqIterator", module = "deepbiop.fq")
+)]
+#[allow(dead_code)]
 pub struct FastqIterator {
+    #[cfg(feature = "python")]
     dataset: Py<FastqDataset>,
     current_batch: usize,
 }
 
+#[cfg(feature = "python")]
 #[gen_stub_pymethods]
+#[cfg(feature = "python")]
 #[pymethods]
 impl FastqIterator {
     fn __iter__(slf: PyRef<'_, Self>) -> PyRef<'_, Self> {
@@ -350,6 +370,7 @@ impl FastqDataset {
 }
 
 // More robust and efficient record counting
+#[allow(dead_code)]
 fn count_records_efficient(file_path: &str) -> Result<usize> {
     let file = File::open(file_path)?;
     let file_size = file.metadata()?.len() as usize;
@@ -395,6 +416,7 @@ fn count_records_efficient(file_path: &str) -> Result<usize> {
 }
 
 // Original counting function renamed for exact counting
+#[allow(dead_code)]
 fn count_records_exact(file_path: &str) -> Result<usize> {
     let file = File::open(file_path)?;
     let mut reader = fastq::io::Reader::new(BufReader::with_capacity(65536, file));
@@ -403,6 +425,7 @@ fn count_records_exact(file_path: &str) -> Result<usize> {
 }
 
 // Legacy function to maintain compatibility
+#[cfg(feature = "python")]
 #[allow(dead_code)]
 fn count_records(file_path: &str) -> PyResult<usize> {
     count_records_efficient(file_path)

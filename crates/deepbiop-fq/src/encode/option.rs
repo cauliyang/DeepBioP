@@ -3,27 +3,28 @@ use derive_builder::Builder;
 use serde::{Deserialize, Serialize};
 use std::fmt::{self, Display, Formatter};
 
+#[cfg(feature = "python")]
 use pyo3::prelude::*;
+#[cfg(feature = "python")]
 use pyo3_stub_gen::derive::*;
 
-#[gen_stub_pyclass]
-#[pyclass(module = "deepbiop.fq")]
+#[cfg_attr(feature = "python", gen_stub_pyclass)]
+#[cfg_attr(feature = "python", pyclass(get_all, set_all, module = "deepbiop.fq"))]
 #[derive(Debug, Builder, Default, Clone, Serialize, Deserialize)]
 pub struct EncoderOption {
-    #[pyo3(get, set)]
     #[builder(default = "QUAL_OFFSET")]
     pub qual_offset: u8,
 
-    #[pyo3(get, set)]
     #[builder(default = "BASES.to_vec()")]
     pub bases: Vec<u8>,
 
-    #[pyo3(get, set)]
     #[builder(default = "2")]
     pub threads: usize,
 }
 
+#[cfg(feature = "python")]
 #[gen_stub_pymethods]
+#[cfg(feature = "python")]
 #[pymethods]
 impl EncoderOption {
     #[new]
