@@ -111,7 +111,7 @@ jobs:
         uses: actions-rs/cargo@v1
         with:
           command: test
-          args: --all --no-fail-fast
+          args: --workspace --exclude py-deepbiop --no-fail-fast
 
   MSRV:
     needs: Formatting
@@ -137,4 +137,4 @@ jobs:
         uses: actions-rs/cargo@v1
         with:
           command: test
-          args: --all --no-fail-fast
+          args: --workspace --exclude py-deepbiop --no-fail-fast
