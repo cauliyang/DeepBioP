@@ -3,12 +3,6 @@ use thiserror::Error;
 
 #[derive(Error, Debug)]
 pub enum DPError {
-    #[error("An error occurred: {0}")]
-    Generic(String),
-
-    #[error("Another error occurred")]
-    Another,
-
     #[error("The sequence is shorter than the k-mer size")]
     SeqShorterThanKmer,
 
@@ -36,28 +30,32 @@ pub enum DPError {
 
     #[error("Invalid CIGAR string: {message}")]
     InvalidCigar { message: String },
+
+    #[error("Invalid parameter: {0}")]
+    InvalidParameter(String),
+
+    #[error("Invalid value: {0}")]
+    InvalidValue(String),
 }
 
 impl From<DPError> for PyErr {
     fn from(error: DPError) -> PyErr {
         use DPError::*;
         match error {
-            Generic(message) => pyo3::exceptions::PyException::new_err(message),
-            Another => pyo3::exceptions::PyException::new_err("Another error occurred"),
-            SeqShorterThanKmer => pyo3::exceptions::PyException::new_err(
+            SeqShorterThanKmer => pyo3::exceptions::PyValueError::new_err(
                 "The sequence is shorter than the k-mer size",
             ),
             TargetRegionInvalid => {
-                pyo3::exceptions::PyException::new_err("The target region is invalid")
+                pyo3::exceptions::PyValueError::new_err("The target region is invalid")
             }
-            InvalidKmerId => pyo3::exceptions::PyException::new_err("The k-mer id is invalid"),
-            InvalidInterval(interval) => pyo3::exceptions::PyException::new_err(format!(
-                "The interval is invalid: {:?}",
+            InvalidKmerId => pyo3::exceptions::PyValueError::new_err("The k-mer id is invalid"),
+            InvalidInterval(interval) => pyo3::exceptions::PyValueError::new_err(format!(
+                "The interval is invalid: {}",
                 interval
             )),
             NotSameLengthForQualityAndSequence(mes) => {
-                pyo3::exceptions::PyException::new_err(format!(
-                    "The sequence and quality scores have different lengths: {:?}",
+                pyo3::exceptions::PyValueError::new_err(format!(
+                    "The sequence and quality scores have different lengths: {}",
                     mes
                 ))
             }
@@ -79,6 +77,12 @@ impl From<DPError> for PyErr {
                 "Invalid CIGAR string: {}",
                 message
             )),
+            InvalidParameter(msg) => {
+                pyo3::exceptions::PyValueError::new_err(format!("Invalid parameter: {}", msg))
+            }
+            InvalidValue(msg) => {
+                pyo3::exceptions::PyValueError::new_err(format!("Invalid value: {}", msg))
+            }
         }
     }
 }

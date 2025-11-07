@@ -164,7 +164,7 @@ impl KmerCommand {
         set_up_threads(self.threads)?;
 
         let encoding_type: EncodingType = self.encoding_type.clone().into();
-        let mut encoder = KmerEncoder::new(self.k, self.canonical, encoding_type);
+        let encoder = KmerEncoder::new(self.k, self.canonical, encoding_type);
 
         // Read sequences from input file
         let mut reader = parse_fastx_file(&self.input)?;

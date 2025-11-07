@@ -4,6 +4,7 @@ use super::Augmentation;
 use derive_builder::Builder;
 use rand::rngs::StdRng;
 use rand::{Rng, SeedableRng};
+use std::sync::Arc;
 
 /// Random point mutation augmenter.
 ///
@@ -33,8 +34,9 @@ pub struct Mutator {
     seed: Option<u64>,
 
     /// Possible bases for mutations (default: DNA)
-    #[builder(default = "vec![b'A', b'C', b'G', b'T']")]
-    alphabet: Vec<u8>,
+    /// Uses Arc for cheap cloning in parallel batch processing
+    #[builder(default = "Arc::new(vec![b'A', b'C', b'G', b'T'])")]
+    alphabet: Arc<Vec<u8>>,
 
     /// Internal RNG
     #[builder(setter(skip), default = "None")]
@@ -49,43 +51,68 @@ impl Mutator {
     /// * `mutation_rate` - Probability of mutating each base (0.0 to 1.0)
     /// * `seed` - Optional seed for reproducible mutations
     ///
-    /// # Panics
+    /// # Errors
     ///
-    /// Panics if mutation_rate is not between 0.0 and 1.0
-    pub fn new(mutation_rate: f64, seed: Option<u64>) -> Self {
-        assert!(
-            (0.0..=1.0).contains(&mutation_rate),
-            "Mutation rate must be between 0.0 and 1.0"
-        );
+    /// Returns an error if mutation_rate is not between 0.0 and 1.0
+    pub fn new(
+        mutation_rate: f64,
+        seed: Option<u64>,
+    ) -> Result<Self, deepbiop_core::error::DPError> {
+        if !(0.0..=1.0).contains(&mutation_rate) {
+            return Err(deepbiop_core::error::DPError::InvalidParameter(format!(
+                "Mutation rate must be between 0.0 and 1.0, got {}",
+                mutation_rate
+            )));
+        }
 
-        Self {
+        Ok(Self {
             mutation_rate,
             seed,
-            alphabet: vec![b'A', b'C', b'G', b'T'],
+            alphabet: Arc::new(vec![b'A', b'C', b'G', b'T']),
             rng: None,
-        }
+        })
     }
 
     /// Create a mutator for RNA sequences.
-    pub fn for_rna(mutation_rate: f64, seed: Option<u64>) -> Self {
-        assert!(
-            (0.0..=1.0).contains(&mutation_rate),
-            "Mutation rate must be between 0.0 and 1.0"
-        );
+    ///
+    /// # Errors
+    ///
+    /// Returns an error if mutation_rate is not between 0.0 and 1.0
+    pub fn for_rna(
+        mutation_rate: f64,
+        seed: Option<u64>,
+    ) -> Result<Self, deepbiop_core::error::DPError> {
+        if !(0.0..=1.0).contains(&mutation_rate) {
+            return Err(deepbiop_core::error::DPError::InvalidParameter(format!(
+                "Mutation rate must be between 0.0 and 1.0, got {}",
+                mutation_rate
+            )));
+        }
 
-        Self {
+        Ok(Self {
             mutation_rate,
             seed,
-            alphabet: vec![b'A', b'C', b'G', b'U'],
+            alphabet: Arc::new(vec![b'A', b'C', b'G', b'U']),
             rng: None,
-        }
+        })
     }
 
     /// Set custom alphabet for mutations.
-    pub fn with_alphabet(mut self, alphabet: Vec<u8>) -> Self {
-        assert!(!alphabet.is_empty(), "Alphabet cannot be empty");
-        self.alphabet = alphabet;
-        self
+    ///
+    /// # Errors
+    ///
+    /// Returns an error if the alphabet is empty
+    pub fn with_alphabet(
+        mut self,
+        alphabet: Vec<u8>,
+    ) -> Result<Self, deepbiop_core::error::DPError> {
+        if alphabet.is_empty() {
+            return Err(deepbiop_core::error::DPError::InvalidParameter(
+                "Alphabet cannot be empty".to_string(),
+            ));
+        }
+        self.alphabet = Arc::new(alphabet);
+        Ok(self)
     }
 
     /// Initialize RNG if needed (lazy initialization).
@@ -179,10 +206,11 @@ impl Mutator {
                 let derived_seed = self.seed.map(|s| s.wrapping_add(idx as u64));
 
                 // Create a new mutator with derived seed for this sequence
+                // Arc::clone is cheap (just increments reference count)
                 let mut local_mutator = Mutator {
                     mutation_rate: self.mutation_rate,
                     seed: derived_seed,
-                    alphabet: self.alphabet.clone(),
+                    alphabet: Arc::clone(&self.alphabet),
                     rng: None,
                 };
 
@@ -214,7 +242,7 @@ mod tests {
 
     #[test]
     fn test_zero_mutation_rate() {
-        let mut mutator = Mutator::new(0.0, Some(42));
+        let mut mutator = Mutator::new(0.0, Some(42)).unwrap();
         let sequence = b"ACGTACGT";
         let result = mutator.apply(sequence);
         assert_eq!(result, sequence);
@@ -222,8 +250,8 @@ mod tests {
 
     #[test]
     fn test_reproducible_mutations() {
-        let mut mutator1 = Mutator::new(0.1, Some(42));
-        let mut mutator2 = Mutator::new(0.1, Some(42));
+        let mut mutator1 = Mutator::new(0.1, Some(42)).unwrap();
+        let mut mutator2 = Mutator::new(0.1, Some(42)).unwrap();
 
         let sequence = b"AAAAAAAAAA";
 
@@ -238,7 +266,7 @@ mod tests {
 
     #[test]
     fn test_high_mutation_rate() {
-        let mut mutator = Mutator::new(0.9, Some(42));
+        let mut mutator = Mutator::new(0.9, Some(42)).unwrap();
         let sequence = b"AAAAAAAAAA"; // 10 A's
 
         let result = mutator.apply(sequence);
@@ -260,7 +288,7 @@ mod tests {
 
     #[test]
     fn test_mutations_change_bases() {
-        let mut mutator = Mutator::new(1.0, Some(42)); // 100% mutation
+        let mut mutator = Mutator::new(1.0, Some(42)).unwrap(); // 100% mutation
         let sequence = b"AAAA";
 
         let result = mutator.apply(sequence);
@@ -278,7 +306,7 @@ mod tests {
 
     #[test]
     fn test_rna_mode() {
-        let mut mutator = Mutator::for_rna(1.0, Some(42));
+        let mut mutator = Mutator::for_rna(1.0, Some(42)).unwrap();
         let sequence = b"AAAA";
 
         let result = mutator.apply(sequence);
@@ -295,7 +323,10 @@ mod tests {
 
     #[test]
     fn test_custom_alphabet() {
-        let mut mutator = Mutator::new(1.0, Some(42)).with_alphabet(vec![b'A', b'B']);
+        let mut mutator = Mutator::new(1.0, Some(42))
+            .unwrap()
+            .with_alphabet(vec![b'A', b'B'])
+            .unwrap();
 
         let sequence = b"AAAA";
         let result = mutator.apply(sequence);
@@ -306,14 +337,14 @@ mod tests {
 
     #[test]
     fn test_empty_sequence() {
-        let mut mutator = Mutator::new(0.5, Some(42));
+        let mut mutator = Mutator::new(0.5, Some(42)).unwrap();
         assert_eq!(mutator.apply(b""), b"");
     }
 
     #[test]
-    #[should_panic(expected = "Mutation rate must be between 0.0 and 1.0")]
     fn test_invalid_mutation_rate() {
-        Mutator::new(1.5, None);
+        let result = Mutator::new(1.5, None);
+        assert!(result.is_err());
     }
 
     #[test]
@@ -334,7 +365,7 @@ mod tests {
 
     #[test]
     fn test_batch_processing() {
-        let mutator = Mutator::new(0.05, Some(42));
+        let mutator = Mutator::new(0.05, Some(42)).unwrap();
         let sequences = vec![
             b"ACGTACGTACGT".to_vec(),
             b"TTAATTAATTAA".to_vec(),
@@ -352,8 +383,8 @@ mod tests {
 
     #[test]
     fn test_batch_reproducibility() {
-        let mutator1 = Mutator::new(0.1, Some(12345));
-        let mutator2 = Mutator::new(0.1, Some(12345));
+        let mutator1 = Mutator::new(0.1, Some(12345)).unwrap();
+        let mutator2 = Mutator::new(0.1, Some(12345)).unwrap();
 
         let sequences = vec![b"ACGTACGT".to_vec(), b"TTAATTAA".to_vec()];
 

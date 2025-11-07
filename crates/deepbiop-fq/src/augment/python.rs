@@ -63,18 +63,16 @@ impl PyMutator {
     #[new]
     #[pyo3(signature = (mutation_rate, seed=None))]
     fn new(mutation_rate: f64, seed: Option<u64>) -> PyResult<Self> {
-        Ok(Self {
-            inner: Mutator::new(mutation_rate, seed),
-        })
+        let inner = Mutator::new(mutation_rate, seed).map_err(PyErr::from)?;
+        Ok(Self { inner })
     }
 
     /// Create a mutator for RNA sequences.
     #[staticmethod]
     #[pyo3(signature = (mutation_rate, seed=None))]
     fn for_rna(mutation_rate: f64, seed: Option<u64>) -> PyResult<Self> {
-        Ok(Self {
-            inner: Mutator::for_rna(mutation_rate, seed),
-        })
+        let inner = Mutator::for_rna(mutation_rate, seed).map_err(PyErr::from)?;
+        Ok(Self { inner })
     }
 
     /// Apply mutation to a sequence.

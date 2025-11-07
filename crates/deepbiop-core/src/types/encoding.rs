@@ -79,7 +79,7 @@ impl FromStr for EncodingType {
             "dna" => Ok(EncodingType::DNA),
             "rna" => Ok(EncodingType::RNA),
             "protein" => Ok(EncodingType::Protein),
-            _ => Err(DPError::Generic(format!(
+            _ => Err(DPError::InvalidValue(format!(
                 "Invalid encoding type: '{}'. Expected 'dna', 'rna', or 'protein'",
                 s
             ))),

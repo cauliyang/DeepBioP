@@ -250,7 +250,9 @@ class TestGILRelease:
             # Note: True GIL release would show near 2x speedup
             # Without GIL release, speedup would be close to 1x
             if speedup > 1.2:
-                print("[PASS] INDICATION: Some parallelism detected (possible GIL release)")
+                print(
+                    "[PASS] INDICATION: Some parallelism detected (possible GIL release)"
+                )
             else:
                 print("[INFO] Limited parallelism (GIL may not be released)")
                 print("   This is expected for I/O-bound operations")

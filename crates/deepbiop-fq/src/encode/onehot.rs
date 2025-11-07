@@ -214,6 +214,60 @@ impl OneHotEncoder {
     pub fn ambiguous_strategy(&self) -> AmbiguousStrategy {
         self.ambiguous_strategy
     }
+
+    /// Validate sequence quality by checking for ambiguous/invalid bases.
+    ///
+    /// Returns a report containing the count and percentage of invalid bases.
+    /// This can be used to filter low-quality sequences before encoding.
+    ///
+    /// # Arguments
+    ///
+    /// * `sequence` - The sequence to validate
+    ///
+    /// # Returns
+    ///
+    /// A tuple of (invalid_count, total_count, percentage)
+    pub fn validate_sequence(&self, sequence: &[u8]) -> (usize, usize, f32) {
+        if sequence.is_empty() {
+            return (0, 0, 0.0);
+        }
+
+        let total = sequence.len();
+        let invalid = sequence
+            .iter()
+            .filter(|&&base| !self.encoding_type.is_valid_char(base.to_ascii_uppercase()))
+            .count();
+
+        let percentage = (invalid as f32 / total as f32) * 100.0;
+
+        (invalid, total, percentage)
+    }
+
+    /// Validate multiple sequences and return statistics.
+    ///
+    /// # Arguments
+    ///
+    /// * `sequences` - Sequences to validate
+    /// * `threshold` - Maximum allowed percentage of invalid bases (0.0-100.0)
+    ///
+    /// # Returns
+    ///
+    /// A vector of tuples: (sequence_index, invalid_count, percentage) for sequences
+    /// that exceed the threshold
+    pub fn validate_batch(&self, sequences: &[&[u8]], threshold: f32) -> Vec<(usize, usize, f32)> {
+        sequences
+            .iter()
+            .enumerate()
+            .filter_map(|(idx, seq)| {
+                let (invalid, _total, percentage) = self.validate_sequence(seq);
+                if percentage > threshold {
+                    Some((idx, invalid, percentage))
+                } else {
+                    None
+                }
+            })
+            .collect()
+    }
 }
 
 #[cfg(test)]
@@ -373,6 +427,59 @@ mod tests {
             assert_eq!(sum1, 1.0);
             assert_eq!(sum2, 1.0);
         }
+    }
+
+    #[test]
+    fn test_validate_sequence_clean() {
+        let encoder = OneHotEncoder::new(EncodingType::DNA, AmbiguousStrategy::Skip);
+        let sequence = b"ACGTACGT";
+
+        let (invalid, total, percentage) = encoder.validate_sequence(sequence);
+
+        assert_eq!(invalid, 0);
+        assert_eq!(total, 8);
+        assert_eq!(percentage, 0.0);
+    }
+
+    #[test]
+    fn test_validate_sequence_with_ambiguous() {
+        let encoder = OneHotEncoder::new(EncodingType::DNA, AmbiguousStrategy::Skip);
+        let sequence = b"ACNGTNNACGT"; // 3 N's out of 11 bases
+
+        let (invalid, total, percentage) = encoder.validate_sequence(sequence);
+
+        assert_eq!(invalid, 3);
+        assert_eq!(total, 11);
+        assert!((percentage - 27.27).abs() < 0.01); // ~27.27%
+    }
+
+    #[test]
+    fn test_validate_sequence_empty() {
+        let encoder = OneHotEncoder::new(EncodingType::DNA, AmbiguousStrategy::Skip);
+        let sequence = b"";
+
+        let (invalid, total, percentage) = encoder.validate_sequence(sequence);
+
+        assert_eq!(invalid, 0);
+        assert_eq!(total, 0);
+        assert_eq!(percentage, 0.0);
+    }
+
+    #[test]
+    fn test_validate_batch() {
+        let encoder = OneHotEncoder::new(EncodingType::DNA, AmbiguousStrategy::Skip);
+        let sequences = vec![
+            b"ACGTACGT".as_ref(),  // 0% invalid
+            b"ACNGTACGT".as_ref(), // ~11% invalid (1/9)
+            b"NNNNN".as_ref(),     // 100% invalid
+            b"ACGT".as_ref(),      // 0% invalid
+        ];
+
+        let failed = encoder.validate_batch(&sequences, 10.0); // 10% threshold
+
+        assert_eq!(failed.len(), 2); // Sequences 1 and 2 exceed threshold
+        assert_eq!(failed[0].0, 1); // Index 1
+        assert_eq!(failed[1].0, 2); // Index 2
     }
 }
 

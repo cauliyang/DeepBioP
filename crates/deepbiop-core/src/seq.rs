@@ -215,12 +215,16 @@ impl SequenceRecord {
     pub fn validate(&self, encoding_type: EncodingType) -> Result<(), DPError> {
         // Check ID is not empty
         if self.id.is_empty() {
-            return Err(DPError::Generic("Sequence ID cannot be empty".to_string()));
+            return Err(DPError::InvalidValue(
+                "Sequence ID cannot be empty".to_string(),
+            ));
         }
 
         // Check sequence is not empty
         if self.sequence.is_empty() {
-            return Err(DPError::Generic("Sequence cannot be empty".to_string()));
+            return Err(DPError::InvalidValue(
+                "Sequence cannot be empty".to_string(),
+            ));
         }
 
         // Check quality scores length matches sequence length

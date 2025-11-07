@@ -421,11 +421,12 @@ impl Mutator {
     ///     Mutator instance
     #[new]
     #[pyo3(signature = (mutation_rate, seed=None))]
-    fn new(mutation_rate: f64, seed: Option<u64>) -> Self {
-        Mutator {
-            inner: InnerMutator::new(mutation_rate, seed),
+    fn new(mutation_rate: f64, seed: Option<u64>) -> PyResult<Self> {
+        let inner = InnerMutator::new(mutation_rate, seed).map_err(PyErr::from)?;
+        Ok(Mutator {
+            inner,
             mutation_rate,
-        }
+        })
     }
 
     /// Apply mutation to sample['sequence'].

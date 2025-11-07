@@ -91,10 +91,21 @@ pub fn default_collate(py: Python, samples: &Bound<'_, PyList>) -> PyResult<Py<P
 
     // Create padded batch array
     let batch_size = sequences.len();
+
+    // SAFETY: Dimensions are guaranteed valid:
+    // - batch_size > 0 (checked at function start)
+    // - max_len computed from valid sequences (always >= 0)
+    // - feature_dim validated to be consistent across all sequences
+    // The array is newly allocated and exclusively owned by this scope.
     let batch_array =
         unsafe { PyArray2::<f32>::new(py, [batch_size, max_len * feature_dim], false) };
 
     // Fill batch array with padded sequences
+    // SAFETY:
+    // - batch_array was just created and is exclusively owned
+    // - No concurrent access possible (single-threaded Python context)
+    // - All array accesses are bounds-checked via computed offsets
+    // - The mutable slice lives only within this block
     unsafe {
         let batch_slice = batch_array.as_slice_mut()?;
 

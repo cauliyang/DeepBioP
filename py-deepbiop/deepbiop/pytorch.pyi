@@ -13,36 +13,35 @@ Example:
     >>> loader = DataLoader(dataset, batch_size=32, shuffle=True)
     >>> # Iterate through batches
     >>> for batch in loader:
-    ...     sequences = batch['sequences']  # NumPy array
+    ...     sequences = batch["sequences"]  # NumPy array
     ...     # ... training logic
 """
 
-from typing import Any, Callable, Dict, Iterator, List, Optional, Union
-import numpy as np
-import numpy.typing as npt
+from collections.abc import Callable
+from typing import Any
 
 __all__ = [
-    "Dataset",
-    "DatasetIterator",
+    "Compose",
     "DataLoader",
     "DataLoaderIterator",
-    "OneHotEncoder",
+    "Dataset",
+    "DatasetIterator",
     "IntegerEncoder",
     "KmerEncoder",
-    "Compose",
-    "ReverseComplement",
     "Mutator",
+    "OneHotEncoder",
+    "ReverseComplement",
     "Sampler",
     "default_collate",
-    "save_cache",
-    "load_cache",
     "is_cache_valid",
+    "load_cache",
+    "save_cache",
 ]
 
 # Type aliases
-Sample = Dict[str, Any]
+Sample = dict[str, Any]
 Transform = Callable[[Sample], Sample]
-CollateFunction = Callable[[List[Sample]], Any]
+CollateFunction = Callable[[list[Sample]], Any]
 
 class Dataset:
     """
@@ -58,7 +57,8 @@ class Dataset:
         cache_dir: Optional directory for caching processed data
         lazy: Load sequences on-demand if True, preload if False (default: True)
 
-    Raises:
+    Raises
+    ------
         FileNotFoundError: If the specified file doesn't exist
         ValueError: If file format is invalid or unsupported
 
@@ -66,21 +66,20 @@ class Dataset:
         >>> dataset = Dataset("data.fastq")
         >>> print(len(dataset))  # Number of sequences
         >>> sample = dataset[0]  # Get first sample
-        >>> print(sample['sequence'])  # Access sequence
+        >>> print(sample["sequence"])  # Access sequence
     """
 
     def __init__(
         self,
-        file_paths: Union[str, List[str]],
+        file_paths: str | list[str],
         *,
         sequence_type: str = "dna",
-        transform: Optional[Transform] = None,
-        cache_dir: Optional[str] = None,
+        transform: Transform | None = None,
+        cache_dir: str | None = None,
         lazy: bool = True,
     ) -> None: ...
     def __len__(self) -> int:
         """Return the total number of sequences in the dataset."""
-        ...
     def __getitem__(self, idx: int) -> Sample:
         """
         Get sample at index idx.
@@ -88,41 +87,40 @@ class Dataset:
         Args:
             idx: Sample index (0 to len(dataset)-1)
 
-        Returns:
+        Returns
+        -------
             Dictionary with 'sequence' (bytes) and 'quality' (bytes) keys
 
-        Raises:
+        Raises
+        ------
             IndexError: If idx is out of bounds
         """
-        ...
     def __iter__(self) -> DatasetIterator:
         """Return iterator over dataset samples."""
-        ...
     def __repr__(self) -> str:
         """Return string representation of dataset."""
-        ...
-    def summary(self) -> Dict[str, Any]:
+    def summary(self) -> dict[str, Any]:
         """
         Get dataset summary statistics.
 
-        Returns:
+        Returns
+        -------
             Dictionary containing:
                 - num_samples: Total number of sequences
                 - length_stats: Min, max, mean, median sequence lengths
                 - memory_footprint: Estimated memory usage in bytes
         """
-        ...
-    def validate(self) -> Dict[str, Any]:
+    def validate(self) -> dict[str, Any]:
         """
         Validate dataset integrity.
 
-        Returns:
+        Returns
+        -------
             Dictionary containing:
                 - is_valid: Boolean indicating validity
                 - warnings: List of warning messages
                 - errors: List of error messages
         """
-        ...
 
 class DatasetIterator:
     """Iterator for Dataset class."""
@@ -159,25 +157,22 @@ class DataLoader:
         *,
         batch_size: int = 1,
         shuffle: bool = False,
-        collate_fn: Optional[CollateFunction] = None,
+        collate_fn: CollateFunction | None = None,
         drop_last: bool = False,
         num_workers: int = 0,
     ) -> None: ...
     def __len__(self) -> int:
         """Return number of batches in the DataLoader."""
-        ...
     def __iter__(self) -> DataLoaderIterator:
         """Return iterator over batches."""
-        ...
     def __repr__(self) -> str:
         """Return string representation of DataLoader."""
-        ...
 
 class DataLoaderIterator:
     """Iterator for DataLoader class."""
 
     def __iter__(self) -> DataLoaderIterator: ...
-    def __next__(self) -> List[Sample]: ...
+    def __next__(self) -> list[Sample]: ...
 
 class OneHotEncoder:
     """
@@ -192,7 +187,8 @@ class OneHotEncoder:
         encoding_type: Type of encoding - "dna", "rna", or "protein"
         unknown_strategy: How to handle unknown bases - "skip", "zero", or "error"
 
-    Returns:
+    Returns
+    -------
         Transformed sample with sequence as NumPy array of shape (seq_len, num_channels)
         with dtype float32
 
@@ -208,7 +204,6 @@ class OneHotEncoder:
     ) -> None: ...
     def __call__(self, sample: Sample) -> Sample:
         """Apply one-hot encoding to sample."""
-        ...
     def __repr__(self) -> str: ...
 
 class IntegerEncoder:
@@ -222,7 +217,8 @@ class IntegerEncoder:
         encoding_type: Type of encoding - "dna", "rna", or "protein"
         unknown_strategy: How to handle unknown bases - "skip", "zero", or "error"
 
-    Returns:
+    Returns
+    -------
         Transformed sample with sequence as NumPy array of dtype int64
 
     Example:
@@ -237,7 +233,6 @@ class IntegerEncoder:
     ) -> None: ...
     def __call__(self, sample: Sample) -> Sample:
         """Apply integer encoding to sample."""
-        ...
     def __repr__(self) -> str: ...
 
 class KmerEncoder:
@@ -253,7 +248,8 @@ class KmerEncoder:
         encoding_type: Type of encoding - "dna", "rna", or "protein"
         unknown_strategy: How to handle unknown bases - "skip" or "error"
 
-    Returns:
+    Returns
+    -------
         Transformed sample with sequence as NumPy array of k-mer frequencies
 
     Example:
@@ -272,7 +268,6 @@ class KmerEncoder:
     ) -> None: ...
     def __call__(self, sample: Sample) -> Sample:
         """Apply k-mer encoding to sample."""
-        ...
     def __repr__(self) -> str: ...
 
 class Compose:
@@ -285,17 +280,15 @@ class Compose:
         transforms: List of transform callables to apply in sequence
 
     Example:
-        >>> transform = Compose([
-        ...     ReverseComplement(probability=0.5),
-        ...     OneHotEncoder(encoding_type="dna")
-        ... ])
+        >>> transform = Compose(
+        ...     [ReverseComplement(probability=0.5), OneHotEncoder(encoding_type="dna")]
+        ... )
         >>> transformed = transform(sample)
     """
 
-    def __init__(self, transforms: List[Transform]) -> None: ...
+    def __init__(self, transforms: list[Transform]) -> None: ...
     def __call__(self, sample: Sample) -> Sample:
         """Apply all transforms in sequence."""
-        ...
     def __repr__(self) -> str: ...
 
 class ReverseComplement:
@@ -315,10 +308,11 @@ class ReverseComplement:
         >>> augmented = augment(sample)  # May return original or reverse complement
     """
 
-    def __init__(self, *, probability: float = 0.5, seed: Optional[int] = None) -> None: ...
+    def __init__(
+        self, *, probability: float = 0.5, seed: int | None = None
+    ) -> None: ...
     def __call__(self, sample: Sample) -> Sample:
         """Apply reverse complement with specified probability."""
-        ...
     def __repr__(self) -> str: ...
 
 class Mutator:
@@ -338,11 +332,10 @@ class Mutator:
     """
 
     def __init__(
-        self, *, mutation_rate: float = 0.01, seed: Optional[int] = None
+        self, *, mutation_rate: float = 0.01, seed: int | None = None
     ) -> None: ...
     def __call__(self, sample: Sample) -> Sample:
         """Apply random mutations to sequence."""
-        ...
     def __repr__(self) -> str: ...
 
 class Sampler:
@@ -363,14 +356,13 @@ class Sampler:
     """
 
     def __init__(
-        self, *, length: int, mode: str = "random", seed: Optional[int] = None
+        self, *, length: int, mode: str = "random", seed: int | None = None
     ) -> None: ...
     def __call__(self, sample: Sample) -> Sample:
         """Extract subsequence from sample."""
-        ...
     def __repr__(self) -> str: ...
 
-def default_collate(samples: List[Sample]) -> List[Sample]:
+def default_collate(samples: list[Sample]) -> list[Sample]:
     """
     Default collate function for DataLoader.
 
@@ -380,17 +372,17 @@ def default_collate(samples: List[Sample]) -> List[Sample]:
     Args:
         samples: List of sample dictionaries
 
-    Returns:
+    Returns
+    -------
         List of samples (currently unchanged)
 
     Example:
         >>> samples = [{"sequence": b"ACGT"}, {"sequence": b"TTGG"}]
         >>> batch = default_collate(samples)
     """
-    ...
 
 def save_cache(
-    data: Any, cache_path: str, metadata: Optional[Dict[str, Any]] = None
+    data: Any, cache_path: str, metadata: dict[str, Any] | None = None
 ) -> None:
     """
     Save processed data to cache file.
@@ -400,26 +392,28 @@ def save_cache(
         cache_path: Path to cache file
         metadata: Optional metadata dictionary (e.g., version, timestamp)
 
-    Raises:
+    Raises
+    ------
         IOError: If cache file cannot be written
 
     Example:
         >>> data = {"sequences": [...], "labels": [...]}
         >>> save_cache(data, "cache.pkl", metadata={"version": "1.0"})
     """
-    ...
 
-def load_cache(cache_path: str) -> tuple[Any, Optional[Dict[str, Any]]]:
+def load_cache(cache_path: str) -> tuple[Any, dict[str, Any] | None]:
     """
     Load processed data from cache file.
 
     Args:
         cache_path: Path to cache file
 
-    Returns:
+    Returns
+    -------
         Tuple of (data, metadata)
 
-    Raises:
+    Raises
+    ------
         FileNotFoundError: If cache file doesn't exist
         IOError: If cache file is corrupted
 
@@ -427,10 +421,9 @@ def load_cache(cache_path: str) -> tuple[Any, Optional[Dict[str, Any]]]:
         >>> data, metadata = load_cache("cache.pkl")
         >>> print(metadata["version"])
     """
-    ...
 
 def is_cache_valid(
-    cache_path: str, source_files: List[str], max_age_seconds: Optional[float] = None
+    cache_path: str, source_files: list[str], max_age_seconds: float | None = None
 ) -> bool:
     """
     Check if cache is valid and up-to-date.
@@ -440,7 +433,8 @@ def is_cache_valid(
         source_files: List of source file paths to check against
         max_age_seconds: Optional maximum cache age in seconds
 
-    Returns:
+    Returns
+    -------
         True if cache exists and is newer than all source files (and within max_age if specified)
 
     Example:
@@ -450,4 +444,3 @@ def is_cache_valid(
         ...     # Regenerate cache
         ...     pass
     """
-    ...

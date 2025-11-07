@@ -7,6 +7,7 @@ use ahash::HashMap;
 use anyhow::Result;
 use ndarray::{Array1, Array2};
 use rayon::prelude::*;
+use std::sync::OnceLock;
 
 use crate::error::DPError;
 use crate::types::EncodingType;
@@ -24,7 +25,7 @@ use super::seq_to_kmers;
 /// use deepbiop_core::kmer::encode::KmerEncoder;
 /// use deepbiop_core::types::EncodingType;
 ///
-/// let mut encoder = KmerEncoder::new(3, true, EncodingType::DNA);
+/// let encoder = KmerEncoder::new(3, true, EncodingType::DNA);
 /// let encoded = encoder.encode(b"ACGTACGT").unwrap();
 /// ```
 pub struct KmerEncoder {
@@ -34,8 +35,8 @@ pub struct KmerEncoder {
     canonical: bool,
     /// Encoding type (DNA, RNA, or Protein)
     encoding_type: EncodingType,
-    /// K-mer to index mapping (built lazily)
-    kmer_to_idx: Option<HashMap<Vec<u8>, usize>>,
+    /// K-mer to index mapping (built lazily using OnceLock for thread-safe initialization)
+    kmer_to_idx: OnceLock<HashMap<Vec<u8>, usize>>,
 }
 
 impl KmerEncoder {
@@ -55,7 +56,7 @@ impl KmerEncoder {
             k,
             canonical,
             encoding_type,
-            kmer_to_idx: None,
+            kmer_to_idx: OnceLock::new(),
         }
     }
 
@@ -77,7 +78,7 @@ impl KmerEncoder {
     /// Build the k-mer to index mapping.
     ///
     /// This generates all possible k-mers for the alphabet and assigns each a unique index.
-    fn build_kmer_index(&mut self) {
+    fn build_kmer_index(&self) -> HashMap<Vec<u8>, usize> {
         let alphabet = self.encoding_type.alphabet();
         let alphabet_size = alphabet.len();
 
@@ -111,7 +112,7 @@ impl KmerEncoder {
         let mut current = Vec::with_capacity(self.k);
         generate_kmers(alphabet, self.k, &mut current, &mut kmer_to_idx, &mut idx);
 
-        self.kmer_to_idx = Some(kmer_to_idx);
+        kmer_to_idx
     }
 
     /// Encode a sequence as a k-mer count vector.
@@ -131,13 +132,10 @@ impl KmerEncoder {
     /// Returns an error if:
     /// - The sequence is shorter than k
     /// - The sequence contains invalid characters
-    pub fn encode(&mut self, sequence: &[u8]) -> Result<Array1<f32>> {
+    pub fn encode(&self, sequence: &[u8]) -> Result<Array1<f32>> {
         // Build k-mer index if not already built (needed for dimensions)
-        if self.kmer_to_idx.is_none() {
-            self.build_kmer_index();
-        }
-
-        let kmer_to_idx = self.kmer_to_idx.as_ref().unwrap();
+        // OnceLock ensures this happens only once, even in concurrent scenarios
+        let kmer_to_idx = self.kmer_to_idx.get_or_init(|| self.build_kmer_index());
         let total_kmers = kmer_to_idx.len();
 
         // If sequence is shorter than k, return a zero vector
@@ -190,23 +188,14 @@ impl KmerEncoder {
     /// # Errors
     ///
     /// Returns an error if any sequence fails to encode
-    pub fn encode_batch(&mut self, sequences: &[&[u8]]) -> Result<Array2<f32>> {
+    pub fn encode_batch(&self, sequences: &[&[u8]]) -> Result<Array2<f32>> {
+        // Build k-mer index if not already built (lazy initialization)
+        let kmer_to_idx = self.kmer_to_idx.get_or_init(|| self.build_kmer_index());
+        let total_kmers = kmer_to_idx.len();
+
         if sequences.is_empty() {
-            // Build index to get proper dimensions
-            if self.kmer_to_idx.is_none() {
-                self.build_kmer_index();
-            }
-            let total_kmers = self.kmer_to_idx.as_ref().unwrap().len();
             return Ok(Array2::zeros((0, total_kmers)));
         }
-
-        // Build k-mer index if not already built
-        if self.kmer_to_idx.is_none() {
-            self.build_kmer_index();
-        }
-
-        let kmer_to_idx = self.kmer_to_idx.as_ref().unwrap();
-        let total_kmers = kmer_to_idx.len();
         let k = self.k;
         let encoding_type = self.encoding_type;
 
@@ -280,7 +269,7 @@ mod tests {
 
     #[test]
     fn test_kmer_encode_dna() {
-        let mut encoder = KmerEncoder::new(3, false, EncodingType::DNA);
+        let encoder = KmerEncoder::new(3, false, EncodingType::DNA);
         let sequence = b"ACGTACGT";
 
         let encoded = encoder.encode(sequence).unwrap();
@@ -295,7 +284,7 @@ mod tests {
 
     #[test]
     fn test_kmer_encode_short_sequence() {
-        let mut encoder = KmerEncoder::new(5, false, EncodingType::DNA);
+        let encoder = KmerEncoder::new(5, false, EncodingType::DNA);
         let sequence = b"ACG"; // Shorter than k
 
         let result = encoder.encode(sequence).unwrap();
@@ -306,7 +295,7 @@ mod tests {
 
     #[test]
     fn test_kmer_encode_invalid_char() {
-        let mut encoder = KmerEncoder::new(3, false, EncodingType::DNA);
+        let encoder = KmerEncoder::new(3, false, EncodingType::DNA);
         let sequence = b"ACGTN"; // N is invalid for DNA
 
         let result = encoder.encode(sequence);
@@ -315,7 +304,7 @@ mod tests {
 
     #[test]
     fn test_kmer_encode_batch() {
-        let mut encoder = KmerEncoder::new(3, false, EncodingType::DNA);
+        let encoder = KmerEncoder::new(3, false, EncodingType::DNA);
         let sequences = vec![b"ACGTACGT".as_ref(), b"AAACCCGGG".as_ref()];
 
         let batch = encoder.encode_batch(&sequences).unwrap();
@@ -331,7 +320,7 @@ mod tests {
 
     #[test]
     fn test_kmer_encode_empty_batch() {
-        let mut encoder = KmerEncoder::new(3, false, EncodingType::DNA);
+        let encoder = KmerEncoder::new(3, false, EncodingType::DNA);
         let sequences: Vec<&[u8]> = vec![];
 
         let batch = encoder.encode_batch(&sequences).unwrap();
@@ -340,7 +329,7 @@ mod tests {
 
     #[test]
     fn test_kmer_encode_case_insensitive() {
-        let mut encoder = KmerEncoder::new(3, false, EncodingType::DNA);
+        let encoder = KmerEncoder::new(3, false, EncodingType::DNA);
 
         let seq1 = b"ACGT";
         let seq2 = b"acgt";
