@@ -111,7 +111,6 @@ fn main() -> Result<()> {
         return Ok(());
     }
 
-
     if cli.markdown_help {
         clap_markdown::print_help_markdown::<Cli>();
         return Ok(());
