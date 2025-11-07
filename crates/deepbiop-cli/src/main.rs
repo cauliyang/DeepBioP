@@ -86,22 +86,22 @@ fn print_completions<G: Generator>(gen: G, cmd: &mut Command) {
 
 fn main() -> Result<()> {
     setup_panic!();
-
     let start = std::time::Instant::now();
     let cli = Cli::parse();
 
     let mut log_builder = Builder::from_default_env();
 
-    match cli.verbose.log_level() {
-        Some(level) => {
-            debug!("Verbose mode is on with level {}!", level);
-            log_builder.filter(None, level.to_level_filter());
-        }
-        None => {
-            debug!("Using default info level");
-            log_builder.filter(None, LevelFilter::Off);
-        }
-    }
+    // clap_verbosity_flag returns: Error (default), Warn (-v), Info (-vv), Debug (-vvv), Trace (-vvvv)
+    // We want: Info (default), Debug (-v), Trace (-vv+)
+    let log_level = match cli.verbose.log_level() {
+        None | Some(log::Level::Error) => LevelFilter::Info, // Default: Info
+        Some(log::Level::Warn) => LevelFilter::Debug,        // -v: Debug
+        Some(log::Level::Info) => LevelFilter::Debug,        // -vv: Debug
+        Some(log::Level::Debug) => LevelFilter::Trace,       // -vvv: Trace
+        Some(log::Level::Trace) => LevelFilter::Trace,       // -vvvv: Trace
+    };
+
+    log_builder.filter(None, log_level);
     log_builder.init();
 
     if let Some(generator) = cli.generator {
@@ -110,6 +110,7 @@ fn main() -> Result<()> {
         print_completions(generator, &mut cmd);
         return Ok(());
     }
+
 
     if cli.markdown_help {
         clap_markdown::print_help_markdown::<Cli>();

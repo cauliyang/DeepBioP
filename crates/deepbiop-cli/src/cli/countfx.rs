@@ -53,6 +53,7 @@ struct Statistics {
     percentage_query_length: f64,
 }
 
+
 fn human_readable_bases(bases: usize) -> String {
     const UNITS: [&str; 5] = ["", "K", "M", "G", "T"];
     if bases < 1000 {
@@ -75,6 +76,7 @@ fn human_readable_bases(bases: usize) -> String {
     };
     format!("{}{}b", size_str, UNITS[unit])
 }
+
 
 impl Statistics {
     fn json<P: AsRef<Path>>(&self, output: P) -> Result<()> {
