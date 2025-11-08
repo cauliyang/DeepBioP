@@ -220,14 +220,12 @@ mod tests {
     use deepbiop_core::dataset::IterableDataset;
 
     #[test]
-    #[ignore = "Requires test data"]
     fn test_fasta_dataset_creation() {
         let dataset = FastaDataset::new("tests/data/test.fa").unwrap();
         assert!(dataset.size_hint().is_some());
     }
 
     #[test]
-    #[ignore = "Requires test data"]
     fn test_fasta_dataset_iteration() {
         let dataset = FastaDataset::new("tests/data/test.fa").unwrap();
         let mut count = 0;
@@ -244,7 +242,6 @@ mod tests {
     }
 
     #[test]
-    #[ignore = "Requires test data"]
     fn test_fasta_dataset_multiple_iterations() {
         let dataset = FastaDataset::new("tests/data/test.fa").unwrap();
 

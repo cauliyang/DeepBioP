@@ -194,17 +194,15 @@ mod tests {
     use deepbiop_core::dataset::IterableDataset;
 
     #[test]
-    #[ignore = "Requires test data"]
     fn test_bam_dataset_creation() {
-        let dataset = BamDataset::new("tests/data/test.bam", None).unwrap();
+        let dataset = BamDataset::new("tests/data/test_chimric_reads.bam", None).unwrap();
         // BAM files don't have quick record counting, so size_hint may be None
         let _ = dataset.size_hint();
     }
 
     #[test]
-    #[ignore = "Requires test data"]
     fn test_bam_dataset_iteration() {
-        let dataset = BamDataset::new("tests/data/test.bam", None).unwrap();
+        let dataset = BamDataset::new("tests/data/test_chimric_reads.bam", None).unwrap();
         let mut count = 0;
 
         for result in dataset.iter() {
@@ -219,9 +217,8 @@ mod tests {
     }
 
     #[test]
-    #[ignore = "Requires test data"]
     fn test_bam_dataset_multiple_iterations() {
-        let dataset = BamDataset::new("tests/data/test.bam", None).unwrap();
+        let dataset = BamDataset::new("tests/data/test_chimric_reads.bam", None).unwrap();
 
         let count1: usize = dataset.iter().count();
         let count2: usize = dataset.iter().count();
@@ -231,9 +228,8 @@ mod tests {
     }
 
     #[test]
-    #[ignore = "Requires test data"]
     fn test_bam_dataset_with_threads() {
-        let dataset = BamDataset::new("tests/data/test.bam", Some(4)).unwrap();
+        let dataset = BamDataset::new("tests/data/test_chimric_reads.bam", Some(4)).unwrap();
         let count: usize = dataset.iter().count();
         assert!(count > 0);
     }

@@ -205,13 +205,14 @@ impl Encoder for ParquetEncoder {
 
 #[cfg(test)]
 mod tests {
-    use deepbiop_utils::io::write_parquet_for_batches;
-
-    use crate::encode::option::EncoderOptionBuilder;
-
     use super::*;
+
     #[test]
+    #[cfg(feature = "cache")]
     fn test_encode_fa_for_parquet() {
+        use crate::encode::option::EncoderOptionBuilder;
+        use deepbiop_utils::io::write_parquet_for_batches;
+
         let option = EncoderOptionBuilder::default().build().unwrap();
         let mut encoder = ParquetEncoderBuilder::default()
             .option(option)
