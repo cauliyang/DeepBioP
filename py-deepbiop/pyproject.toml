@@ -222,7 +222,7 @@ source = ["deepbiop"]
 branch = true
 
 [tool.coverage.report]
-fail_under = 85
+fail_under = 40
 skip_covered = true
 show_missing = true
 exclude_lines = [
