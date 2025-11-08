@@ -1,10 +1,12 @@
 mod json;
+#[cfg(feature = "cache")]
 mod parquet;
 
 use std::path::Path;
 
 use anyhow::Result;
 pub use json::*;
+#[cfg(feature = "cache")]
 pub use parquet::*;
 use std::fs::File;
 

@@ -45,9 +45,17 @@ fn fa_worker(options: &FxToParquet) -> Result<()> {
         .option(option)
         .build()?;
 
+    #[cfg(feature = "cache")]
     if options.chunk {
         fa_encoder.encode_chunk(&options.fx, options.chunk_size, false)?;
         return Ok(());
+    }
+
+    #[cfg(not(feature = "cache"))]
+    if options.chunk {
+        return Err(anyhow::anyhow!(
+            "Chunked parquet encoding requires 'cache' feature"
+        ));
     }
 
     let (record_batch, schema) = fa_encoder.encode(&options.fx)?;
@@ -72,9 +80,17 @@ fn fq_worker(options: &FxToParquet) -> Result<()> {
         .option(option)
         .build()?;
 
+    #[cfg(feature = "cache")]
     if options.chunk {
         fq_encoder.encode_chunk(&options.fx, options.chunk_size, false)?;
         return Ok(());
+    }
+
+    #[cfg(not(feature = "cache"))]
+    if options.chunk {
+        return Err(anyhow::anyhow!(
+            "Chunked parquet encoding requires 'cache' feature"
+        ));
     }
 
     let (record_batch, schema) = fq_encoder.encode(&options.fx)?;

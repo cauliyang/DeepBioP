@@ -2,6 +2,7 @@
 
 pub mod chimeric;
 pub mod cigar;
+pub mod dataset;
 pub mod features;
 pub mod io;
 pub mod reader;

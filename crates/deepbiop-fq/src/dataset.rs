@@ -369,6 +369,86 @@ impl FastqDataset {
     }
 }
 
+// IterableDataset trait implementation for streaming access
+impl deepbiop_core::dataset::IterableDataset for FastqDataset {
+    fn iter(
+        &self,
+    ) -> Box<
+        dyn Iterator<
+                Item = deepbiop_core::dataset::DatasetResult<deepbiop_core::seq::SequenceRecord>,
+            > + '_,
+    > {
+        Box::new(FastqStreamIterator::new(&self.file_path))
+    }
+
+    fn paths(&self) -> Vec<std::path::PathBuf> {
+        vec![std::path::PathBuf::from(&self.file_path)]
+    }
+
+    fn size_hint(&self) -> Option<usize> {
+        Some(self.records_count)
+    }
+}
+
+/// Streaming iterator for IterableDataset trait implementation.
+///
+/// This provides true streaming access without batching.
+struct FastqStreamIterator {
+    reader: fastq::io::Reader<BufReader<Box<dyn Read>>>,
+}
+
+impl FastqStreamIterator {
+    fn new(file_path: &str) -> Self {
+        // Create reader with compression support
+        let file_reader = deepbiop_utils::io::create_reader_for_compressed_file(file_path)
+            .expect("Failed to create file reader");
+
+        let buffered = BufReader::new(file_reader);
+        let reader = fastq::io::Reader::new(buffered);
+
+        Self { reader }
+    }
+}
+
+impl Iterator for FastqStreamIterator {
+    type Item = deepbiop_core::dataset::DatasetResult<deepbiop_core::seq::SequenceRecord>;
+
+    fn next(&mut self) -> Option<Self::Item> {
+        // Read next record
+        match self.reader.records().next() {
+            None => None, // EOF
+            Some(Ok(record)) => {
+                // Convert to SequenceRecord
+                let id = String::from_utf8_lossy(record.name()).into_owned();
+                let sequence = record.sequence().to_vec();
+                let quality_scores = Some(record.quality_scores().to_vec());
+                let desc_bstr = record.definition().description();
+                let description = if desc_bstr.is_empty() {
+                    None
+                } else {
+                    Some(desc_bstr.to_string())
+                };
+
+                let seq_record = deepbiop_core::seq::SequenceRecord::new(
+                    id,
+                    sequence,
+                    quality_scores,
+                    description,
+                );
+
+                Some(Ok(seq_record))
+            }
+            Some(Err(e)) => {
+                // Return error
+                Some(Err(deepbiop_core::error::DPError::InvalidValue(format!(
+                    "Failed to read FASTQ record: {}",
+                    e
+                ))))
+            }
+        }
+    }
+}
+
 // More robust and efficient record counting
 #[allow(dead_code)]
 fn count_records_efficient(file_path: &str) -> Result<usize> {

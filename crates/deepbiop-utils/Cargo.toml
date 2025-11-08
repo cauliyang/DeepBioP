@@ -28,11 +28,13 @@ log = { workspace = true }
 serde = { workspace = true }
 tempfile = { workspace = true }
 
-arrow = { workspace = true }
-parquet = { workspace = true }
+arrow = { workspace = true, optional = true }
+parquet = { workspace = true, optional = true }
 serde_json = { workspace = true }
 ndarray = { workspace = true }
 ndarray-npy = { workspace = true }
 
 [features]
 python = ["dep:pyo3", "dep:pyo3-stub-gen"]
+cache = ["dep:arrow", "dep:parquet"]
+default = []

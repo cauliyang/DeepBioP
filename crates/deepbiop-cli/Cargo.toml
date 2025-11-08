@@ -10,6 +10,10 @@ license = { workspace = true }
 readme = "../../README.md"
 description = "CLI tool for Processing Biological Data."
 
+[features]
+default = ["cache"]
+cache = ["deepbiop-utils/cache", "deepbiop-fq/cache", "deepbiop-fa/cache"]
+
 [dependencies]
 noodles = { workspace = true }
 deepbiop-fq = { workspace = true }
