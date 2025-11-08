@@ -107,3 +107,18 @@ def write_fa_parallel(
     file_path: builtins.str | os.PathLike | pathlib.Path,
     threads: builtins.int,
 ) -> None: ...
+def fasta_to_fastq(
+    fasta_path: builtins.str | os.PathLike | pathlib.Path,
+    fastq_path: builtins.str | os.PathLike | pathlib.Path,
+) -> None:
+    """
+    Convert FASTA file to FASTQ file with default quality scores.
+
+    Since FASTA files don't contain quality information, assigns
+    default quality score (Phred+33 Q40 = '~') to all bases.
+    Q40 represents 99.99% base call accuracy.
+
+    Args:
+        fasta_path: Path to input FASTA file
+        fastq_path: Path to output FASTQ file
+    """

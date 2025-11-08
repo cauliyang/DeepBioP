@@ -6,7 +6,9 @@ use ahash::HashMapExt;
 use anyhow::Result;
 use candle_core::{self, pickle};
 use log::info;
+#[cfg(feature = "python")]
 use pyo3::prelude::*;
+#[cfg(feature = "python")]
 use pyo3::types::PyBytes;
 use rayon::prelude::*;
 use serde::Deserialize;
@@ -14,11 +16,14 @@ use serde::Serialize;
 use walkdir::WalkDir;
 
 use crate::utils::{ascii_list2str, get_label_region, id_list2seq_i64};
-use deepbiop_core::default;
 
+#[cfg(feature = "python")]
+use deepbiop_core::default;
+#[cfg(feature = "python")]
 use deepbiop_utils::highlight_targets;
 use deepbiop_utils::strategy::majority_voting;
 
+#[cfg(feature = "python")]
 use pyo3_stub_gen::derive::*;
 
 pub fn summary_predict_generic<D: PartialEq + Send + Sync + Copy>(
@@ -46,23 +51,21 @@ pub fn summary_predict_generic<D: PartialEq + Send + Sync + Copy>(
 }
 
 /// A struct to store the prediction result
-#[gen_stub_pyclass]
-#[pyclass(module = "deepbiop.fq")]
-#[derive(Debug, Default, FromPyObject, Deserialize, Serialize)]
+#[cfg_attr(feature = "python", gen_stub_pyclass)]
+#[cfg_attr(feature = "python", pyclass(get_all, set_all, module = "deepbiop.fq"))]
+#[cfg_attr(feature = "python", derive(FromPyObject))]
+#[derive(Debug, Default, Deserialize, Serialize)]
 pub struct Predict {
-    #[pyo3(get, set)]
     pub prediction: Vec<i8>,
-    #[pyo3(get, set)]
     pub seq: String,
-    #[pyo3(get, set)]
     pub id: String,
-    #[pyo3(get, set)]
     pub is_truncated: bool,
-    #[pyo3(get, set)]
     pub qual: Option<String>,
 }
 
+#[cfg(feature = "python")]
 #[gen_stub_pymethods]
+#[cfg(feature = "python")]
 #[pymethods]
 impl Predict {
     #[new]
@@ -130,11 +133,6 @@ impl Predict {
         .par_iter()
         .map(|r| (r.start, r.end))
         .collect()
-    }
-
-    /// Get the sequence length
-    pub fn seq_len(&self) -> usize {
-        self.seq.len()
     }
 
     /// Get the quality score array
@@ -235,6 +233,11 @@ impl Predict {
         }
 
         results
+    }
+
+    /// Get the sequence length
+    pub fn seq_len(&self) -> usize {
+        self.seq.len()
     }
 }
 

@@ -10,10 +10,12 @@ use ahash::HashMap;
 use ahash::HashMapExt;
 use anyhow::Result;
 use derive_builder::Builder;
+#[cfg(feature = "python")]
 use pyo3::prelude::*;
 use serde::{Deserialize, Serialize};
 use tempfile::tempdir;
 
+#[cfg(feature = "python")]
 use pyo3_stub_gen::derive::*;
 
 pub const MIN_SEQ_SIZE: usize = 20;
@@ -24,29 +26,22 @@ pub const MIN_SEQ_SIZE: usize = 20;
 // ---------------------------------------------------------------------------------------------------------------------------------------------------------------
 // 23      1       0       0       0       0       0       0       +       seq     51      3       27      chr12   133275309       11447342     11447366 1       24,     3,      11447342,
 
-#[gen_stub_pyclass]
-#[pyclass(module = "deepbiop.utils")]
+#[cfg_attr(feature = "python", gen_stub_pyclass)]
+#[cfg_attr(
+    feature = "python",
+    pyclass(module = "deepbiop.utils", get_all, set_all)
+)]
 #[derive(Debug, Default, Builder, Clone, Serialize, Deserialize)]
 pub struct PslAlignment {
-    #[pyo3(get, set)]
     pub qname: String,
-    #[pyo3(get, set)]
     pub qsize: usize,
-    #[pyo3(get, set)]
     pub qstart: usize,
-    #[pyo3(get, set)]
     pub qend: usize,
-    #[pyo3(get, set)]
     pub qmatch: usize,
-    #[pyo3(get, set)]
     pub tname: String,
-    #[pyo3(get, set)]
     pub tsize: usize,
-    #[pyo3(get, set)]
     pub tstart: usize,
-    #[pyo3(get, set)]
     pub tend: usize,
-    #[pyo3(get, set)]
     pub identity: f32,
 }
 

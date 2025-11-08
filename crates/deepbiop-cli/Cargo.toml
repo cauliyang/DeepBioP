@@ -10,6 +10,10 @@ license = { workspace = true }
 readme = "../../README.md"
 description = "CLI tool for Processing Biological Data."
 
+[features]
+default = ["cache"]
+cache = ["deepbiop-utils/cache", "deepbiop-fq/cache", "deepbiop-fa/cache"]
+
 [dependencies]
 noodles = { workspace = true }
 deepbiop-fq = { workspace = true }
@@ -25,6 +29,7 @@ ahash = { workspace = true }
 bstr = { workspace = true }
 serde = { workspace = true }
 serde_json = { workspace = true }
+needletail = { workspace = true }
 
 clap = { version = "4.5", features = ["derive"] }
 clap_complete = "4.5"

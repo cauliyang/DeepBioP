@@ -7,11 +7,13 @@ pub type Tensor = Array3<Element>;
 pub type Kmer2IdTable = HashMap<Vec<u8>, Element>;
 pub type Id2KmerTable = HashMap<Element, Vec<u8>>;
 
+pub mod onehot;
 pub mod option;
 pub mod parquet;
 pub mod record;
 pub mod traits;
 
+pub use onehot::*;
 pub use option::*;
 pub use parquet::*;
 pub use record::*;

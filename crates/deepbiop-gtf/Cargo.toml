@@ -1,0 +1,29 @@
+[package]
+name = "deepbiop-gtf"
+version = { workspace = true }
+authors = { workspace = true }
+edition = { workspace = true }
+homepage = { workspace = true }
+repository = { workspace = true }
+keywords = ["deep-learning", "bioinformatics", "gtf", "annotation"]
+license = { workspace = true }
+readme = "../../README.md"
+description = "GTF annotation file processing for deep learning preprocessing"
+
+[dependencies]
+noodles = { workspace = true }
+ahash = { workspace = true }
+anyhow = { workspace = true }
+rayon = { workspace = true }
+log = { workspace = true }
+serde = { workspace = true }
+thiserror = { workspace = true }
+
+pyo3 = { workspace = true, optional = true }
+pyo3-stub-gen = { workspace = true, optional = true }
+
+[dev-dependencies]
+tempfile = { workspace = true }
+
+[features]
+python = ["dep:pyo3", "dep:pyo3-stub-gen"]

@@ -16,13 +16,14 @@ use deepbiop_utils::interval::GenomicIntervalBuilder;
 
 use derive_builder::Builder;
 use log::debug;
+#[cfg(feature = "python")]
 use pyo3::prelude::*;
 use std::str::FromStr;
 
 use super::{is_chimeric_record, is_retain_record};
 
 /// A chimeric event.
-#[pyclass]
+#[cfg_attr(feature = "python", pyclass)]
 #[derive(Debug, Builder)]
 pub struct ChimericEvent {
     /// The name of the chimeric event.

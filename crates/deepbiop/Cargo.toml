@@ -16,6 +16,8 @@ deepbiop-bam = { workspace = true, optional = true }
 deepbiop-utils = { workspace = true, optional = true }
 deepbiop-fa = { workspace = true, optional = true }
 deepbiop-core = { workspace = true, optional = true }
+deepbiop-vcf = { workspace = true, optional = true }
+deepbiop-gtf = { workspace = true, optional = true }
 
 [features]
 default = ["dep:deepbiop-core"]
@@ -23,6 +25,8 @@ fastq = ["dep:deepbiop-fq"]
 bam = ["dep:deepbiop-bam"]
 utils = ["dep:deepbiop-utils"]
 fasta = ["dep:deepbiop-fa"]
+vcf = ["dep:deepbiop-vcf"]
+gtf = ["dep:deepbiop-gtf"]
 
 [package.metadata.docs.rs]
 all-features = true

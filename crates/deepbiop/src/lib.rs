@@ -20,3 +20,11 @@ pub use deepbiop_utils as utils;
 #[cfg(feature = "fasta")]
 #[doc(inline)]
 pub use deepbiop_fa as fasta;
+
+#[cfg(feature = "vcf")]
+#[doc(inline)]
+pub use deepbiop_vcf as vcf;
+
+#[cfg(feature = "gtf")]
+#[doc(inline)]
+pub use deepbiop_gtf as gtf;
