@@ -173,7 +173,7 @@ class TestDataLoaderMultiprocess:
         dataset = FastqStreamDataset(str(test_file))
 
         # Test with different worker counts
-        for num_workers in [0, 1, 2, 4]:
+        for num_workers in [0, 1, 2, 3]:
             loader = DataLoader(
                 dataset,
                 batch_size=2,
