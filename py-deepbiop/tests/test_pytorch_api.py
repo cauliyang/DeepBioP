@@ -43,8 +43,8 @@ class TestDataset:
         # Create dataset
         dataset = pytorch.Dataset(str(test_file))
 
-        # Check dataset length (test.fastq has 25 sequences)
-        assert len(dataset) == 25, f"Expected 25 sequences, got {len(dataset)}"
+        # Check dataset length (test.fastq has 1000 sequences)
+        assert len(dataset) == 1000, f"Expected 1000 sequences, got {len(dataset)}"
 
         # Check __getitem__ returns valid Sample
         sample = dataset[0]
@@ -54,14 +54,14 @@ class TestDataset:
 
         # Check valid indexing
         first_sample = dataset[0]
-        last_sample = dataset[24]
+        last_sample = dataset[999]
         assert first_sample is not None
         assert last_sample is not None
 
         # Check __repr__
         repr_str = repr(dataset)
         assert "Dataset" in repr_str
-        assert "25" in repr_str or "num_samples=25" in repr_str
+        assert "1000" in repr_str or "num_samples=1000" in repr_str
 
 
 class TestDataLoader:
@@ -84,26 +84,20 @@ class TestDataLoader:
         # Create data loader with batch_size=5
         loader = pytorch.DataLoader(dataset, batch_size=5, shuffle=False)
 
-        # Check __len__ (25 samples / 5 batch_size = 5 batches)
-        assert len(loader) == 5, f"Expected 5 batches, got {len(loader)}"
+        # Check __len__ (1000 samples / 5 batch_size = 200 batches)
+        assert len(loader) == 200, f"Expected 200 batches, got {len(loader)}"
 
         # Iterate and check batches
         batch_count = 0
         for batch in loader:
             batch_count += 1
             assert isinstance(batch, list), "Batch should be a list of samples"
-            # All batches except possibly last should have batch_size samples
-            if batch_count < 5:
-                assert len(batch) == 5, (
-                    f"Expected 5 samples in batch {batch_count}, got {len(batch)}"
-                )
-            else:
-                # Last batch
-                assert len(batch) == 5, (
-                    f"Expected 5 samples in last batch, got {len(batch)}"
-                )
+            # All batches should have batch_size samples (1000 is evenly divisible by 5)
+            assert len(batch) == 5, (
+                f"Expected 5 samples in batch {batch_count}, got {len(batch)}"
+            )
 
-        assert batch_count == 5, f"Expected to iterate 5 batches, got {batch_count}"
+        assert batch_count == 200, f"Expected to iterate 200 batches, got {batch_count}"
 
         # Check __repr__
         repr_str = repr(loader)
@@ -430,8 +424,8 @@ class TestInspection:
         assert "memory_footprint" in summary, "Summary should have memory_footprint"
 
         # Verify num_samples
-        assert summary["num_samples"] == 25, (
-            f"Expected 25 samples, got {summary['num_samples']}"
+        assert summary["num_samples"] == 1000, (
+            f"Expected 1000 samples, got {summary['num_samples']}"
         )
 
         # Verify length_stats structure
@@ -739,7 +733,7 @@ class TestIntegration:
         dataset = pytorch.Dataset(str(test_file))
 
         # Verify dataset loaded correctly
-        assert len(dataset) == 25, f"Expected 25 sequences, got {len(dataset)}"
+        assert len(dataset) == 1000, f"Expected 1000 sequences, got {len(dataset)}"
 
         # 2. Apply transformation (OneHot encoding)
         encoder = pytorch.OneHotEncoder(encoding_type="dna", unknown_strategy="skip")

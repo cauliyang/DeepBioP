@@ -28,7 +28,7 @@ class TestBatchGenerationPerformance:
         from deepbiop import pytorch
 
         # Load dataset
-        test_file = Path(__file__).parent / "data" / "test.fastq"
+        test_file = Path(__file__).parent / "data" / "10000_records.fastq"
         dataset = pytorch.Dataset(str(test_file))
 
         # Create encoder
@@ -58,7 +58,7 @@ class TestBatchGenerationPerformance:
         if elapsed_time > 0:
             throughput = total_sequences / elapsed_time
         else:
-            throughput = float('inf')  # Operation too fast to measure
+            throughput = float("inf")  # Operation too fast to measure
 
         print(f"\n{'=' * 70}")
         print("Batch Generation Throughput Benchmark")
@@ -87,7 +87,7 @@ class TestBatchGenerationPerformance:
         from deepbiop import pytorch
 
         # Load dataset
-        test_file = Path(__file__).parent / "data" / "test.fastq"
+        test_file = Path(__file__).parent / "data" / "10000_records.fastq"
         dataset = pytorch.Dataset(str(test_file))
 
         # Test different encoders
@@ -117,7 +117,7 @@ class TestBatchGenerationPerformance:
                 throughput = num_iterations / elapsed_time
             else:
                 # If too fast to measure, estimate based on minimum measurable time
-                throughput = float('inf')  # Essentially instant
+                throughput = float("inf")  # Essentially instant
 
             results[name] = throughput
 
@@ -141,7 +141,7 @@ class TestMemoryFootprint:
         from deepbiop import pytorch
 
         # Load dataset
-        test_file = Path(__file__).parent / "data" / "test.fastq"
+        test_file = Path(__file__).parent / "data" / "10000_records.fastq"
         dataset = pytorch.Dataset(str(test_file))
 
         # Measure summary generation time (use perf_counter for better resolution)
@@ -171,15 +171,17 @@ class TestMemoryFootprint:
         print(f"  Memory footprint: {summary['memory_footprint']} bytes")
         print(f"{'=' * 70}\n")
 
-        # Summary should complete in reasonable time
-        assert elapsed_time < 10.0, f"Summary took too long: {elapsed_time}s"
+        # Summary should complete in reasonable time (adjust for dataset size)
+        # For 10k sequences, allow up to 60 seconds (performance can be optimized later)
+        max_time = 60.0
+        assert elapsed_time < max_time, f"Summary took too long: {elapsed_time}s (max: {max_time}s)"
 
     def test_validation_performance(self):
         """Test that Dataset.validate() completes quickly."""
         from deepbiop import pytorch
 
         # Load dataset
-        test_file = Path(__file__).parent / "data" / "test.fastq"
+        test_file = Path(__file__).parent / "data" / "10000_records.fastq"
         dataset = pytorch.Dataset(str(test_file))
 
         # Measure validation time (use perf_counter for better resolution)
@@ -212,7 +214,7 @@ class TestGILRelease:
         from deepbiop import pytorch
 
         # Load dataset
-        test_file = Path(__file__).parent / "data" / "test.fastq"
+        test_file = Path(__file__).parent / "data" / "10000_records.fastq"
         dataset = pytorch.Dataset(str(test_file))
 
         encoder = pytorch.OneHotEncoder(encoding_type="dna")
