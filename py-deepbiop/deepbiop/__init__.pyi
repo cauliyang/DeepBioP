@@ -2,7 +2,7 @@
 # ruff: noqa: F401
 
 """
-DeepBioP: Deep Learning Preprocessing Library for Biological Data
+DeepBioP: Deep Learning Preprocessing Library for Biological Data.
 
 A high-performance Python library for loading, preprocessing, and transforming
 biological sequence data (FASTQ, FASTA, BAM, VCF, GTF) for deep learning workflows.
@@ -18,6 +18,11 @@ from deepbiop.lightning import BiologicalDataModule
 from deepbiop.transforms import Compose, FilterCompose, TransformDataset
 
 __all__ = [
+    # Pure Python classes
+    "BiologicalDataModule",
+    "Compose",
+    "FilterCompose",
+    "TransformDataset",
     # Submodules
     "bam",
     "core",
@@ -27,11 +32,6 @@ __all__ = [
     "pytorch",
     "utils",
     "vcf",
-    # Pure Python classes
-    "BiologicalDataModule",
-    "Compose",
-    "FilterCompose",
-    "TransformDataset",
 ]
 
 __version__: str

@@ -27,10 +27,9 @@ class Compose:
     Example:
         >>> from deepbiop.transforms import Compose
         >>> from deepbiop.pytorch import ReverseComplement, OneHotEncoder
-        >>> transform = Compose([
-        ...     ReverseComplement(probability=0.5),
-        ...     OneHotEncoder(encoding_type="dna")
-        ... ])
+        >>> transform = Compose(
+        ...     [ReverseComplement(probability=0.5), OneHotEncoder(encoding_type="dna")]
+        ... )
         >>> sample = {"sequence": b"ACGT"}
         >>> transformed = transform(sample)
     """
@@ -54,10 +53,12 @@ class FilterCompose:
     Example:
         >>> from deepbiop.transforms import FilterCompose
         >>> from deepbiop.fq import QualityFilter, LengthFilter
-        >>> filter_fn = FilterCompose([
-        ...     QualityFilter(min_quality=20),
-        ...     LengthFilter(min_length=50, max_length=500)
-        ... ])
+        >>> filter_fn = FilterCompose(
+        ...     [
+        ...         QualityFilter(min_quality=20),
+        ...         LengthFilter(min_length=50, max_length=500),
+        ...     ]
+        ... )
         >>> sample = {"sequence": b"ACGT", "quality": b"IIII"}
         >>> if filter_fn(sample):
         ...     # Process sample
@@ -87,8 +88,7 @@ class TransformDataset:
         >>> from deepbiop.pytorch import Dataset, OneHotEncoder
         >>> base_dataset = Dataset("data.fastq")
         >>> transformed = TransformDataset(
-        ...     base_dataset,
-        ...     transform=OneHotEncoder(encoding_type="dna")
+        ...     base_dataset, transform=OneHotEncoder(encoding_type="dna")
         ... )
         >>> sample = transformed[0]  # Returns one-hot encoded sample
     """

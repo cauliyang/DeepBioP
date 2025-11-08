@@ -5,8 +5,9 @@ Provides LightningDataModule implementation for seamless integration with
 PyTorch Lightning training workflows.
 """
 
+from collections.abc import Callable
 from pathlib import Path
-from typing import Any, Callable
+from typing import Any
 
 from pytorch_lightning import LightningDataModule as _LightningDataModule
 from torch.utils.data import DataLoader
@@ -37,7 +38,7 @@ class BiologicalDataModule(_LightningDataModule):
         ...     train_files="train.fastq",
         ...     val_files="val.fastq",
         ...     batch_size=32,
-        ...     transform=OneHotEncoder(encoding_type="dna")
+        ...     transform=OneHotEncoder(encoding_type="dna"),
         ... )
         >>> # Use with PyTorch Lightning Trainer
         >>> trainer.fit(model, dm)
