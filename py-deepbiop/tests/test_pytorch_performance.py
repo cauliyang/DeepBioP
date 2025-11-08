@@ -209,32 +209,35 @@ class TestGILRelease:
         encoder = pytorch.OneHotEncoder(encoding_type="dna")
 
         # Test parallel encoding (simulates GIL release benefit)
-        def encode_samples(start_idx, count):
-            """Encode a range of samples."""
+        def encode_samples(start_idx, count, iterations=10):
+            """Encode a range of samples multiple times for measurable timing."""
             encoded = []
-            for i in range(start_idx, min(start_idx + count, len(dataset))):
-                sample = dataset[i]
-                encoded_sample = encoder(sample)
-                encoded.append(encoded_sample)
+            for _ in range(iterations):  # Repeat to ensure measurable time
+                for i in range(start_idx, min(start_idx + count, len(dataset))):
+                    sample = dataset[i]
+                    encoded_sample = encoder(sample)
+                    encoded.append(encoded_sample)
             return encoded
 
-        # Measure single-threaded time
-        start_time = time.time()
-        encode_samples(0, 10)
-        single_thread_time = time.time() - start_time
+        # Measure single-threaded time (use perf_counter for better resolution on Windows)
+        start_time = time.perf_counter()
+        encode_samples(0, 10, iterations=10)
+        single_thread_time = time.perf_counter() - start_time
 
         # Measure multi-threaded time (2 threads)
-        start_time = time.time()
+        start_time = time.perf_counter()
         threads = []
         for i in range(2):
-            thread = threading.Thread(target=encode_samples, args=(i * 5, 5))
+            thread = threading.Thread(
+                target=encode_samples, args=(i * 5, 5, 10)
+            )  # iterations=10
             threads.append(thread)
             thread.start()
 
         for thread in threads:
             thread.join()
 
-        multi_thread_time = time.time() - start_time
+        multi_thread_time = time.perf_counter() - start_time
 
         print(f"\n{'=' * 70}")
         print("GIL Release Verification")
