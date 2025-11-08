@@ -28,10 +28,11 @@ classifiers = [
   "Programming Language :: Rust",
   "Topic :: Scientific/Engineering",
 ]
-dependencies = ["numpy>=2.2.6"]
+dependencies = []
 
 [dependency-groups]
 dev = [
+  "numpy>=2.2.6",
   "sphinx>=7.4.7",
   "interrogate>=1.7.0",
   "mkdocs>=1.6.0",
