@@ -1,0 +1,184 @@
+name: Test-Python
+
+on:
+  push:
+    branches:
+      - main
+  pull_request:
+    branches:
+      - main
+
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
+env:
+  RUSTFLAGS: -C debuginfo=0  # Do not produce debug symbols to keep memory usage down
+
+jobs:
+  test:
+    name: Test Python ${{ matrix.python-version }} on ${{ matrix.os }}
+    runs-on: ${{ matrix.os }}
+    strategy:
+      fail-fast: false
+      matrix:
+        os: [ubuntu-latest, macos-latest, windows-latest]
+        python-version: ["3.10", "3.11", "3.12"]
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v5
+        with:
+          fetch-depth: 1
+
+      - name: Set up Python ${{ matrix.python-version }}
+        uses: actions/setup-python@v6
+        with:
+          python-version: ${{ matrix.python-version }}
+
+      - name: Install Rust toolchain
+        uses: actions-rs/toolchain@v1
+        with:
+          toolchain: stable
+          override: true
+          profile: minimal
+
+      - name: Install uv (Linux/macOS)
+        if: runner.os != 'Windows'
+        run: curl -LsSf https://astral.sh/uv/install.sh | sh
+
+      - name: Install uv (Windows)
+        if: runner.os == 'Windows'
+        run: irm https://astral.sh/uv/install.ps1 | iex
+        shell: powershell
+
+      - name: Cache Rust dependencies
+        uses: actions/cache@v5
+        with:
+          path: |
+            ~/.cargo/bin/
+            ~/.cargo/registry/index/
+            ~/.cargo/registry/cache/
+            ~/.cargo/git/db/
+            target/
+          key: ${{ runner.os }}-cargo-${{ hashFiles('**/Cargo.lock') }}
+          restore-keys: |
+            ${{ runner.os }}-cargo-
+
+      - name: Cache Python dependencies
+        uses: actions/cache@v5
+        with:
+          path: |
+            ~/.cache/uv
+            py-deepbiop/.venv
+          key: ${{ runner.os }}-py${{ matrix.python-version }}-uv-${{ hashFiles('py-deepbiop/uv.lock') }}
+          restore-keys: |
+            ${{ runner.os }}-py${{ matrix.python-version }}-uv-
+
+      - name: Build Python package
+        working-directory: py-deepbiop
+        run: |
+          uv sync
+          uv tool run maturin develop --release
+
+      - name: Run Python tests
+        working-directory: py-deepbiop
+        run: uv run pytest -v --tb=short
+
+      - name: Run Python tests with coverage (Linux only)
+        if: runner.os == 'Linux' && matrix.python-version == '3.10'
+        working-directory: py-deepbiop
+        run: |
+          uv pip install pytest-cov
+          uv run pytest --cov=deepbiop --cov-report=xml --cov-report=term
+
+      - name: Upload coverage to Codecov (Linux only)
+        if: runner.os == 'Linux' && matrix.python-version == '3.10'
+        uses: codecov/codecov-action@v5
+        with:
+          files: py-deepbiop/coverage.xml
+          flags: python
+          name: python-${{ matrix.python-version }}
+          fail_ci_if_error: false
+
+  lint:
+    name: Lint Python code
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v5
+        with:
+          fetch-depth: 1
+
+      - name: Set up Python
+        uses: actions/setup-python@v6
+        with:
+          python-version: "3.10"
+
+      - name: Install Rust toolchain
+        uses: actions-rs/toolchain@v1
+        with:
+          toolchain: stable
+          override: true
+          profile: minimal
+
+      - name: Install uv
+        run: curl -LsSf https://astral.sh/uv/install.sh | sh
+
+      - name: Install dependencies
+        working-directory: py-deepbiop
+        run: |
+          uv sync
+          uv tool run maturin develop --release
+
+      - name: Run ruff check
+        working-directory: py-deepbiop
+        run: uvx ruff check .
+
+      - name: Run ruff format check
+        working-directory: py-deepbiop
+        run: uvx ruff format --check .
+
+      - name: Run interrogate (docstring coverage)
+        working-directory: py-deepbiop
+        run: uv run interrogate deepbiop/ tests/ -vv
+
+  minimum-versions:
+    name: Test with minimum supported Python version
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v5
+        with:
+          fetch-depth: 1
+
+      - name: Set up Python 3.10 (minimum version)
+        uses: actions/setup-python@v6
+        with:
+          python-version: "3.10"
+
+      - name: Install Rust toolchain
+        uses: actions-rs/toolchain@v1
+        with:
+          toolchain: stable
+          override: true
+          profile: minimal
+
+      - name: Install uv
+        run: curl -LsSf https://astral.sh/uv/install.sh | sh
+
+      - name: Build and test with minimum Python version
+        working-directory: py-deepbiop
+        run: |
+          uv sync
+          uv tool run maturin develop --release
+          uv run pytest -v --tb=short
+
+      - name: Verify Python version requirement
+        working-directory: py-deepbiop
+        run: |
+          REQUIRED_VERSION=$(grep "requires-python" pyproject.toml | sed 's/.*>=\([0-9.]*\).*/\1/')
+          echo "Required Python version: $REQUIRED_VERSION"
+          python --version | grep -q "3.10" || exit 1
