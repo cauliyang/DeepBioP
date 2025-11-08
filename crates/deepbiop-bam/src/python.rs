@@ -12,13 +12,16 @@ use std::path::PathBuf;
 use ahash::HashMap;
 use anyhow::Result;
 use noodles::sam::record::Cigar;
+use numpy::convert::ToPyArray;
 use pyo3::prelude::*;
+use pyo3::types::PyDict;
 
 use crate::chimeric;
 use crate::cigar::calc_softclips;
 use crate::features::AlignmentFeatures;
 use crate::reader::BamReader;
 
+use deepbiop_core::dataset::IterableDataset;
 use pyo3_stub_gen::derive::*;
 
 /// Python wrapper for AlignmentFeatures
@@ -214,6 +217,181 @@ fn left_right_soft_clip(cigar_string: &str) -> Result<(usize, usize)> {
     calc_softclips(&cigar)
 }
 
+/// Streaming BAM dataset for efficient iteration over large files.
+///
+/// This dataset provides memory-efficient streaming iteration over BAM files,
+/// reading alignment records one at a time without loading the entire file into memory.
+/// Yields records as dictionaries with NumPy arrays for zero-copy efficiency.
+/// Supports multithreaded bgzf decompression for improved performance.
+///
+/// # Examples
+///
+/// ```python
+/// from deepbiop.bam import BamStreamDataset
+///
+/// dataset = BamStreamDataset("alignments.bam", threads=4)
+/// for record in dataset:
+///     seq = record['sequence']  # NumPy array
+///     qual = record['quality']   # NumPy array
+///     print(f"ID: {record['id']}, Length: {len(seq)}")
+/// ```
+#[gen_stub_pyclass]
+#[pyclass(name = "BamStreamDataset", module = "deepbiop.bam")]
+pub struct PyBamStreamDataset {
+    file_path: String,
+    threads: Option<usize>,
+    size_hint: Option<usize>,
+}
+
+#[gen_stub_pymethods]
+#[pymethods]
+impl PyBamStreamDataset {
+    /// Create a new streaming BAM dataset.
+    ///
+    /// # Arguments
+    ///
+    /// * `file_path` - Path to BAM file
+    /// * `threads` - Optional number of threads for bgzf decompression (None = use all available)
+    ///
+    /// # Returns
+    ///
+    /// BamStreamDataset instance
+    ///
+    /// # Raises
+    ///
+    /// * `FileNotFoundError` - If file doesn't exist
+    /// * `IOError` - If file cannot be opened
+    #[new]
+    #[pyo3(signature = (file_path, threads=None))]
+    fn new(file_path: String, threads: Option<usize>) -> PyResult<Self> {
+        // Create temporary dataset to validate file
+        let dataset = crate::dataset::BamDataset::new(file_path.clone(), threads)
+            .map_err(|e| pyo3::exceptions::PyIOError::new_err(e.to_string()))?;
+
+        let size_hint = dataset.records_count();
+
+        Ok(Self {
+            file_path,
+            threads,
+            size_hint,
+        })
+    }
+
+    /// Return iterator over dataset records.
+    ///
+    /// Each record is a dictionary with:
+    /// - 'id': str - Read name/identifier
+    /// - 'sequence': np.ndarray (uint8) - Nucleotide sequence bytes
+    /// - 'quality': np.ndarray (uint8) - Quality score bytes
+    /// - 'description': Optional[str] - Additional description (usually None for BAM)
+    fn __iter__(slf: PyRef<'_, Self>) -> PyResult<Py<PyBamStreamIterator>> {
+        let iter = PyBamStreamIterator {
+            file_path: slf.file_path.clone(),
+            threads: slf.threads,
+            current_idx: 0,
+        };
+        Py::new(slf.py(), iter)
+    }
+
+    /// Get estimated number of records in dataset.
+    ///
+    /// # Returns
+    ///
+    /// int - Record count estimate (0 if unavailable)
+    fn __len__(&self) -> PyResult<usize> {
+        Ok(self.size_hint.unwrap_or(0))
+    }
+
+    /// Human-readable representation.
+    fn __repr__(&self) -> PyResult<String> {
+        Ok(format!(
+            "BamStreamDataset(file='{}', threads={}, records={})",
+            self.file_path,
+            self.threads.map_or("auto".to_string(), |n| n.to_string()),
+            self.size_hint
+                .map_or("unknown".to_string(), |n| n.to_string())
+        ))
+    }
+
+    /// Pickling support for multiprocessing (DataLoader with num_workers > 0).
+    fn __getstate__(&self, py: Python) -> PyResult<Py<PyDict>> {
+        let state = PyDict::new(py);
+        state.set_item("file_path", &self.file_path)?;
+        state.set_item("threads", self.threads)?;
+        state.set_item("size_hint", self.size_hint)?;
+        Ok(state.into())
+    }
+
+    /// Unpickling support for multiprocessing.
+    fn __setstate__(&mut self, state: &Bound<'_, PyDict>) -> PyResult<()> {
+        self.file_path = state.get_item("file_path")?.unwrap().extract()?;
+        self.threads = state.get_item("threads")?.unwrap().extract()?;
+        self.size_hint = state.get_item("size_hint")?.unwrap().extract()?;
+        Ok(())
+    }
+}
+
+/// Iterator for streaming BAM dataset.
+#[gen_stub_pyclass]
+#[pyclass(name = "BamStreamIterator", module = "deepbiop.bam")]
+pub struct PyBamStreamIterator {
+    file_path: String,
+    threads: Option<usize>,
+    current_idx: usize,
+}
+
+#[gen_stub_pymethods]
+#[pymethods]
+impl PyBamStreamIterator {
+    fn __iter__(slf: PyRef<'_, Self>) -> PyRef<'_, Self> {
+        slf
+    }
+
+    fn __next__(&mut self, py: Python) -> PyResult<Option<Py<PyDict>>> {
+        // Create a new dataset and iterator for each record
+        let dataset = crate::dataset::BamDataset::new(self.file_path.clone(), self.threads)
+            .map_err(|e| pyo3::exceptions::PyIOError::new_err(e.to_string()))?;
+
+        // Skip to current index and get next record
+        let mut iter = dataset.iter();
+        for _ in 0..self.current_idx {
+            if iter.next().is_none() {
+                return Ok(None);
+            }
+        }
+
+        match iter.next() {
+            None => Ok(None),
+            Some(Ok(record)) => {
+                self.current_idx += 1;
+
+                // Create dict with NumPy arrays for zero-copy
+                let dict = PyDict::new(py);
+                dict.set_item("id", record.id)?;
+
+                // Convert sequence and quality to NumPy arrays (zero-copy from Rust Vec)
+                let seq_array = record.sequence.to_pyarray(py);
+                dict.set_item("sequence", seq_array)?;
+
+                if let Some(quality) = record.quality_scores {
+                    let qual_array = quality.to_pyarray(py);
+                    dict.set_item("quality", qual_array)?;
+                } else {
+                    dict.set_item("quality", py.None())?;
+                }
+
+                dict.set_item("description", record.description)?;
+
+                Ok(Some(dict.into()))
+            }
+            Some(Err(e)) => Err(pyo3::exceptions::PyIOError::new_err(format!(
+                "Failed to read BAM record: {}",
+                e
+            ))),
+        }
+    }
+}
+
 // register bam sub module
 pub fn register_bam_module(parent_module: &Bound<'_, PyModule>) -> PyResult<()> {
     let sub_module_name = "bam";
@@ -222,6 +400,10 @@ pub fn register_bam_module(parent_module: &Bound<'_, PyModule>) -> PyResult<()> 
     // Add classes
     child_module.add_class::<PyAlignmentFeatures>()?;
     child_module.add_class::<PyBamReader>()?;
+
+    // Add streaming dataset classes
+    child_module.add_class::<PyBamStreamDataset>()?;
+    child_module.add_class::<PyBamStreamIterator>()?;
 
     // Add functions
     child_module.add_function(wrap_pyfunction!(left_right_soft_clip, &child_module)?)?;

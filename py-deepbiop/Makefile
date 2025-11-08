@@ -5,10 +5,15 @@ all: build
 
 clean:
 	rm -rf build dist
-
-build: clean
-	uv sync
+	uvx ruff format
 	uvx ruff check --fix --unsafe-fixes
+
+test:
+	uv run pytest -vsl tests
+
+build:
+	uv sync
+	uv tool run maturin develop -r
 
 # Generate Python type stubs (.pyi files)
 stubs:

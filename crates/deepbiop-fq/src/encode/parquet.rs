@@ -9,10 +9,13 @@ use arrow::datatypes::{DataType, Field, Schema};
 
 use bstr::BString;
 use derive_builder::Builder;
-use log::{debug, info};
+use log::debug;
+#[cfg(feature = "cache")]
+use log::info;
 use serde::{Deserialize, Serialize};
 
 use crate::types::Element;
+#[cfg(feature = "cache")]
 use deepbiop_utils::io::write_parquet;
 
 use super::{traits::Encoder, EncoderOption, RecordData};
@@ -102,6 +105,7 @@ impl ParquetEncoder {
         Ok(all_batches)
     }
 
+    #[cfg(feature = "cache")]
     fn generate_batch(&self, records: &[RecordData], schema: &Arc<Schema>) -> Result<RecordBatch> {
         let all_batches = self.generate_batches(records, schema)?;
         // Concatenate all batches
@@ -109,6 +113,7 @@ impl ParquetEncoder {
             .context("Failed to concatenate record batches")
     }
 
+    #[cfg(feature = "cache")]
     pub fn encode_chunk<P: AsRef<Path>>(
         &mut self,
         path: P,
@@ -217,12 +222,14 @@ impl Encoder for ParquetEncoder {
 
 #[cfg(test)]
 mod tests {
+    #[cfg(feature = "cache")]
     use deepbiop_utils::io::write_parquet_for_batches;
 
     use crate::encode::EncoderOptionBuilder;
 
     use super::*;
     #[test]
+    #[cfg(feature = "cache")]
     fn test_encode_fq_for_parquet() {
         let option = EncoderOptionBuilder::default().build().unwrap();
 

@@ -11,12 +11,16 @@ use crate::{
 
 use ahash::{HashMap, HashSet};
 use anyhow::Result;
+#[cfg(feature = "cache")]
 use deepbiop_utils::io::write_parquet_for_batches;
 use log::warn;
 use noodles::fasta;
+use numpy::convert::ToPyArray;
 use pyo3::prelude::*;
+use pyo3::types::PyDict;
 use rayon::prelude::*;
 
+use deepbiop_core::dataset::IterableDataset;
 use pyo3_stub_gen::derive::*;
 
 #[gen_stub_pymethods]
@@ -121,6 +125,7 @@ fn write_fq_parallel(
     io::write_bgzip_fq_parallel(&records, file_path, Some(threads))
 }
 
+#[cfg(feature = "cache")]
 #[gen_stub_pyfunction(module = "deepbiop.fq")]
 #[pyfunction]
 fn encode_fq_path_to_parquet_chunk(
@@ -170,8 +175,18 @@ fn encode_fq_path_to_parquet(
     } else {
         fq_path.with_extension("parquet")
     };
-    write_parquet_for_batches(parquet_path, &record_batch, schema)?;
-    Ok(())
+
+    #[cfg(feature = "cache")]
+    {
+        write_parquet_for_batches(parquet_path, &record_batch, schema)?;
+        Ok(())
+    }
+
+    #[cfg(not(feature = "cache"))]
+    {
+        let _ = (parquet_path, record_batch, schema); // Silence unused warnings
+        Err(anyhow::anyhow!("Parquet encoding requires 'cache' feature"))
+    }
 }
 
 #[gen_stub_pyfunction(module = "deepbiop.fq")]
@@ -296,6 +311,252 @@ pub fn py_select_record_from_fq_by_random(
     Ok(())
 }
 
+/// Streaming FASTQ dataset for efficient iteration over large files.
+///
+/// This dataset provides memory-efficient streaming iteration over FASTQ files,
+/// reading records one at a time without loading the entire file into memory.
+/// Yields records as dictionaries with NumPy arrays for zero-copy efficiency.
+///
+/// # Examples
+///
+/// ```python
+/// from deepbiop.fq import FastqStreamDataset
+///
+/// dataset = FastqStreamDataset("data.fastq.gz")
+/// for record in dataset:
+///     seq = record['sequence']  # NumPy array
+///     qual = record['quality']   # NumPy array
+///     print(f"ID: {record['id']}, Length: {len(seq)}")
+/// ```
+#[gen_stub_pyclass]
+#[pyclass(name = "FastqStreamDataset", module = "deepbiop.fq")]
+pub struct PyFastqStreamDataset {
+    file_path: String,
+    size_hint: Option<usize>,
+}
+
+#[gen_stub_pymethods]
+#[pymethods]
+impl PyFastqStreamDataset {
+    /// Create a new streaming FASTQ dataset.
+    ///
+    /// # Arguments
+    ///
+    /// * `file_path` - Path to FASTQ file (supports .fastq, .fastq.gz, .fastq.bgz)
+    ///
+    /// # Returns
+    ///
+    /// FastqStreamDataset instance
+    ///
+    /// # Raises
+    ///
+    /// * `FileNotFoundError` - If file doesn't exist
+    /// * `IOError` - If file cannot be opened
+    #[new]
+    fn new(file_path: String) -> PyResult<Self> {
+        // Create temporary dataset to validate file and get size hint
+        let dataset = crate::dataset::FastqDataset::new(file_path.clone(), 1)
+            .map_err(|e| pyo3::exceptions::PyIOError::new_err(e.to_string()))?;
+
+        let size_hint = Some(dataset.records_count());
+
+        Ok(Self {
+            file_path,
+            size_hint,
+        })
+    }
+
+    /// Return iterator over dataset records.
+    ///
+    /// Each record is a dictionary with:
+    /// - 'id': str - Sequence identifier
+    /// - 'sequence': np.ndarray (uint8) - Nucleotide sequence bytes
+    /// - 'quality': np.ndarray (uint8) - Quality score bytes
+    /// - 'description': Optional[str] - Sequence description
+    fn __iter__(slf: PyRef<'_, Self>) -> PyResult<Py<PyFastqStreamIterator>> {
+        let iter = PyFastqStreamIterator {
+            file_path: slf.file_path.clone(),
+            current_idx: 0,
+        };
+        Py::new(slf.py(), iter)
+    }
+
+    /// Get estimated number of records in dataset.
+    ///
+    /// # Returns
+    ///
+    /// int - Estimated record count (0 if unavailable)
+    fn __len__(&self) -> PyResult<usize> {
+        Ok(self.size_hint.unwrap_or(0))
+    }
+
+    /// Get record by index (map-style dataset access).
+    ///
+    /// # Arguments
+    ///
+    /// * `index` - Index of record to retrieve
+    ///
+    /// # Returns
+    ///
+    /// Dict with 'id', 'sequence', 'quality', 'description'
+    ///
+    /// # Note
+    ///
+    /// This requires iterating through the file to reach the index,
+    /// so it's O(n). For sequential access, use iteration instead.
+    fn __getitem__(&self, index: usize, py: Python) -> PyResult<Py<PyDict>> {
+        use numpy::ToPyArray;
+
+        // Create dataset and iterate to index
+        let dataset = crate::dataset::FastqDataset::new(self.file_path.clone(), 1)
+            .map_err(|e| pyo3::exceptions::PyIOError::new_err(e.to_string()))?;
+
+        let mut iter = dataset.iter();
+
+        // Skip to index
+        for _ in 0..index {
+            if iter.next().is_none() {
+                return Err(pyo3::exceptions::PyIndexError::new_err(format!(
+                    "Index {} out of range for dataset with {} records",
+                    index,
+                    self.size_hint.unwrap_or(0)
+                )));
+            }
+        }
+
+        // Get record at index
+        match iter.next() {
+            None => Err(pyo3::exceptions::PyIndexError::new_err(format!(
+                "Index {} out of range",
+                index
+            ))),
+            Some(Ok(record)) => {
+                let dict = PyDict::new(py);
+                dict.set_item("id", record.id)?;
+                dict.set_item("sequence", record.sequence.to_pyarray(py))?;
+
+                if let Some(quality) = record.quality_scores {
+                    dict.set_item("quality", quality.to_pyarray(py))?;
+                } else {
+                    dict.set_item("quality", py.None())?;
+                }
+
+                dict.set_item("description", record.description)?;
+                Ok(dict.into())
+            }
+            Some(Err(e)) => Err(pyo3::exceptions::PyIOError::new_err(format!(
+                "Failed to read record at index {}: {}",
+                index, e
+            ))),
+        }
+    }
+
+    /// Human-readable representation.
+    fn __repr__(&self) -> PyResult<String> {
+        Ok(format!(
+            "FastqStreamDataset(file='{}', records={})",
+            self.file_path,
+            self.size_hint
+                .map_or("unknown".to_string(), |n| n.to_string())
+        ))
+    }
+
+    /// Provide arguments for __new__ during unpickling.
+    ///
+    /// This is called by pickle to get arguments to pass to __new__().
+    ///
+    /// # Returns
+    ///
+    /// Tuple of (file_path,) to pass to __new__
+    fn __getnewargs__(&self) -> PyResult<(String,)> {
+        Ok((self.file_path.clone(),))
+    }
+
+    /// Pickling support for multiprocessing (DataLoader with num_workers > 0).
+    ///
+    /// # Returns
+    ///
+    /// Dict with file_path and size_hint for reconstruction
+    fn __getstate__(&self, py: Python) -> PyResult<Py<PyDict>> {
+        let state = PyDict::new(py);
+        state.set_item("file_path", &self.file_path)?;
+        state.set_item("size_hint", self.size_hint)?;
+        Ok(state.into())
+    }
+
+    /// Unpickling support for multiprocessing.
+    ///
+    /// # Arguments
+    ///
+    /// * `state` - Dict with file_path and size_hint from __getstate__
+    fn __setstate__(&mut self, state: &Bound<'_, PyDict>) -> PyResult<()> {
+        self.file_path = state.get_item("file_path")?.unwrap().extract()?;
+        self.size_hint = state.get_item("size_hint")?.unwrap().extract()?;
+        Ok(())
+    }
+}
+
+/// Iterator for streaming FASTQ dataset.
+#[gen_stub_pyclass]
+#[pyclass(name = "FastqStreamIterator", module = "deepbiop.fq")]
+pub struct PyFastqStreamIterator {
+    file_path: String,
+    current_idx: usize,
+}
+
+#[gen_stub_pymethods]
+#[pymethods]
+impl PyFastqStreamIterator {
+    fn __iter__(slf: PyRef<'_, Self>) -> PyRef<'_, Self> {
+        slf
+    }
+
+    fn __next__(&mut self, py: Python) -> PyResult<Option<Py<PyDict>>> {
+        // Create a new dataset and iterator for each record
+        // This is less efficient but simplifies ownership
+        let dataset = crate::dataset::FastqDataset::new(self.file_path.clone(), 1)
+            .map_err(|e| pyo3::exceptions::PyIOError::new_err(e.to_string()))?;
+
+        // Skip to current index and get next record
+        let mut iter = dataset.iter();
+        for _ in 0..self.current_idx {
+            if iter.next().is_none() {
+                return Ok(None);
+            }
+        }
+
+        match iter.next() {
+            None => Ok(None),
+            Some(Ok(record)) => {
+                self.current_idx += 1;
+
+                // Create dict with NumPy arrays for zero-copy
+                let dict = PyDict::new(py);
+                dict.set_item("id", record.id)?;
+
+                // Convert sequence and quality to NumPy arrays (zero-copy from Rust Vec)
+                let seq_array = record.sequence.to_pyarray(py);
+                dict.set_item("sequence", seq_array)?;
+
+                if let Some(quality) = record.quality_scores {
+                    let qual_array = quality.to_pyarray(py);
+                    dict.set_item("quality", qual_array)?;
+                } else {
+                    dict.set_item("quality", py.None())?;
+                }
+
+                dict.set_item("description", record.description)?;
+
+                Ok(Some(dict.into()))
+            }
+            Some(Err(e)) => Err(pyo3::exceptions::PyIOError::new_err(format!(
+                "Failed to read FASTQ record: {}",
+                e
+            ))),
+        }
+    }
+}
+
 // register fq sub_module
 pub fn register_fq_module(parent_module: &Bound<'_, PyModule>) -> PyResult<()> {
     let sub_module_name = "fq";
@@ -331,6 +592,7 @@ pub fn register_fq_module(parent_module: &Bound<'_, PyModule>) -> PyResult<()> {
     child_module.add_function(wrap_pyfunction!(write_fq_parallel, &child_module)?)?;
     child_module.add_function(wrap_pyfunction!(encode_fq_path_to_parquet, &child_module)?)?;
     child_module.add_function(wrap_pyfunction!(encode_fq_paths_to_parquet, &child_module)?)?;
+    #[cfg(feature = "cache")]
     child_module.add_function(wrap_pyfunction!(
         encode_fq_path_to_parquet_chunk,
         &child_module
@@ -360,6 +622,10 @@ pub fn register_fq_module(parent_module: &Bound<'_, PyModule>) -> PyResult<()> {
     child_module.add_class::<FastqDataset>()?;
     child_module.add_class::<FastqIterator>()?;
     child_module.add_class::<FastqRecord>()?;
+
+    // Add streaming dataset classes
+    child_module.add_class::<PyFastqStreamDataset>()?;
+    child_module.add_class::<PyFastqStreamIterator>()?;
 
     parent_module.add_submodule(&child_module)?;
 

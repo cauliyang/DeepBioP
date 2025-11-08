@@ -39,6 +39,11 @@ dev = [
   "pymdown-extensions>=10.9",
   "pytest>=8.3.2",
   "pytest-sugar>=1.0.0",
+  "pytest-benchmark>=4.0.0",
+  "torch>=2.0.0",
+  "pytorch-lightning>=2.0.0",
+  "transformers>=4.30.0",
+  "accelerate>=1.11.0",
 ]
 
 [project.urls]

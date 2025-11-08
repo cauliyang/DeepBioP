@@ -16,7 +16,7 @@ crate-type = ["cdylib", "rlib"]
 [dependencies]
 deepbiop-fq = { workspace = true, features = ['python'] }
 deepbiop-bam = { workspace = true, features = ['python'] }
-deepbiop-utils = { workspace = true, features = ['python'] }
+deepbiop-utils = { workspace = true, features = ['python', 'cache'] }
 deepbiop-fa = { workspace = true, features = ['python'] }
 deepbiop-core = { workspace = true, features = ['python'] }
 deepbiop-vcf = { workspace = true, features = ['python'] }

@@ -9,12 +9,16 @@ use crate::{
 use ahash::HashSet;
 use anyhow::Result;
 use bstr::BString;
+#[cfg(feature = "cache")]
 use deepbiop_utils::io as deepbiop_io;
 use log::warn;
 use noodles::fastq;
+use numpy::convert::ToPyArray;
 use pyo3::prelude::*;
+use pyo3::types::PyDict;
 use rayon::prelude::*;
 
+use deepbiop_core::dataset::IterableDataset;
 use pyo3_stub_gen::derive::*;
 
 #[gen_stub_pymethods]
@@ -107,6 +111,7 @@ fn write_fa_parallel(
     io::write_bzip_fa_parallel(&records, file_path, Some(threads))
 }
 
+#[cfg(feature = "cache")]
 #[gen_stub_pyfunction(module = "deepbiop.fa")]
 #[pyfunction]
 fn encode_fa_path_to_parquet_chunk(
@@ -152,8 +157,18 @@ fn encode_fa_path_to_parquet(
     } else {
         fa_path.with_extension("parquet")
     };
-    deepbiop_io::write_parquet_for_batches(parquet_path, &record_batch, schema)?;
-    Ok(())
+
+    #[cfg(feature = "cache")]
+    {
+        deepbiop_io::write_parquet_for_batches(parquet_path, &record_batch, schema)?;
+        Ok(())
+    }
+
+    #[cfg(not(feature = "cache"))]
+    {
+        let _ = (parquet_path, record_batch, schema); // Silence unused warnings
+        Err(anyhow::anyhow!("Parquet encoding requires 'cache' feature"))
+    }
 }
 
 #[gen_stub_pyfunction(module = "deepbiop.fa")]
@@ -221,6 +236,167 @@ pub fn fasta_to_fastq(fasta_path: PathBuf, fastq_path: PathBuf) -> Result<()> {
     Ok(())
 }
 
+/// Streaming FASTA dataset for efficient iteration over large files.
+///
+/// This dataset provides memory-efficient streaming iteration over FASTA files,
+/// reading records one at a time without loading the entire file into memory.
+/// Yields records as dictionaries with NumPy arrays for zero-copy efficiency.
+///
+/// Note: FASTA files do not contain quality scores.
+///
+/// # Examples
+///
+/// ```python
+/// from deepbiop.fa import FastaStreamDataset
+///
+/// dataset = FastaStreamDataset("genome.fasta.gz")
+/// for record in dataset:
+///     seq = record['sequence']  # NumPy array
+///     print(f"ID: {record['id']}, Length: {len(seq)}")
+/// ```
+#[gen_stub_pyclass]
+#[pyclass(name = "FastaStreamDataset", module = "deepbiop.fa")]
+pub struct PyFastaStreamDataset {
+    file_path: String,
+    size_hint: Option<usize>,
+}
+
+#[gen_stub_pymethods]
+#[pymethods]
+impl PyFastaStreamDataset {
+    /// Create a new streaming FASTA dataset.
+    ///
+    /// # Arguments
+    ///
+    /// * `file_path` - Path to FASTA file (supports .fasta, .fa, .fasta.gz, .fa.gz)
+    ///
+    /// # Returns
+    ///
+    /// FastaStreamDataset instance
+    ///
+    /// # Raises
+    ///
+    /// * `FileNotFoundError` - If file doesn't exist
+    /// * `IOError` - If file cannot be opened
+    #[new]
+    fn new(file_path: String) -> PyResult<Self> {
+        // Create temporary dataset to validate file and get size hint
+        let dataset = crate::dataset::FastaDataset::new(file_path.clone())
+            .map_err(|e| pyo3::exceptions::PyIOError::new_err(e.to_string()))?;
+
+        let size_hint = dataset.records_count();
+
+        Ok(Self {
+            file_path,
+            size_hint,
+        })
+    }
+
+    /// Return iterator over dataset records.
+    ///
+    /// Each record is a dictionary with:
+    /// - 'id': str - Sequence identifier
+    /// - 'sequence': np.ndarray (uint8) - Nucleotide sequence bytes
+    /// - 'description': Optional[str] - Sequence description
+    fn __iter__(slf: PyRef<'_, Self>) -> PyResult<Py<PyFastaStreamIterator>> {
+        let iter = PyFastaStreamIterator {
+            file_path: slf.file_path.clone(),
+            current_idx: 0,
+        };
+        Py::new(slf.py(), iter)
+    }
+
+    /// Get estimated number of records in dataset.
+    ///
+    /// # Returns
+    ///
+    /// int - Estimated record count (0 if unavailable)
+    fn __len__(&self) -> PyResult<usize> {
+        Ok(self.size_hint.unwrap_or(0))
+    }
+
+    /// Human-readable representation.
+    fn __repr__(&self) -> PyResult<String> {
+        Ok(format!(
+            "FastaStreamDataset(file='{}', records={})",
+            self.file_path,
+            self.size_hint
+                .map_or("unknown".to_string(), |n| n.to_string())
+        ))
+    }
+
+    /// Pickling support for multiprocessing (DataLoader with num_workers > 0).
+    fn __getstate__(&self, py: Python) -> PyResult<Py<PyDict>> {
+        let state = PyDict::new(py);
+        state.set_item("file_path", &self.file_path)?;
+        state.set_item("size_hint", self.size_hint)?;
+        Ok(state.into())
+    }
+
+    /// Unpickling support for multiprocessing.
+    fn __setstate__(&mut self, state: &Bound<'_, PyDict>) -> PyResult<()> {
+        self.file_path = state.get_item("file_path")?.unwrap().extract()?;
+        self.size_hint = state.get_item("size_hint")?.unwrap().extract()?;
+        Ok(())
+    }
+}
+
+/// Iterator for streaming FASTA dataset.
+#[gen_stub_pyclass]
+#[pyclass(name = "FastaStreamIterator", module = "deepbiop.fa")]
+pub struct PyFastaStreamIterator {
+    file_path: String,
+    current_idx: usize,
+}
+
+#[gen_stub_pymethods]
+#[pymethods]
+impl PyFastaStreamIterator {
+    fn __iter__(slf: PyRef<'_, Self>) -> PyRef<'_, Self> {
+        slf
+    }
+
+    fn __next__(&mut self, py: Python) -> PyResult<Option<Py<PyDict>>> {
+        // Create a new dataset and iterator for each record
+        let dataset = crate::dataset::FastaDataset::new(self.file_path.clone())
+            .map_err(|e| pyo3::exceptions::PyIOError::new_err(e.to_string()))?;
+
+        // Skip to current index and get next record
+        let mut iter = dataset.iter();
+        for _ in 0..self.current_idx {
+            if iter.next().is_none() {
+                return Ok(None);
+            }
+        }
+
+        match iter.next() {
+            None => Ok(None),
+            Some(Ok(record)) => {
+                self.current_idx += 1;
+
+                // Create dict with NumPy arrays for zero-copy
+                let dict = PyDict::new(py);
+                dict.set_item("id", record.id)?;
+
+                // Convert sequence to NumPy array (zero-copy from Rust Vec)
+                let seq_array = record.sequence.to_pyarray(py);
+                dict.set_item("sequence", seq_array)?;
+
+                // FASTA files don't have quality scores
+                dict.set_item("quality", py.None())?;
+
+                dict.set_item("description", record.description)?;
+
+                Ok(Some(dict.into()))
+            }
+            Some(Err(e)) => Err(pyo3::exceptions::PyIOError::new_err(format!(
+                "Failed to read FASTA record: {}",
+                e
+            ))),
+        }
+    }
+}
+
 // register fq sub_module
 pub fn register_fa_module(parent_module: &Bound<'_, PyModule>) -> PyResult<()> {
     let sub_module_name = "fa";
@@ -234,6 +410,7 @@ pub fn register_fa_module(parent_module: &Bound<'_, PyModule>) -> PyResult<()> {
     child_module.add_function(wrap_pyfunction!(write_fa_parallel, &child_module)?)?;
     child_module.add_function(wrap_pyfunction!(encode_fa_path_to_parquet, &child_module)?)?;
     child_module.add_function(wrap_pyfunction!(encode_fa_paths_to_parquet, &child_module)?)?;
+    #[cfg(feature = "cache")]
     child_module.add_function(wrap_pyfunction!(
         encode_fa_path_to_parquet_chunk,
         &child_module
@@ -249,6 +426,10 @@ pub fn register_fa_module(parent_module: &Bound<'_, PyModule>) -> PyResult<()> {
         &child_module
     )?)?;
     child_module.add_function(wrap_pyfunction!(fasta_to_fastq, &child_module)?)?;
+
+    // Add streaming dataset classes
+    child_module.add_class::<PyFastaStreamDataset>()?;
+    child_module.add_class::<PyFastaStreamIterator>()?;
 
     parent_module.add_submodule(&child_module)?;
 

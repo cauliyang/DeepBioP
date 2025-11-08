@@ -49,3 +49,4 @@ tempfile = { workspace = true }
 
 [features]
 python = ["dep:pyo3", "dep:pyo3-stub-gen", "dep:numpy"]
+cache = []

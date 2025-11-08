@@ -1,0 +1,248 @@
+"""
+Transform composition utilities for biological data.
+
+This module provides utilities for composing and chaining transformations
+on biological sequence data.
+"""
+
+from typing import Any
+
+
+class Compose:
+    """
+    Compose multiple transforms together.
+
+    This class allows chaining multiple transformations that will be
+    applied sequentially to data records.
+
+    Parameters
+    ----------
+        transforms: List of transform objects with .augment() or .filter() methods
+
+    Example:
+        >>> from deepbiop.fq import ReverseComplement, Mutator
+        >>> from deepbiop.transforms import Compose
+        >>>
+        >>> # Create composed transform
+        >>> transform = Compose([ReverseComplement(), Mutator(mutation_rate=0.1)])
+        >>>
+        >>> # Apply to a record
+        >>> record = {"id": "seq1", "sequence": b"ACGT", "quality": None}
+        >>> transformed = transform(record)
+    """
+
+    def __init__(self, transforms: list[Any]):
+        """
+        Initialize Compose with a list of transforms.
+
+        Args:
+            transforms: List of transform objects
+        """
+        self.transforms = transforms
+
+    def __call__(self, record: dict[str, Any]) -> dict[str, Any]:
+        """
+        Apply all transforms sequentially to a record.
+
+        Args:
+            record: Input record dict
+
+        Returns
+        -------
+            Transformed record dict
+        """
+        result = record
+        for transform in self.transforms:
+            # Try augment method first (for augmentation transforms)
+            if hasattr(transform, "augment"):
+                result = transform.augment(result)
+            # Try __call__ method (for encoder transforms)
+            elif callable(transform) and not isinstance(transform, type):
+                result = transform(result)
+            # Try apply method (generic)
+            elif hasattr(transform, "apply"):
+                result = transform.apply(result)
+            else:
+                msg = (
+                    f"Transform {type(transform).__name__} must have "
+                    f"augment(), __call__(), or apply() method"
+                )
+                raise TypeError(msg)
+        return result
+
+    def filter(self, record: dict[str, Any]) -> bool:
+        """
+        Apply filter transforms.
+
+        Returns False if any filter rejects the record.
+
+        Args:
+            record: Input record dict
+
+        Returns
+        -------
+            True if record passes all filters, False otherwise
+        """
+        for transform in self.transforms:
+            if hasattr(transform, "filter"):
+                if not transform.filter(record):
+                    return False
+        return True
+
+    def __repr__(self) -> str:
+        """String representation."""
+        transform_names = [type(t).__name__ for t in self.transforms]
+        return f"Compose([{', '.join(transform_names)}])"
+
+
+class FilterCompose:
+    """
+    Compose multiple filter transforms with AND logic.
+
+    All filters must pass for a record to be accepted.
+
+    Parameters
+    ----------
+        filters: List of filter objects with .filter() method
+
+    Example:
+        >>> from deepbiop.fq import QualityFilter, LengthFilter
+        >>> from deepbiop.transforms import FilterCompose
+        >>>
+        >>> # Create composed filter
+        >>> filter_chain = FilterCompose(
+        ...     [
+        ...         QualityFilter(min_quality=30.0),
+        ...         LengthFilter(min_length=50, max_length=500),
+        ...     ]
+        ... )
+        >>>
+        >>> # Apply to a record
+        >>> record = {"id": "seq1", "sequence": b"ACGT" * 20, "quality": b"I" * 80}
+        >>> passes = filter_chain.filter(record)
+    """
+
+    def __init__(self, filters: list[Any]):
+        """
+        Initialize FilterCompose with a list of filters.
+
+        Args:
+            filters: List of filter objects
+        """
+        self.filters = filters
+
+    def filter(self, record: dict[str, Any]) -> bool:
+        """
+        Apply all filters with AND logic.
+
+        Args:
+            record: Input record dict
+
+        Returns
+        -------
+            True if record passes all filters, False otherwise
+        """
+        return all(filt.filter(record) for filt in self.filters)
+
+    def __call__(self, record: dict[str, Any]) -> bool:
+        """Alias for filter() method."""
+        return self.filter(record)
+
+    def __repr__(self) -> str:
+        """String representation."""
+        filter_names = [type(f).__name__ for f in self.filters]
+        return f"FilterCompose([{', '.join(filter_names)}])"
+
+
+class TransformDataset:
+    """
+    Wrapper to apply transforms to a dataset during iteration.
+
+    This allows lazy application of transforms as records are streamed
+    from the underlying dataset.
+
+    Parameters
+    ----------
+        dataset: Underlying dataset (must be iterable)
+        transform: Transform or Compose object to apply
+        filter_fn: Optional filter function/object
+
+    Example:
+        >>> from deepbiop.fq import FastqStreamDataset, ReverseComplement
+        >>> from deepbiop.transforms import TransformDataset
+        >>>
+        >>> # Create base dataset
+        >>> dataset = FastqStreamDataset("data.fastq")
+        >>>
+        >>> # Wrap with transforms
+        >>> transformed_dataset = TransformDataset(
+        ...     dataset, transform=ReverseComplement()
+        ... )
+        >>>
+        >>> # Iterate with transforms applied
+        >>> for record in transformed_dataset:
+        ...     # record is already transformed
+        ...     pass
+    """
+
+    def __init__(self, dataset: Any, transform: Any = None, filter_fn: Any = None):
+        """
+        Initialize TransformDataset.
+
+        Args:
+            dataset: Underlying dataset
+            transform: Transform to apply
+            filter_fn: Optional filter
+        """
+        self.dataset = dataset
+        self.transform = transform
+        self.filter_fn = filter_fn
+
+    def __iter__(self):
+        """
+        Iterate with transforms and filters applied.
+
+        Yields
+        ------
+            Transformed and filtered records
+        """
+        for record in self.dataset:
+            # Apply filter first
+            if self.filter_fn is not None:
+                if hasattr(self.filter_fn, "filter"):
+                    if not self.filter_fn.filter(record):
+                        continue
+                elif callable(self.filter_fn):
+                    if not self.filter_fn(record):
+                        continue
+
+            # Apply transform
+            if self.transform is not None:
+                if hasattr(self.transform, "augment"):
+                    record = self.transform.augment(record)
+                elif callable(self.transform):
+                    record = self.transform(record)
+
+            yield record
+
+    def __len__(self):
+        """
+        Return dataset length if available.
+
+        Note: Length may not be accurate if filtering is applied.
+        """
+        if hasattr(self.dataset, "__len__"):
+            return len(self.dataset)
+        return 0
+
+    def __repr__(self) -> str:
+        """String representation."""
+        transform_name = type(self.transform).__name__ if self.transform else "None"
+        filter_name = type(self.filter_fn).__name__ if self.filter_fn else "None"
+        return (
+            f"TransformDataset(dataset={type(self.dataset).__name__}, "
+            f"transform={transform_name}, filter={filter_name})"
+        )
+
+
+__all__ = ["Compose", "FilterCompose", "TransformDataset"]
