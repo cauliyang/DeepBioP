@@ -174,7 +174,9 @@ class TestMemoryFootprint:
         # Summary should complete in reasonable time (adjust for dataset size)
         # For 10k sequences, allow up to 60 seconds (performance can be optimized later)
         max_time = 60.0
-        assert elapsed_time < max_time, f"Summary took too long: {elapsed_time}s (max: {max_time}s)"
+        assert elapsed_time < max_time, (
+            f"Summary took too long: {elapsed_time}s (max: {max_time}s)"
+        )
 
     def test_validation_performance(self):
         """Test that Dataset.validate() completes quickly."""
