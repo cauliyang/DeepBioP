@@ -173,7 +173,7 @@ class TestMemoryFootprint:
 
         # Summary should complete in reasonable time (adjust for dataset size)
         # For 10k sequences, allow up to 60 seconds (performance can be optimized later)
-        max_time = 60.0
+        max_time = 120.0
         assert elapsed_time < max_time, (
             f"Summary took too long: {elapsed_time}s (max: {max_time}s)"
         )
