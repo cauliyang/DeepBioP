@@ -34,11 +34,11 @@ class TestBatchGenerationPerformance:
         # Create encoder
         encoder = pytorch.OneHotEncoder(encoding_type="dna")
 
-        # Measure throughput for batch generation
+        # Measure throughput for batch generation (use perf_counter for better resolution)
         num_iterations = 100
         batch_size = 5
 
-        start_time = time.time()
+        start_time = time.perf_counter()
 
         for _ in range(num_iterations):
             # Encode samples
@@ -51,11 +51,14 @@ class TestBatchGenerationPerformance:
             # Collate into batch
             pytorch.default_collate(encoded_samples)
 
-        elapsed_time = time.time() - start_time
+        elapsed_time = time.perf_counter() - start_time
 
-        # Calculate throughput
+        # Calculate throughput (protect against zero elapsed time)
         total_sequences = num_iterations * batch_size
-        throughput = total_sequences / elapsed_time
+        if elapsed_time > 0:
+            throughput = total_sequences / elapsed_time
+        else:
+            throughput = float('inf')  # Operation too fast to measure
 
         print(f"\n{'=' * 70}")
         print("Batch Generation Throughput Benchmark")
@@ -100,15 +103,21 @@ class TestBatchGenerationPerformance:
             # Get first sample
             sample = dataset[0]
 
-            # Measure encoding time
+            # Measure encoding time (use perf_counter for better resolution on Windows)
             num_iterations = 1000
-            start_time = time.time()
+            start_time = time.perf_counter()
 
             for _ in range(num_iterations):
                 encoder(sample)
 
-            elapsed_time = time.time() - start_time
-            throughput = num_iterations / elapsed_time
+            elapsed_time = time.perf_counter() - start_time
+
+            # Protect against zero elapsed time
+            if elapsed_time > 0:
+                throughput = num_iterations / elapsed_time
+            else:
+                # If too fast to measure, estimate based on minimum measurable time
+                throughput = float('inf')  # Essentially instant
 
             results[name] = throughput
 
@@ -135,10 +144,10 @@ class TestMemoryFootprint:
         test_file = Path(__file__).parent / "data" / "test.fastq"
         dataset = pytorch.Dataset(str(test_file))
 
-        # Measure summary generation time
-        start_time = time.time()
+        # Measure summary generation time (use perf_counter for better resolution)
+        start_time = time.perf_counter()
         summary = dataset.summary()
-        elapsed_time = time.time() - start_time
+        elapsed_time = time.perf_counter() - start_time
 
         print(f"\n{'=' * 70}")
         print("Dataset Summary Performance")
@@ -173,10 +182,10 @@ class TestMemoryFootprint:
         test_file = Path(__file__).parent / "data" / "test.fastq"
         dataset = pytorch.Dataset(str(test_file))
 
-        # Measure validation time
-        start_time = time.time()
+        # Measure validation time (use perf_counter for better resolution)
+        start_time = time.perf_counter()
         validation_result = dataset.validate()
-        elapsed_time = time.time() - start_time
+        elapsed_time = time.perf_counter() - start_time
 
         print(f"\n{'=' * 70}")
         print("Dataset Validation Performance")
