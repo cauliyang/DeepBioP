@@ -45,6 +45,7 @@ dev = [
   "pytorch-lightning>=2.0.0",
   "transformers>=4.30.0",
   "accelerate>=1.11.0",
+  "pytest-cov>=7.0.0",
 ]
 
 [project.urls]
