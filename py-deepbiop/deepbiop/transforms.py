@@ -5,7 +5,109 @@ This module provides utilities for composing and chaining transformations
 on biological sequence data.
 """
 
-from typing import Any
+from __future__ import annotations
+
+from abc import ABC, abstractmethod
+from typing import TYPE_CHECKING, Any
+
+if TYPE_CHECKING:
+    import numpy as np
+
+    from deepbiop.core import Record
+
+
+class Transform(ABC):
+    """
+    Abstract base class for all data transformations.
+
+    Transforms operate on Record objects and return modified Record objects.
+    All transforms must be:
+    - Stateless (except for seeded random operations)
+    - Picklable (for multiprocessing)
+    - Deterministic when seed is provided
+
+    Parameters
+    ----------
+    seed : int | None
+        Random seed for reproducibility. If None, operations are non-deterministic.
+
+    Examples
+    --------
+    >>> class MyTransform(Transform):
+    ...     def __call__(self, record):
+    ...         # Modify record
+    ...         return record
+    """
+
+    def __init__(self, seed: int | None = None, **kwargs: Any) -> None:
+        """
+        Initialize transform.
+
+        Parameters
+        ----------
+        seed : int | None
+            Random seed for reproducibility
+        **kwargs : Any
+            Transform-specific parameters
+        """
+        self.seed = seed
+        self._rng: np.random.RandomState | None = None
+        if seed is not None:
+            import numpy as np
+
+            self._rng = np.random.RandomState(seed)
+
+    @abstractmethod
+    def __call__(self, record: Record | dict[str, Any]) -> Record | dict[str, Any]:
+        """
+        Apply transform to a record.
+
+        Parameters
+        ----------
+        record : Record | dict[str, Any]
+            Input record
+
+        Returns
+        -------
+        Record | dict[str, Any]
+            Transformed record
+
+        Notes
+        -----
+        Implementations must NOT modify the input record. Create a copy
+        if modifications are needed.
+        """
+        ...
+
+    def save_state(self) -> dict[str, Any]:
+        """
+        Save internal state for reproducibility.
+
+        Returns
+        -------
+        dict[str, Any]
+            State dictionary that can be passed to load_state()
+        """
+        return {
+            "seed": self.seed,
+            "rng_state": self._rng.get_state() if self._rng else None,
+        }
+
+    def load_state(self, state: dict[str, Any]) -> None:
+        """
+        Restore internal state.
+
+        Parameters
+        ----------
+        state : dict[str, Any]
+            State dictionary from save_state()
+        """
+        import numpy as np
+
+        self.seed = state["seed"]
+        if state["rng_state"] is not None:
+            self._rng = np.random.RandomState()
+            self._rng.set_state(state["rng_state"])
 
 
 class Compose:
@@ -350,4 +452,4 @@ class TransformDataset:
         )
 
 
-__all__ = ["Compose", "FilterCompose", "TransformDataset"]
+__all__ = ["Transform", "Compose", "FilterCompose", "TransformDataset"]

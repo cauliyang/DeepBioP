@@ -59,6 +59,13 @@ for _module_name in ["fq", "fa", "bam", "core", "utils", "vcf", "gtf", "pytorch"
     if hasattr(_deepbiop_ext, _module_name):
         sys.modules[f"deepbiop.{_module_name}"] = getattr(_deepbiop_ext, _module_name)
 
+# Import filter classes from Rust fq module
+try:
+    from deepbiop.fq import LengthFilter, QualityFilter
+    _FILTERS_AVAILABLE = True
+except (ImportError, AttributeError):
+    _FILTERS_AVAILABLE = False
+
 __all__ = [
     # Core data structures
     "Record",
@@ -80,6 +87,9 @@ __all__ = [
     "OneHotEncoder",
     "IntegerEncoder",
     "KmerEncoder",
+    # Filters (Rust-based)
+    "LengthFilter",
+    "QualityFilter",
     # Target extraction for supervised learning
     "TargetExtractor",
     "get_builtin_extractor",
