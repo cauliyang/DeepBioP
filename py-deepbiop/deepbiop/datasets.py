@@ -170,4 +170,88 @@ class FastaDataset:
         return f"FastaDataset(file_path='{self.file_path}', total_records={self._total_records})"
 
 
-__all__ = ["FastqDataset", "FastaDataset"]
+class BamDataset:
+    """
+    Simple PyTorch-compatible BAM dataset that returns individual alignment records.
+
+    This implementation uses a simple streaming approach with optional caching
+    for better performance with PyTorch DataLoader.
+
+    Parameters
+    ----------
+        file_path: Path to BAM file
+        threads: Optional number of threads for bgzf decompression (None = use all available)
+
+    Example:
+        >>> from torch.utils.data import DataLoader
+        >>> dataset = BamDataset("alignments.bam", threads=4)
+        >>> loader = DataLoader(dataset, batch_size=32)
+        >>> for batch in loader:
+        ...     # Process batch of alignment records
+        ...     pass
+
+    Note:
+        For best performance with multi-worker DataLoader, the underlying
+        Rust implementation handles file reading efficiently with parallel decompression.
+    """
+
+    def __init__(self, file_path: str, threads: int | None = None):
+        """Initialize BamDataset with file path and optional thread count."""
+        from deepbiop.bam import BamStreamDataset
+
+        self.file_path = file_path
+        self.threads = threads
+
+        # Use Rust BamStreamDataset which provides efficient streaming
+        self._rust_dataset = BamStreamDataset(file_path, threads)
+
+        # Get total count by reading the file once
+        # This is needed for __len__ and random access
+        self._records_cache = list(self._read_all_records())
+        self._total_records = len(self._records_cache)
+
+    def _read_all_records(self) -> Iterator[dict[str, Any]]:
+        """Read all records from file using Rust streaming dataset."""
+        # Iterate through Rust dataset (already returns dicts)
+        for record_dict in self._rust_dataset:
+            # rust_record is already a dict with id, sequence, quality keys
+            yield record_dict
+
+    def __len__(self) -> int:
+        """Return total number of records."""
+        return self._total_records
+
+    def __getitem__(self, idx: int) -> dict[str, Any]:
+        """
+        Get individual record at index.
+
+        Parameters
+        ----------
+            idx: Record index (0-based)
+
+        Returns
+        -------
+            Record dict with keys: "id", "sequence", "quality"
+        """
+        if idx < 0 or idx >= self._total_records:
+            raise IndexError(f"Index {idx} out of range [0, {self._total_records})")
+
+        return self._records_cache[idx]
+
+    def __iter__(self) -> Iterator[dict[str, Any]]:
+        """
+        Iterate over all records.
+
+        Yields
+        ------
+            Record dict with keys: "id", "sequence", "quality"
+        """
+        return iter(self._records_cache)
+
+    def __repr__(self) -> str:
+        """String representation."""
+        threads_str = f", threads={self.threads}" if self.threads is not None else ""
+        return f"BamDataset(file_path='{self.file_path}'{threads_str}, total_records={self._total_records})"
+
+
+__all__ = ["FastqDataset", "FastaDataset", "BamDataset"]
