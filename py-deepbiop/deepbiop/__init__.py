@@ -51,7 +51,7 @@ from deepbiop.targets import (
 from deepbiop.collate import default_collate, get_collate_fn, supervised_collate, tensor_collate
 
 # Import PyTorch-compatible dataset wrappers (pure Python)
-from deepbiop.datasets import FastqDataset
+from deepbiop.datasets import FastaDataset, FastqDataset
 
 # Register submodules in sys.modules so they can be imported with "from deepbiop.fq import"
 # Only register modules that actually exist
@@ -73,6 +73,7 @@ __all__ = [
     "Transform",
     # Dataset implementations
     "FastqDataset",
+    "FastaDataset",
     # Lightning integration
     "BiologicalDataModule",
     # Transform composition
