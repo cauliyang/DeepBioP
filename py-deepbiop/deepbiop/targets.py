@@ -1,4 +1,4 @@
-"""
+r"""
 Target extraction utilities for supervised learning with biological sequences.
 
 This module provides flexible target/label extraction from FASTQ, FASTA, and BAM files
@@ -6,7 +6,7 @@ to enable supervised learning tasks like classification and regression.
 
 Examples:
     >>> # Extract from header metadata
-    >>> extractor = TargetExtractor.from_header("label=(\\w+)")
+    >>> extractor = TargetExtractor.from_header(r"label=(\w+)")
     >>>
     >>> # Extract quality statistics
     >>> extractor = TargetExtractor.from_quality(stat="mean")
