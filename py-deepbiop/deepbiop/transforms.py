@@ -156,55 +156,72 @@ class FilterCompose:
 
 class TransformDataset:
     """
-    Wrapper to apply transforms to a dataset during iteration.
+    Wrapper to apply transforms and extract targets from a dataset during iteration.
 
-    This allows lazy application of transforms as records are streamed
-    from the underlying dataset.
+    This allows lazy application of transforms and target extraction as records
+    are streamed from the underlying dataset, enabling supervised learning.
 
     Parameters
     ----------
         dataset: Underlying dataset (must be iterable)
-        transform: Transform or Compose object to apply
+        transform: Transform or Compose object to apply (encodes sequences)
+        target_fn: Function or TargetExtractor to extract targets
         filter_fn: Optional filter function/object
+        return_dict: If True, return dict samples; if False, return (features, target) tuples
 
     Example:
-        >>> from deepbiop.fq import FastqStreamDataset, ReverseComplement
+        >>> from deepbiop.fq import FastqStreamDataset, OneHotEncoder
         >>> from deepbiop.transforms import TransformDataset
+        >>> from deepbiop.targets import TargetExtractor
         >>>
         >>> # Create base dataset
         >>> dataset = FastqStreamDataset("data.fastq")
         >>>
-        >>> # Wrap with transforms
+        >>> # Wrap with transforms and target extraction
         >>> transformed_dataset = TransformDataset(
-        ...     dataset, transform=ReverseComplement()
+        ...     dataset,
+        ...     transform=OneHotEncoder(),
+        ...     target_fn=TargetExtractor.from_quality("mean"),
+        ...     return_dict=False,  # Return (features, target) tuples
         ... )
         >>>
         >>> # Iterate with transforms applied
-        >>> for record in transformed_dataset:
-        ...     # record is already transformed
+        >>> for features, target in transformed_dataset:
+        ...     # Ready for PyTorch training
         ...     pass
     """
 
-    def __init__(self, dataset: Any, transform: Any = None, filter_fn: Any = None):
+    def __init__(
+        self,
+        dataset: Any,
+        transform: Any = None,
+        target_fn: Any = None,
+        filter_fn: Any = None,
+        return_dict: bool = True,
+    ):
         """
         Initialize TransformDataset.
 
         Args:
             dataset: Underlying dataset
-            transform: Transform to apply
+            transform: Transform to apply (encoder)
+            target_fn: Function to extract targets
             filter_fn: Optional filter
+            return_dict: If True, return dict; if False, return tuple
         """
         self.dataset = dataset
         self.transform = transform
+        self.target_fn = target_fn
         self.filter_fn = filter_fn
+        self.return_dict = return_dict
 
     def __iter__(self):
         """
-        Iterate with transforms and filters applied.
+        Iterate with transforms, filters, and target extraction applied.
 
         Yields
         ------
-            Transformed and filtered records
+            Transformed records (dict or tuple based on return_dict parameter)
         """
         for record in self.dataset:
             # Apply filter first
@@ -216,14 +233,43 @@ class TransformDataset:
                     if not self.filter_fn(record):
                         continue
 
-            # Apply transform
+            # Keep original record for target extraction (before transformation)
+            original_record = record.copy() if isinstance(record, dict) else record
+
+            # Apply transform to encode sequences
             if self.transform is not None:
                 if hasattr(self.transform, "augment"):
                     record = self.transform.augment(record)
+                elif hasattr(self.transform, "encode"):
+                    # Encoder transforms: encode sequence and store in "features"
+                    encoded = self.transform.encode(record["sequence"])
+                    record["features"] = encoded
                 elif callable(self.transform):
                     record = self.transform(record)
 
-            yield record
+            # Extract target if configured
+            if self.target_fn is not None:
+                if callable(self.target_fn):
+                    target = self.target_fn(original_record)
+                else:
+                    raise TypeError(f"target_fn must be callable, got {type(self.target_fn)}")
+
+                # Add target to record
+                if isinstance(record, dict):
+                    record["target"] = target
+                else:
+                    # Handle non-dict records
+                    record = {"data": record, "target": target}
+
+            # Return in appropriate format
+            if not self.return_dict and self.target_fn is not None:
+                # Return (features, target) tuple for PyTorch compatibility
+                features = record.get("features", record.get("sequence"))
+                target = record.get("target")
+                yield (features, target)
+            else:
+                # Return dict (default or when no target)
+                yield record
 
     def __len__(self):
         """
@@ -234,6 +280,65 @@ class TransformDataset:
         if hasattr(self.dataset, "__len__"):
             return len(self.dataset)
         return 0
+
+    def __getitem__(self, idx):
+        """
+        Get item by index (for PyTorch DataLoader compatibility).
+
+        Parameters
+        ----------
+            idx: Index of item to retrieve
+
+        Returns
+        -------
+            Transformed record at index idx
+        """
+        if not hasattr(self.dataset, "__getitem__"):
+            raise TypeError(
+                f"Underlying dataset {type(self.dataset).__name__} does not support indexing. "
+                f"Use iteration instead or ensure dataset has __getitem__ method."
+            )
+
+        # Get record from underlying dataset
+        record = self.dataset[idx]
+
+        # Keep original record for target extraction (before transformation)
+        original_record = record.copy() if isinstance(record, dict) else record
+
+        # Apply transform to encode sequences
+        if self.transform is not None:
+            if hasattr(self.transform, "augment"):
+                record = self.transform.augment(record)
+            elif hasattr(self.transform, "encode"):
+                # Encoder transforms: encode sequence and store in "features"
+                encoded = self.transform.encode(record["sequence"])
+                record["features"] = encoded
+            elif callable(self.transform):
+                record = self.transform(record)
+
+        # Extract target if configured
+        if self.target_fn is not None:
+            if callable(self.target_fn):
+                target = self.target_fn(original_record)
+            else:
+                raise TypeError(f"target_fn must be callable, got {type(self.target_fn)}")
+
+            # Add target to record
+            if isinstance(record, dict):
+                record["target"] = target
+            else:
+                # Handle non-dict records
+                record = {"data": record, "target": target}
+
+        # Return in appropriate format
+        if not self.return_dict and self.target_fn is not None:
+            # Return (features, target) tuple for PyTorch compatibility
+            features = record.get("features", record.get("sequence"))
+            target = record.get("target")
+            return (features, target)
+        else:
+            # Return dict (default or when no target)
+            return record
 
     def __repr__(self) -> str:
         """String representation."""
