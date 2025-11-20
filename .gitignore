@@ -215,4 +215,7 @@ CLAUDE.md
 .claude
 .specify
 specs
+claudedoc
+.mcp.json
 # End of https://www.toptal.com/developers/gitignore/api/python
+#
