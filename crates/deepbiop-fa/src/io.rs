@@ -1,17 +1,14 @@
 use ahash::HashSet;
 use anyhow::{Ok, Result};
 use bstr::BString;
-use rand::{rng, Rng};
 use rayon::prelude::*;
 use std::fs::File;
 use std::io::{self, BufReader};
-use std::num::NonZeroUsize;
 use std::path::{Path, PathBuf};
-use std::thread;
 
 use noodles::fasta::record::{Definition, Record as FastaRecord, Sequence};
 use noodles::fastq::record::Record as FastqRecord;
-use noodles::{bgzf, fasta, fastq};
+use noodles::{fasta, fastq};
 
 use crate::encode::RecordData;
 use deepbiop_utils as utils;
@@ -78,13 +75,7 @@ pub fn write_bzip_fa_parallel(
     file_path: PathBuf,
     threads: Option<usize>,
 ) -> Result<()> {
-    let worker_count = NonZeroUsize::new(threads.unwrap_or(1))
-        .map(|count| count.min(thread::available_parallelism().unwrap()))
-        .unwrap();
-
-    let sink = File::create(file_path)?;
-    let encoder = bgzf::io::MultithreadedWriter::with_worker_count(worker_count, sink);
-
+    let encoder = utils::io::create_multithreaded_writer(file_path, threads)?;
     let mut writer = fasta::io::Writer::new(encoder);
 
     for record in records {
@@ -103,13 +94,7 @@ pub fn write_bzip_fa_parallel_for_noodle_record(
     file_path: PathBuf,
     threads: Option<usize>,
 ) -> Result<()> {
-    let worker_count = NonZeroUsize::new(threads.unwrap_or(2))
-        .map(|count| count.min(thread::available_parallelism().unwrap()))
-        .unwrap();
-
-    let sink = File::create(file_path)?;
-    let encoder = bgzf::io::MultithreadedWriter::with_worker_count(worker_count, sink);
-
+    let encoder = utils::io::create_multithreaded_writer(file_path, threads.or(Some(2)))?;
     let mut writer = fasta::io::Writer::new(encoder);
 
     for record in records {
@@ -235,12 +220,7 @@ pub fn convert_multiple_fas_to_one_bgzip_fa_streaming<P: AsRef<Path>>(
     result_path: P,
     threads: Option<usize>,
 ) -> Result<()> {
-    let worker_count = NonZeroUsize::new(threads.unwrap_or(2))
-        .map(|count| count.min(thread::available_parallelism().unwrap()))
-        .unwrap();
-
-    let sink = File::create(result_path)?;
-    let encoder = bgzf::io::MultithreadedWriter::with_worker_count(worker_count, sink);
+    let encoder = utils::io::create_multithreaded_writer(result_path, threads.or(Some(2)))?;
     let mut writer = fasta::io::Writer::new(encoder);
 
     // Process each file sequentially in a streaming fashion
@@ -274,42 +254,16 @@ pub fn select_record_from_fa<P: AsRef<Path>>(
         .collect())
 }
 
-pub fn select_record_from_fq_by_random<P: AsRef<Path>>(
+pub fn select_record_from_fa_by_random<P: AsRef<Path>>(
     fa: P,
     numbers: usize,
 ) -> Result<Vec<FastaRecord>> {
     let reader = utils::io::create_reader_for_compressed_file(fa)?;
     let mut reader = fasta::io::Reader::new(BufReader::new(reader));
 
-    // Use reservoir sampling algorithm to randomly select records
-    let mut rng = rng();
-    let mut selected_records = Vec::with_capacity(numbers);
-    let mut count = 0;
-
+    // Use reservoir sampling from utils
     let records_iter = reader.records().filter_map(|r| r.ok());
-    let mut records_iter = records_iter.peekable();
-
-    // Fill reservoir with first k elements
-    while selected_records.len() < numbers && records_iter.peek().is_some() {
-        if let Some(record) = records_iter.next() {
-            selected_records.push(record);
-            count += 1;
-        }
-    }
-
-    // Process remaining elements with reservoir sampling
-    for record in records_iter {
-        count += 1;
-        let j = rng.random_range(0..count);
-        if j < numbers {
-            selected_records[j] = record;
-        }
-    }
-
-    if count < numbers {
-        selected_records.truncate(count);
-    }
-    Ok(selected_records)
+    Ok(utils::sampling::reservoir_sampling(records_iter, numbers))
 }
 
 pub fn select_record_from_fa_by_stream<P: AsRef<Path>>(

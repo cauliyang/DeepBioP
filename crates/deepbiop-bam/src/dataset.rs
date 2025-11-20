@@ -27,11 +27,10 @@
 //! ```
 
 use std::fs::File;
-use std::num::NonZeroUsize;
 use std::path::{Path, PathBuf};
-use std::thread;
 
 use anyhow::Result;
+use deepbiop_utils as utils;
 use noodles::{bam, bgzf, sam};
 
 /// A dataset for streaming BAM files.
@@ -128,13 +127,7 @@ impl BamStreamIterator {
         let file = File::open(file_path).expect("Failed to open BAM file");
 
         // Calculate worker count for multithreaded decompression
-        let worker_count = if let Some(threads) = threads {
-            NonZeroUsize::new(threads)
-                .unwrap()
-                .min(thread::available_parallelism().unwrap_or(NonZeroUsize::MIN))
-        } else {
-            thread::available_parallelism().unwrap_or(NonZeroUsize::MIN)
-        };
+        let worker_count = utils::parallel::calculate_worker_count(threads);
 
         // Create multithreaded bgzf reader
         let decoder = bgzf::io::MultithreadedReader::with_worker_count(worker_count, file);
