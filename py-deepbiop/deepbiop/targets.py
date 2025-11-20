@@ -1,4 +1,4 @@
-r"""
+"""
 Target extraction utilities for supervised learning with biological sequences.
 
 This module provides flexible target/label extraction from FASTQ, FASTA, and BAM files
@@ -6,7 +6,7 @@ to enable supervised learning tasks like classification and regression.
 
 Examples:
     >>> # Extract from header metadata
-    >>> extractor = TargetExtractor.from_header(r"label=(\w+)")
+    >>> extractor = TargetExtractor.from_header(r"label=(\\w+)")
     >>>
     >>> # Extract quality statistics
     >>> extractor = TargetExtractor.from_quality(stat="mean")
@@ -87,7 +87,7 @@ class TargetExtractor:
 
         Parameters
         ----------
-            pattern: Regex pattern with one capture group (e.g., r"class=(\w+)")
+            pattern: Regex pattern with one capture group (e.g., r"class=(\\w+)")
             key: Key to extract from key:value pairs (e.g., "label")
             separator: Separator for key:value pairs (default: "|")
             converter: Function to convert extracted string to target type
@@ -408,7 +408,7 @@ def create_classification_extractor(
     Example:
         >>> extractor = create_classification_extractor(
         ...     classes=["negative", "positive"],
-        ...     pattern=r"class=(\w+)"
+        ...     pattern=r"class=(\\w+)"
         ... )
         >>> # Header "@read1 class=positive" → target = 1
     """
