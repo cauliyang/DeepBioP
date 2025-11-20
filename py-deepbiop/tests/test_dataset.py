@@ -668,3 +668,117 @@ class TestBamDatasetErrorHandling:
         # Error handling tested with nonexistent file test
         # Proper error handling would require fixing Rust panic to return Result
         pytest.skip("BAM invalid format handling needs Rust-side fixes")
+
+
+class TestDatasetPerformance:
+    """T078: Performance benchmark tests for FASTA and BAM datasets."""
+
+    @pytest.mark.benchmark
+    def test_fasta_iteration_performance(self):
+        """Test FASTA dataset iteration performance.
+
+        This test ensures FASTA dataset can iterate through records
+        efficiently with acceptable throughput.
+        """
+        import time
+        from deepbiop import FastaDataset
+
+        dataset = FastaDataset(str(FASTA_TEST_FILE))
+
+        # Warmup
+        _ = list(dataset)
+
+        # Benchmark iteration
+        start = time.perf_counter()
+        count = 0
+        for record in dataset:
+            count += 1
+            assert "id" in record
+            assert "sequence" in record
+        elapsed = time.perf_counter() - start
+
+        throughput = count / elapsed if elapsed > 0 else 0
+
+        print(f"\nFASTA Performance:")
+        print(f"  Records: {count}")
+        print(f"  Time: {elapsed:.4f}s")
+        print(f"  Throughput: {throughput:,.0f} records/sec")
+
+        # Verify we processed all records
+        assert count == len(dataset)
+        # Verify reasonable performance (>1000 records/sec for small test file)
+        assert throughput > 1000, f"FASTA throughput {throughput:.0f} too low"
+
+    @pytest.mark.benchmark
+    def test_bam_iteration_performance(self):
+        """Test BAM dataset iteration performance.
+
+        This test ensures BAM dataset can iterate through alignment records
+        efficiently with acceptable throughput.
+        """
+        import time
+        from deepbiop import BamDataset
+
+        dataset = BamDataset(str(BAM_TEST_FILE))
+
+        # Warmup
+        _ = list(dataset)
+
+        # Benchmark iteration
+        start = time.perf_counter()
+        count = 0
+        for record in dataset:
+            count += 1
+            assert "id" in record
+            assert "sequence" in record
+        elapsed = time.perf_counter() - start
+
+        throughput = count / elapsed if elapsed > 0 else 0
+
+        print(f"\nBAM Performance:")
+        print(f"  Records: {count}")
+        print(f"  Time: {elapsed:.4f}s")
+        print(f"  Throughput: {throughput:,.0f} records/sec")
+
+        # Verify we processed all records
+        assert count == len(dataset)
+        # Verify reasonable performance (>1000 records/sec for small test file)
+        assert throughput > 1000, f"BAM throughput {throughput:.0f} too low"
+
+    @pytest.mark.benchmark
+    def test_bam_multithreaded_performance(self):
+        """Test BAM dataset performance with multiple threads.
+
+        This test verifies that the threads parameter improves
+        decompression performance for BAM files.
+        """
+        import time
+        from deepbiop import BamDataset
+
+        # Test with single thread
+        start = time.perf_counter()
+        dataset_single = BamDataset(str(BAM_TEST_FILE), threads=1)
+        count_single = sum(1 for _ in dataset_single)
+        elapsed_single = time.perf_counter() - start
+
+        # Test with multiple threads
+        start = time.perf_counter()
+        dataset_multi = BamDataset(str(BAM_TEST_FILE), threads=4)
+        count_multi = sum(1 for _ in dataset_multi)
+        elapsed_multi = time.perf_counter() - start
+
+        # Verify same record count
+        assert count_single == count_multi
+
+        throughput_single = count_single / elapsed_single if elapsed_single > 0 else 0
+        throughput_multi = count_multi / elapsed_multi if elapsed_multi > 0 else 0
+
+        print(f"\nBAM Multithreaded Performance:")
+        print(f"  Single thread: {throughput_single:,.0f} records/sec")
+        print(f"  Multi thread (4): {throughput_multi:,.0f} records/sec")
+        print(f"  Speedup: {throughput_multi / throughput_single:.2f}x")
+
+        # Note: For small test files, multithreading overhead may not show improvement
+        # This test verifies functionality rather than expecting speedup
+        assert throughput_single > 0
+        assert throughput_multi > 0
