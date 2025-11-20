@@ -111,6 +111,64 @@ for record in dataset:
 
 ---
 
+#### `FastaDataset`
+
+PyTorch-compatible FASTA dataset with random access and caching.
+
+```python
+from deepbiop import FastaDataset
+
+dataset = FastaDataset(file_path: str)
+```
+
+**Parameters:**
+- `file_path` (str): Path to FASTA file (.fasta, .fa, .fasta.gz, .fa.gz)
+
+**Features:**
+- Full PyTorch Dataset protocol: `__len__`, `__getitem__`, `__iter__`
+- Random access via indexing
+- Caches records for efficient random access
+- Compatible with PyTorch DataLoader
+
+**Returns:**
+Dict records with keys:
+- `id` (bytes): Sequence identifier
+- `sequence` (bytes): Sequence data
+- `description` (bytes | None): Optional description
+
+**Example:**
+```python
+from deepbiop import FastaDataset, default_collate
+from torch.utils.data import DataLoader
+
+# Create dataset
+dataset = FastaDataset("genome.fasta.gz")
+
+# Access records
+print(f"Total: {len(dataset)}")      # Supports len()
+first = dataset[0]                    # Supports indexing
+for record in dataset:                # Supports iteration
+    process(record)
+
+# Use with DataLoader
+loader = DataLoader(
+    dataset,
+    batch_size=16,
+    collate_fn=default_collate  # For variable-length sequences
+)
+
+for batch in loader:
+    # batch is a list of dicts
+    for record in batch:
+        print(record['id'], len(record['sequence']))
+```
+
+**Memory Usage:** Loads all records into memory on initialization
+
+**Pickling Support:** ✅ Yes
+
+---
+
 ### BAM Datasets
 
 #### `BamStreamDataset`
@@ -150,6 +208,74 @@ for record in dataset:
     if record['mapping_quality'] >= 30:
         process_alignment(record)
 ```
+
+---
+
+#### `BamDataset`
+
+PyTorch-compatible BAM dataset with random access and multithreaded decompression.
+
+```python
+from deepbiop import BamDataset
+
+dataset = BamDataset(
+    file_path: str,
+    threads: int | None = None
+)
+```
+
+**Parameters:**
+- `file_path` (str): Path to BAM file
+- `threads` (int | None, optional): Number of threads for BGZF decompression (None = use all available)
+
+**Features:**
+- Full PyTorch Dataset protocol: `__len__`, `__getitem__`, `__iter__`
+- Random access via indexing
+- Multithreaded BGZF decompression for improved performance
+- Caches records for efficient random access
+- Compatible with PyTorch DataLoader
+
+**Returns:**
+Dict records with keys:
+- `id` (bytes): Read name
+- `sequence` (bytes): Sequence data
+- `quality` (bytes): Quality scores
+- `description` (bytes | None): Optional description
+
+**Example:**
+```python
+from deepbiop import BamDataset, default_collate
+from torch.utils.data import DataLoader
+
+# Create dataset with 4 decompression threads
+dataset = BamDataset("alignments.bam", threads=4)
+
+# Access records
+print(f"Total: {len(dataset)}")      # Supports len()
+first = dataset[0]                    # Supports indexing
+for record in dataset:                # Supports iteration
+    process(record)
+
+# Use with DataLoader
+loader = DataLoader(
+    dataset,
+    batch_size=32,
+    collate_fn=default_collate  # For variable-length sequences
+)
+
+for batch in loader:
+    # batch is a list of dicts
+    for record in batch:
+        print(record['id'], len(record['sequence']))
+```
+
+**Performance Tips:**
+- Use `threads` parameter for large BAM files (recommended: 2-8 threads)
+- For small files, multithreading overhead may not improve performance
+
+**Memory Usage:** Loads all records into memory on initialization
+
+**Pickling Support:** ✅ Yes
 
 ---
 

@@ -41,18 +41,48 @@ for batch in loader:
 
 ### Loading FASTA and BAM Data
 
+DeepBioP provides PyTorch-compatible dataset classes for FASTA and BAM files:
+
+```python
+from deepbiop import FastaDataset, BamDataset, default_collate
+from torch.utils.data import DataLoader
+
+# FASTA dataset - simple PyTorch Dataset interface
+fasta_dataset = FastaDataset("data/genome.fasta.gz")
+print(f"Total sequences: {len(fasta_dataset)}")  # Supports __len__
+
+# Access individual records
+first_seq = fasta_dataset[0]  # Supports indexing
+print(f"ID: {first_seq['id']}")
+print(f"Sequence length: {len(first_seq['sequence'])}")
+
+# BAM dataset with multithreaded decompression
+bam_dataset = BamDataset("data/alignments.bam", threads=4)
+
+# Use with DataLoader (use default_collate for variable-length sequences)
+fasta_loader = DataLoader(
+    fasta_dataset,
+    batch_size=16,
+    collate_fn=default_collate
+)
+
+# Each batch is a list of record dicts
+for batch in fasta_loader:
+    # batch is a list of dicts, not a batched tensor
+    for record in batch:
+        seq = record['sequence']
+        print(f"Processing {record['id']}: {len(seq)} bases")
+```
+
+**Low-level streaming API** (for advanced use cases):
+
 ```python
 from deepbiop.fa import FastaStreamDataset
 from deepbiop.bam import BamStreamDataset
 
-# FASTA dataset
-fasta_dataset = FastaStreamDataset("data/genome.fasta.gz")
-
-# BAM dataset with threading
-bam_dataset = BamStreamDataset("data/alignments.bam", threads=4)
-
-# Use with DataLoader as above
-loader = DataLoader(fasta_dataset, batch_size=16)
+# Streaming datasets for memory-efficient iteration
+fasta_stream = FastaStreamDataset("data/genome.fasta.gz")
+bam_stream = BamStreamDataset("data/alignments.bam", threads=4)
 ```
 
 ## Data Transformations
