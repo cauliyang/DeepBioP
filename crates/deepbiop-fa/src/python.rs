@@ -215,7 +215,7 @@ pub fn py_select_record_from_fq_by_random(
     number: usize,
     output: PathBuf,
 ) -> Result<()> {
-    let records = io::select_record_from_fq_by_random(fq, number)?;
+    let records = io::select_record_from_fa_by_random(fq, number)?;
     io::write_fa_for_noodle_record(&records, output)?;
     Ok(())
 }

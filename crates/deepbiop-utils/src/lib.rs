@@ -4,6 +4,8 @@ pub mod blat;
 pub mod export;
 pub mod interval;
 pub mod io;
+pub mod parallel;
+pub mod sampling;
 pub mod strategy;
 pub mod sv;
 

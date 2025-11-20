@@ -3,6 +3,7 @@
 pub mod batch;
 pub mod dataset;
 pub mod default;
+pub mod encoder;
 pub mod error;
 pub mod kmer;
 pub mod seq;

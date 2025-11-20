@@ -2,12 +2,11 @@
 
 use crate::features::AlignmentFeatures;
 use anyhow::{Context, Result};
+use deepbiop_utils as utils;
 use noodles::{bam, bgzf, sam};
 use rayon::prelude::*;
 use std::fs::File;
-use std::num::NonZeroUsize;
 use std::path::Path;
-use std::thread;
 
 /// BAM/SAM file reader with streaming and filtering capabilities
 pub struct BamReader {
@@ -35,14 +34,7 @@ impl BamReader {
         let file = File::open(path.as_ref())
             .with_context(|| format!("Failed to open BAM file: {:?}", path.as_ref()))?;
 
-        let worker_count = if let Some(threads) = threads {
-            NonZeroUsize::new(threads)
-                .unwrap()
-                .min(thread::available_parallelism().unwrap_or(NonZeroUsize::MIN))
-        } else {
-            thread::available_parallelism().unwrap_or(NonZeroUsize::MIN)
-        };
-
+        let worker_count = utils::parallel::calculate_worker_count(threads);
         let decoder = bgzf::io::MultithreadedReader::with_worker_count(worker_count, file);
         let mut reader = bam::io::Reader::from(decoder);
 

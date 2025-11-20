@@ -1,10 +1,11 @@
 use noodles::sam::alignment::record::Cigar as CigarTrait;
 use noodles::sam::record::Cigar;
+use std::fs::File;
 use std::path::Path;
-use std::{fs::File, num::NonZeroUsize, thread};
 
 use anyhow::Result;
 use bstr::BString;
+use deepbiop_utils as utils;
 use noodles::{bam, bgzf, sam};
 use rayon::prelude::*;
 
@@ -185,14 +186,7 @@ where
     F: Fn(&bam::Record) -> bool + std::marker::Sync,
     P: AsRef<Path>,
 {
-    let worker_count = if let Some(threads) = threads {
-        std::num::NonZeroUsize::new(threads)
-            .unwrap()
-            .min(thread::available_parallelism().unwrap_or(NonZeroUsize::MIN))
-    } else {
-        thread::available_parallelism().unwrap_or(NonZeroUsize::MIN)
-    };
-
+    let worker_count = utils::parallel::calculate_worker_count(threads);
     let file = File::open(bam.as_ref())?;
     let decoder = bgzf::io::MultithreadedReader::with_worker_count(worker_count, file);
     let mut reader = bam::io::Reader::from(decoder);

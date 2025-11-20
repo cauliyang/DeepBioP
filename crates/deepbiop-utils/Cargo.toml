@@ -27,6 +27,8 @@ lexical = { workspace = true }
 log = { workspace = true }
 serde = { workspace = true }
 tempfile = { workspace = true }
+deepbiop-core = { path = "../deepbiop-core", version = "0.1.16" }
+rand = { workspace = true }
 
 arrow = { workspace = true, optional = true }
 parquet = { workspace = true, optional = true }

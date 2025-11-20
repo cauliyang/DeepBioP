@@ -133,6 +133,23 @@ impl IntegerEncoder {
     }
 }
 
+// Implement SequenceEncoder trait for IntegerEncoder
+impl deepbiop_core::encoder::SequenceEncoder for IntegerEncoder {
+    type EncodeOutput = Array1<f32>;
+
+    fn encode_sequence(&self, seq: &[u8], qual: Option<&[u8]>) -> Result<Self::EncodeOutput> {
+        // Validate inputs
+        self.validate_input(seq, qual)?;
+
+        // IntegerEncoder ignores quality scores, only encodes sequence
+        self.encode(seq)
+    }
+
+    fn expected_output_size(&self, seq_len: usize) -> usize {
+        seq_len
+    }
+}
+
 #[cfg(test)]
 mod tests {
     use super::*;

@@ -255,6 +255,25 @@ impl KmerEncoder {
     }
 }
 
+// Implement SequenceEncoder trait for KmerEncoder
+impl crate::encoder::SequenceEncoder for KmerEncoder {
+    type EncodeOutput = Array1<f32>;
+
+    fn encode_sequence(&self, seq: &[u8], qual: Option<&[u8]>) -> Result<Self::EncodeOutput> {
+        // Validate inputs
+        self.validate_input(seq, qual)?;
+
+        // KmerEncoder ignores quality scores, only encodes sequence
+        self.encode(seq)
+    }
+
+    fn expected_output_size(&self, _seq_len: usize) -> usize {
+        // K-mer vocabulary size
+        let alphabet_size = self.encoding_type.alphabet_size();
+        alphabet_size.pow(self.k as u32)
+    }
+}
+
 #[cfg(test)]
 mod tests {
     use super::*;

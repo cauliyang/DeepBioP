@@ -270,6 +270,23 @@ impl OneHotEncoder {
     }
 }
 
+// Implement SequenceEncoder trait for OneHotEncoder
+impl deepbiop_core::encoder::SequenceEncoder for OneHotEncoder {
+    type EncodeOutput = Array2<f32>;
+
+    fn encode_sequence(&self, seq: &[u8], qual: Option<&[u8]>) -> Result<Self::EncodeOutput> {
+        // Validate inputs
+        self.validate_input(seq, qual)?;
+
+        // OneHotEncoder ignores quality scores, only encodes sequence
+        self.encode(seq)
+    }
+
+    fn expected_output_size(&self, seq_len: usize) -> usize {
+        seq_len * self.encoding_type.alphabet_size()
+    }
+}
+
 #[cfg(test)]
 mod tests {
     use super::*;
