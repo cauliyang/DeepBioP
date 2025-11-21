@@ -9,8 +9,7 @@ import pytest
 @pytest.mark.slow
 @pytest.mark.benchmark
 def test_fastq_throughput(benchmark):
-    """
-    Test FASTQ streaming achieves 1M+ records/sec throughput.
+    """Test FASTQ streaming achieves 1M+ records/sec throughput.
 
     Requirements:
     - FR-015: High-performance iteration (1M+ records/sec)
@@ -58,8 +57,7 @@ def test_fastq_throughput(benchmark):
 
 @pytest.mark.benchmark
 def test_fastq_throughput_simple():
-    """
-    Simple throughput test without pytest-benchmark.
+    """Simple throughput test without pytest-benchmark.
 
     This is a fallback test that works without pytest-benchmark plugin.
     Can be run with: pytest -m benchmark tests/test_performance.py::test_fastq_throughput_simple
@@ -93,8 +91,7 @@ def test_fastq_throughput_simple():
 
 @pytest.mark.benchmark
 def test_batch_creation_throughput():
-    """
-    Test batch creation throughput.
+    """Test batch creation throughput.
 
     Requirements:
     - FR-016: Efficient batching
@@ -162,8 +159,7 @@ def test_batch_creation_throughput():
 
 @pytest.mark.benchmark
 def test_parallel_dataloader_throughput():
-    """
-    Test PyTorch DataLoader with multiple workers.
+    """Test PyTorch DataLoader with multiple workers.
 
     Requirements:
     - FR-017: Multi-worker support
@@ -226,8 +222,7 @@ def test_parallel_dataloader_throughput():
 
 @pytest.mark.benchmark
 def test_compression_overhead():
-    """
-    Test throughput difference between compressed and uncompressed files.
+    """Test throughput difference between compressed and uncompressed files.
 
     This test verifies that:
     1. Decompression overhead is acceptable

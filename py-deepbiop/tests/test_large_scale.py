@@ -1,26 +1,24 @@
-"""
-Tests for large-scale batch processing.
+"""Tests for large-scale batch processing.
 
 Tests T032-T042 for User Story 3: Memory-efficient batch processing and multi-worker support.
 """
 
 import gc
-import os
 import sys
 import tempfile
+from pathlib import Path
 
 import pytest
 
 # Import datasets and loaders
 try:
     from deepbiop import FastqDataset, TransformDataset
-    from deepbiop.collate import default_collate, supervised_collate, tensor_collate
+    from deepbiop.collate import default_collate, supervised_collate
 except ImportError as e:
     pytest.skip(f"Datasets not yet exported: {e}", allow_module_level=True)
 
 # Import PyTorch
 try:
-    import torch
     from torch.utils.data import DataLoader
 except ImportError:
     pytest.skip("PyTorch not installed", allow_module_level=True)
@@ -32,7 +30,7 @@ class TestMemoryEfficiency:
     @pytest.fixture
     def large_fastq(self):
         """Create a large temporary FASTQ file."""
-        with tempfile.NamedTemporaryFile(mode='w', suffix='.fq', delete=False) as f:
+        with tempfile.NamedTemporaryFile(mode="w", suffix=".fq", delete=False) as f:
             # Write 1000 records (should be small enough for CI, large enough for testing)
             for i in range(1000):
                 f.write(f"@seq{i}\n")
@@ -42,7 +40,7 @@ class TestMemoryEfficiency:
             f.flush()  # Ensure all data is written
             fname = f.name
         yield fname
-        os.unlink(fname)
+        Path(fname).unlink()
 
     def test_dataset_memory_does_not_grow_linearly(self, large_fastq):
         """T032: Dataset should not load entire file into memory."""
@@ -99,7 +97,7 @@ class TestMultiWorkerDataLoader:
     @pytest.fixture
     def test_fastq(self):
         """Create a test FASTQ file."""
-        with tempfile.NamedTemporaryFile(mode='w', suffix='.fq', delete=False) as f:
+        with tempfile.NamedTemporaryFile(mode="w", suffix=".fq", delete=False) as f:
             for i in range(100):
                 f.write(f"@seq{i}\n")
                 f.write("ACGTACGTACGTACGT\n")
@@ -108,20 +106,17 @@ class TestMultiWorkerDataLoader:
             f.flush()
             fname = f.name
         yield fname
-        os.unlink(fname)
+        Path(fname).unlink()
 
     @pytest.mark.skipif(
         sys.platform == "win32",
-        reason="Multi-worker DataLoader not reliable on Windows"
+        reason="Multi-worker DataLoader not reliable on Windows",
     )
     def test_multiworker_dataloader(self, test_fastq):
         """T035: DataLoader should work with num_workers > 0."""
         dataset = FastqDataset(test_fastq)
         loader = DataLoader(
-            dataset,
-            batch_size=10,
-            num_workers=2,
-            collate_fn=default_collate
+            dataset, batch_size=10, num_workers=2, collate_fn=default_collate
         )
 
         batch_count = 0
@@ -133,20 +128,19 @@ class TestMultiWorkerDataLoader:
         assert batch_count == 10  # 100 / 10 = 10 batches
         assert sample_count == 100  # All samples processed
 
-    @pytest.mark.skip(reason="Rust PyTorch transforms not picklable for multiprocessing - known limitation")
+    @pytest.mark.skip(
+        reason="Rust PyTorch transforms not picklable for multiprocessing - known limitation"
+    )
     def test_multiworker_with_transforms(self, test_fastq):
         """T036: Multi-worker DataLoader with transforms (currently not supported due to pickling).
 
         Note: Rust-based PyTorch transforms cannot be pickled for multiprocessing.
         Users should apply transforms in the main process or use num_workers=0.
         """
-        from deepbiop import ReverseComplement, Mutator, Compose
+        from deepbiop import Compose, Mutator, ReverseComplement
 
         dataset = FastqDataset(test_fastq)
-        transform = Compose([
-            ReverseComplement(),
-            Mutator(mutation_rate=0.1, seed=42)
-        ])
+        transform = Compose([ReverseComplement(), Mutator(mutation_rate=0.1, seed=42)])
         transformed = TransformDataset(dataset, transform)
 
         # This would fail with pickle error in multiprocessing
@@ -155,7 +149,7 @@ class TestMultiWorkerDataLoader:
             transformed,
             batch_size=10,
             num_workers=0,  # Use 0 workers to avoid pickling
-            collate_fn=default_collate
+            collate_fn=default_collate,
         )
 
         batch_count = 0
@@ -174,7 +168,9 @@ class TestMultiWorkerDataLoader:
         # Use worker_init_fn for deterministic behavior
         def worker_init_fn(worker_id):
             import random
+
             import numpy as np
+
             random.seed(42 + worker_id)
             np.random.seed(42 + worker_id)
 
@@ -183,7 +179,7 @@ class TestMultiWorkerDataLoader:
             batch_size=10,
             num_workers=0,  # Use 0 workers for deterministic test
             collate_fn=default_collate,
-            worker_init_fn=worker_init_fn
+            worker_init_fn=worker_init_fn,
         )
 
         # Collect all IDs
@@ -200,8 +196,9 @@ class TestKmerEncoding:
 
     def test_kmer_encoder_basic(self):
         """T038: KmerEncoder should encode sequences to k-mer counts."""
-        from deepbiop import KmerEncoder
         import numpy as np
+
+        from deepbiop import KmerEncoder
 
         encoder = KmerEncoder(k=3)
         sample = {"id": b"@seq1", "sequence": b"ACGTACGTACGT", "quality": b"I" * 12}
@@ -217,8 +214,9 @@ class TestKmerEncoding:
 
     def test_kmer_encoder_canonical(self):
         """T039: KmerEncoder with canonical=True should treat RC kmers as same."""
-        from deepbiop import KmerEncoder
         import numpy as np
+
+        from deepbiop import KmerEncoder
 
         encoder = KmerEncoder(k=3, canonical=True)
         sample1 = {"id": b"@seq1", "sequence": b"ACG", "quality": b"III"}
@@ -285,6 +283,7 @@ class TestVariableLengthCollate:
 
         # Group by length
         from collections import defaultdict
+
         buckets = defaultdict(list)
         for sample in variable_length_batch:
             length = len(sample["sequence"])

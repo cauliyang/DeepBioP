@@ -1,5 +1,4 @@
-"""
-Supervised Learning Examples with DeepBioP.
+"""Supervised Learning Examples with DeepBioP.
 
 This module demonstrates how to use DeepBioP for supervised learning tasks
 with biological sequence data (FASTQ, FASTA, BAM files).
@@ -16,9 +15,9 @@ Examples include:
 # Example 1: Quality Score Prediction
 # ===================================
 
+
 def example_quality_prediction():
-    """
-    Regression task: Predict mean quality score from sequence.
+    """Regression task: Predict mean quality score from sequence.
 
     This example shows how to:
     - Use built-in quality extractors
@@ -30,10 +29,10 @@ def example_quality_prediction():
     import torch.nn as nn
     from torch.utils.data import DataLoader
 
-    from deepbiop.fq import FastqStreamDataset, OneHotEncoder
-    from deepbiop.transforms import TransformDataset
-    from deepbiop.targets import TargetExtractor
     from deepbiop.collate import tensor_collate
+    from deepbiop.fq import FastqStreamDataset, OneHotEncoder
+    from deepbiop.targets import TargetExtractor
+    from deepbiop.transforms import TransformDataset
 
     # Create dataset with quality score as target
     base_dataset = FastqStreamDataset("data.fastq")
@@ -78,7 +77,7 @@ def example_quality_prediction():
         total_loss = 0.0
         for batch in loader:
             features = batch["features"]  # Shape: (batch_size, seq_length, 4)
-            targets = batch["targets"]    # Shape: (batch_size,)
+            targets = batch["targets"]  # Shape: (batch_size,)
 
             # Forward pass
             predictions = model(features)
@@ -91,16 +90,16 @@ def example_quality_prediction():
 
             total_loss += loss.item()
 
-        print(f"Epoch {epoch+1}, Loss: {total_loss:.4f}")
+        print(f"Epoch {epoch + 1}, Loss: {total_loss:.4f}")
 
 
 # ===================================
 # Example 2: Sequence Classification from Headers
 # ===================================
 
+
 def example_header_classification():
-    """
-    Classification task: Extract labels from FASTQ headers.
+    """Classification task: Extract labels from FASTQ headers.
 
     Headers format: @read_123|class:positive|score:0.95
 
@@ -113,11 +112,11 @@ def example_header_classification():
     import torch.nn as nn
     from torch.utils.data import DataLoader
 
-    from deepbiop.fq import FastqStreamDataset
-    from deepbiop.transforms import TransformDataset
-    from deepbiop.targets import create_classification_extractor
     from deepbiop import KmerEncoder  # K-mer encoding
     from deepbiop.collate import tensor_collate
+    from deepbiop.fq import FastqStreamDataset
+    from deepbiop.targets import create_classification_extractor
+    from deepbiop.transforms import TransformDataset
 
     # Define classes
     classes = ["negative", "positive"]
@@ -158,11 +157,13 @@ def example_header_classification():
             return self.fc3(x)
 
     # Training
-    model = SequenceClassifier(input_dim=4096, num_classes=len(classes))  # 4^6 = 4096 for 6-mers
+    model = SequenceClassifier(
+        input_dim=4096, num_classes=len(classes)
+    )  # 4^6 = 4096 for 6-mers
     criterion = nn.CrossEntropyLoss()
     optimizer = torch.optim.Adam(model.parameters())
 
-    for epoch in range(10):
+    for _epoch in range(10):
         for batch in loader:
             features = batch["features"]
             targets = batch["targets"].long()
@@ -179,9 +180,9 @@ def example_header_classification():
 # Example 3: External Label File
 # ===================================
 
+
 def example_external_labels():
-    """
-    Classification with external CSV label file.
+    """Classification with external CSV label file.
 
     labels.csv:
     read_id,class,confidence
@@ -195,8 +196,8 @@ def example_external_labels():
     - Handle missing labels gracefully
     """
     from deepbiop.fq import FastqStreamDataset, OneHotEncoder
-    from deepbiop.transforms import TransformDataset
     from deepbiop.targets import TargetExtractor
+    from deepbiop.transforms import TransformDataset
 
     # Create target extractor from CSV file
     target_extractor = TargetExtractor.from_file(
@@ -220,7 +221,7 @@ def example_external_labels():
     for sample in dataset:
         seq_id = sample["id"]
         features = sample["features"]  # Encoded sequence
-        target = sample["target"]      # Label from CSV
+        target = sample["target"]  # Label from CSV
         print(f"ID: {seq_id}, Target: {target}, Features shape: {features.shape}")
         break  # Just show first sample
 
@@ -229,9 +230,9 @@ def example_external_labels():
 # Example 4: PyTorch Lightning Integration
 # ===================================
 
+
 def example_lightning_training():
-    """
-    Full training pipeline with PyTorch Lightning.
+    """Full training pipeline with PyTorch Lightning.
 
     This example shows how to:
     - Use BiologicalDataModule
@@ -247,9 +248,10 @@ def example_lightning_training():
 
     import torch
     import torch.nn as nn
+
+    from deepbiop import OneHotEncoder
     from deepbiop.lightning import BiologicalDataModule
     from deepbiop.targets import TargetExtractor
-    from deepbiop import OneHotEncoder
 
     # Data Module
     data_module = BiologicalDataModule(
@@ -315,30 +317,29 @@ def example_lightning_training():
 # Example 5: Custom Target Extraction
 # ===================================
 
+
 def example_custom_extractor():
-    """
-    Custom target extraction function.
+    """Custom target extraction function.
 
     This example shows how to:
     - Write custom extraction logic
     - Combine multiple features as targets
     - Handle complex label formats
     """
-    from deepbiop.fq import FastqStreamDataset
-    from deepbiop.transforms import TransformDataset
-    from deepbiop.targets import TargetExtractor
     from deepbiop import OneHotEncoder
+    from deepbiop.fq import FastqStreamDataset
+    from deepbiop.targets import TargetExtractor
+    from deepbiop.transforms import TransformDataset
 
     # Custom extraction function
     def extract_gc_and_quality(record):
-        """
-        Extract both GC content and quality score as multi-target.
+        """Extract both GC content and quality score as multi-target.
 
         Returns tuple of (gc_content, mean_quality)
         """
         # GC content
         seq = record["sequence"]
-        gc = seq.count(b'G') + seq.count(b'C')
+        gc = seq.count(b"G") + seq.count(b"C")
         gc_content = gc / len(seq) if len(seq) > 0 else 0.0
 
         # Mean quality
@@ -371,18 +372,19 @@ def example_custom_extractor():
 # Example 6: Multi-Task Learning
 # ===================================
 
+
 def example_multitask_learning():
-    """
-    Multi-task learning with multiple targets.
+    """Multi-task learning with multiple targets.
 
     Predict both quality score (regression) and read type (classification).
     """
     import torch
     import torch.nn as nn
-    from deepbiop.fq import FastqStreamDataset
-    from deepbiop.transforms import TransformDataset
-    from deepbiop.targets import TargetExtractor
+
     from deepbiop import OneHotEncoder
+    from deepbiop.fq import FastqStreamDataset
+    from deepbiop.targets import TargetExtractor
+    from deepbiop.transforms import TransformDataset
 
     # Multi-target extractor
     def extract_multi_targets(record):
@@ -392,7 +394,9 @@ def example_multitask_learning():
         mean_quality = sum(quality) / len(quality) if quality else 0.0
 
         # Read type from header (classification)
-        header = record["id"].decode() if isinstance(record["id"], bytes) else record["id"]
+        header = (
+            record["id"].decode() if isinstance(record["id"], bytes) else record["id"]
+        )
         read_type = 1 if "type:good" in header else 0
 
         return {
@@ -421,7 +425,7 @@ def example_multitask_learning():
             )
             # Task-specific heads
             self.quality_head = nn.Linear(128, 1)  # Regression
-            self.type_head = nn.Linear(128, 2)      # Binary classification
+            self.type_head = nn.Linear(128, 2)  # Binary classification
 
         def forward(self, x):
             x = x.transpose(1, 2)
@@ -437,8 +441,8 @@ def example_multitask_learning():
 
     # Training would involve combining losses
     model = MultiTaskModel()
-    quality_loss = nn.MSELoss()
-    type_loss = nn.CrossEntropyLoss()
+    nn.MSELoss()
+    nn.CrossEntropyLoss()
 
     # Example forward pass
     sample = next(iter(dataset))

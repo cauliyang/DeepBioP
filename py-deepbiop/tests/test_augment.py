@@ -114,7 +114,11 @@ class TestMutator:
 
         assert len(result["sequence"]) == len(record["sequence"])
         # With 10% rate, expect ~1 mutation (but random)
-        mutations = sum(1 for a, b in zip(record["sequence"], result["sequence"], strict=False) if a != b)
+        mutations = sum(
+            1
+            for a, b in zip(record["sequence"], result["sequence"], strict=False)
+            if a != b
+        )
         assert 0 <= mutations <= len(record["sequence"])
 
     def test_mutator_high_rate(self):
@@ -124,7 +128,11 @@ class TestMutator:
 
         result = mutator(record)
 
-        mutations = sum(1 for a, b in zip(record["sequence"], result["sequence"], strict=False) if a != b)
+        mutations = sum(
+            1
+            for a, b in zip(record["sequence"], result["sequence"], strict=False)
+            if a != b
+        )
         # With 50% rate, expect ~50 mutations (within reasonable range)
         assert 30 <= mutations <= 70
 
@@ -185,7 +193,10 @@ class TestMutator:
         results = [mutator(r) for r in records]
 
         assert len(results) == 3
-        assert all(len(r["sequence"]) == len(s["sequence"]) for r, s in zip(results, records, strict=False))
+        assert all(
+            len(r["sequence"]) == len(s["sequence"])
+            for r, s in zip(results, records, strict=False)
+        )
 
     def test_mutator_empty_sequence(self):
         """Test mutator with empty sequence."""
@@ -472,4 +483,7 @@ class TestAugmentationIntegration:
         mutated = [mutator(r) for r in rc_records]
 
         assert len(mutated) == 3
-        assert all(len(m["sequence"]) == len(s["sequence"]) for m, s in zip(mutated, records, strict=False))
+        assert all(
+            len(m["sequence"]) == len(s["sequence"])
+            for m, s in zip(mutated, records, strict=False)
+        )

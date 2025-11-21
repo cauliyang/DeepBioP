@@ -7,8 +7,7 @@ import typing
 
 @typing.final
 class EncoderOption:
-    r"""
-    Options for configuring the FASTA sequence encoder.
+    r"""Options for configuring the FASTA sequence encoder.
 
     This struct provides configuration options for encoding FASTA sequences,
     such as which bases to consider during encoding.
@@ -34,8 +33,7 @@ class EncoderOption:
 
 @typing.final
 class ParquetEncoder:
-    r"""
-    An encoder for converting FASTA records to Parquet format.
+    r"""An encoder for converting FASTA records to Parquet format.
 
     This struct provides functionality to encode FASTA sequence data into Parquet files,
     which are an efficient columnar storage format.
@@ -111,8 +109,7 @@ def fasta_to_fastq(
     fasta_path: builtins.str | os.PathLike | pathlib.Path,
     fastq_path: builtins.str | os.PathLike | pathlib.Path,
 ) -> None:
-    """
-    Convert FASTA file to FASTQ file with default quality scores.
+    """Convert FASTA file to FASTQ file with default quality scores.
 
     Since FASTA files don't contain quality information, assigns
     default quality score (Phred+33 Q40 = '~') to all bases.

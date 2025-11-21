@@ -1,5 +1,4 @@
-"""
-Collate functions for batching biological sequence data with PyTorch.
+"""Collate functions for batching biological sequence data with PyTorch.
 
 This module provides collate functions compatible with PyTorch DataLoader
 for handling variable-length sequences and supervised learning targets.
@@ -9,18 +8,15 @@ from typing import Any
 
 
 def default_collate(batch: list[dict[str, Any]]) -> dict[str, Any]:
-    """
-    Default collate function for biological sequence batches.
+    """Default collate function for biological sequence batches.
 
     Preserves variable-length sequences as lists and stacks numpy arrays.
     This is the identity collate function - returns batch as-is for maximum flexibility.
 
-    Parameters
-    ----------
-        batch: List of samples from dataset
+    Args:
+        batch (list[dict[str, Any]]): List of samples from dataset
 
-    Returns
-    -------
+    Returns:
         Batch as list of samples (identity function)
 
     Example:
@@ -31,20 +27,17 @@ def default_collate(batch: list[dict[str, Any]]) -> dict[str, Any]:
 
 
 def supervised_collate(batch: list[dict[str, Any]]) -> dict[str, list | Any]:
-    """
-    Collate function for supervised learning with biological sequences.
+    """Collate function for supervised learning with biological sequences.
 
     Separates features and targets for easy use with PyTorch training loops.
     Handles both dict-based samples and tuple-based samples.
 
-    Parameters
-    ----------
-        batch: List of samples, each being either:
+    Args:
+        batch (list[dict[str, Any]]): List of samples, each being either:
             - dict with keys like {"features": ..., "target": ..., "id": ...}
             - tuple of (features, target)
 
-    Returns
-    -------
+    Returns:
         Dictionary with structured batch:
         - "features": List of feature arrays/tensors
         - "targets": List of targets
@@ -56,7 +49,7 @@ def supervised_collate(batch: list[dict[str, Any]]) -> dict[str, list | Any]:
         >>> loader = DataLoader(dataset, batch_size=32, collate_fn=supervised_collate)
         >>> for batch in loader:
         ...     features = batch["features"]  # List or stacked tensor
-        ...     targets = batch["targets"]    # List of targets
+        ...     targets = batch["targets"]  # List of targets
         ...     loss = criterion(model(features), targets)
     """
     # Handle tuple-based samples (features, target)
@@ -98,18 +91,15 @@ def supervised_collate(batch: list[dict[str, Any]]) -> dict[str, list | Any]:
 
 
 def tensor_collate(batch: list[dict[str, Any]]) -> dict[str, Any]:
-    """
-    Collate function that converts features and targets to PyTorch tensors.
+    """Collate function that converts features and targets to PyTorch tensors.
 
     Requires numpy or PyTorch to be installed. Stacks features and targets
     into tensors for direct use with PyTorch models.
 
-    Parameters
-    ----------
-        batch: List of samples with "features" and "target" keys
+    Args:
+        batch (list[dict[str, Any]]): List of samples with "features" and "target" keys
 
-    Returns
-    -------
+    Returns:
         Dictionary with:
         - "features": Stacked tensor of shape (batch_size, ...)
         - "targets": Tensor of targets of shape (batch_size,) or (batch_size, num_classes)
@@ -121,12 +111,11 @@ def tensor_collate(batch: list[dict[str, Any]]) -> dict[str, Any]:
         >>> loader = DataLoader(dataset, batch_size=32, collate_fn=tensor_collate)
         >>> for batch in loader:
         ...     features = batch["features"]  # torch.Tensor
-        ...     targets = batch["targets"]    # torch.Tensor
+        ...     targets = batch["targets"]  # torch.Tensor
         ...     outputs = model(features)
         ...     loss = criterion(outputs, targets)
 
-    Raises
-    ------
+    Raises:
         ImportError: If PyTorch is not installed
     """
     try:
@@ -156,7 +145,7 @@ def tensor_collate(batch: list[dict[str, Any]]) -> dict[str, Any]:
     if "target" in batch[0]:
         targets_list = [item["target"] for item in batch]
         # Handle different target types
-        if isinstance(targets_list[0], (list, tuple)):
+        if isinstance(targets_list[0], list | tuple):
             # Multi-dimensional targets
             result["targets"] = torch.tensor(targets_list)
         else:
@@ -175,18 +164,15 @@ def tensor_collate(batch: list[dict[str, Any]]) -> dict[str, Any]:
 
 
 def get_collate_fn(mode: str = "default"):
-    """
-    Get a collate function by name.
+    """Get a collate function by name.
 
-    Parameters
-    ----------
-        mode: Collate mode
+    Args:
+        mode (str): Collate mode
             - "default": Identity function, returns batch as-is
             - "supervised": Separates features and targets
             - "tensor": Converts to PyTorch tensors
 
-    Returns
-    -------
+    Returns:
         Collate function suitable for PyTorch DataLoader
 
     Example:
@@ -200,4 +186,5 @@ def get_collate_fn(mode: str = "default"):
     elif mode == "tensor":
         return tensor_collate
     else:
-        raise ValueError(f"Unknown collate mode: {mode}. Choose from: default, supervised, tensor")
+        msg = f"Unknown collate mode: {mode}. Choose from: default, supervised, tensor"
+        raise ValueError(msg)

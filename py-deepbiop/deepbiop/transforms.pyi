@@ -1,5 +1,4 @@
-"""
-Transform composition utilities for biological sequence data.
+"""Transform composition utilities for biological sequence data.
 
 Provides utilities for composing and chaining transformations in preprocessing
 pipelines.
@@ -15,8 +14,7 @@ Transform = Callable[[Sample], Sample]
 Filter = Callable[[Sample], bool]
 
 class Compose:
-    """
-    Compose multiple transforms into a single transform.
+    """Compose multiple transforms into a single transform.
 
     Applies a sequence of transformations in order, passing the output of each
     transform as input to the next.
@@ -42,8 +40,7 @@ class Compose:
     def __repr__(self) -> str: ...
 
 class FilterCompose:
-    """
-    Compose multiple filters with AND logic.
+    """Compose multiple filters with AND logic.
 
     Applies filters in sequence, short-circuiting on first False result.
 
@@ -73,8 +70,7 @@ class FilterCompose:
     def __repr__(self) -> str: ...
 
 class TransformDataset:
-    """
-    Wrapper dataset that applies transformations to another dataset.
+    """Wrapper dataset that applies transformations to another dataset.
 
     Lazily applies transforms on-the-fly during iteration or indexing.
 

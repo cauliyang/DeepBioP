@@ -3,16 +3,12 @@
 from __future__ import annotations
 
 from dataclasses import dataclass, field
-from typing import TYPE_CHECKING, Any
-
-if TYPE_CHECKING:
-    import numpy as np
+from typing import Any
 
 
 @dataclass
 class Record:
-    """
-    Unified sequence record representation.
+    """Unified sequence record representation.
 
     This is the core data structure that flows through the entire pipeline.
     All dataset implementations return Record objects, and all transforms
@@ -31,7 +27,7 @@ class Record:
     features : dict[str, Any] | None
         Encoded features added by transforms (e.g., one-hot, k-mer vectors)
 
-    Examples
+    Examples:
     --------
     >>> record = Record(
     ...     id=b"@read_001",
@@ -72,15 +68,14 @@ class Record:
         return len(self.sequence)
 
     def to_dict(self) -> dict[str, Any]:
-        """
-        Convert record to dictionary representation.
+        """Convert record to dictionary representation.
 
-        Returns
+        Returns:
         -------
         dict[str, Any]
             Dictionary with all record fields
 
-        Examples
+        Examples:
         --------
         >>> record = Record(id=b"@r1", sequence=b"ACGT", quality=b"IIII")
         >>> record.to_dict()
@@ -96,20 +91,19 @@ class Record:
 
     @classmethod
     def from_dict(cls, data: dict[str, Any]) -> Record:
-        """
-        Create record from dictionary.
+        """Create record from dictionary.
 
         Parameters
         ----------
         data : dict[str, Any]
             Dictionary containing record fields
 
-        Returns
+        Returns:
         -------
         Record
             New record instance
 
-        Examples
+        Examples:
         --------
         >>> data = {"id": b"@r1", "sequence": b"ACGT", "quality": b"IIII"}
         >>> record = Record.from_dict(data)
@@ -125,10 +119,9 @@ class Record:
         )
 
     def copy(self) -> Record:
-        """
-        Create a deep copy of the record.
+        """Create a deep copy of the record.
 
-        Returns
+        Returns:
         -------
         Record
             New record instance with copied data

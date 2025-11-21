@@ -1,5 +1,4 @@
-"""
-PyTorch API Quickstart Example.
+"""PyTorch API Quickstart Example.
 
 This example demonstrates the basic usage of DeepBioP's PyTorch-style API
 for loading and preprocessing biological sequence data.

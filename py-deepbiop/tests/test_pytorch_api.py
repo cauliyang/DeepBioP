@@ -1,5 +1,4 @@
-"""
-Tests for PyTorch-style Python API.
+"""Tests for PyTorch-style Python API.
 
 This test module validates the PyTorch-compatible Dataset, DataLoader,
 and Transform classes for biological sequence data loading.
@@ -440,7 +439,7 @@ class TestInspection:
         )
 
         # Verify memory_footprint
-        assert isinstance(summary["memory_footprint"], (int, float)), (
+        assert isinstance(summary["memory_footprint"], int | float), (
             "memory_footprint should be numeric"
         )
         assert summary["memory_footprint"] > 0, "Memory footprint should be positive"

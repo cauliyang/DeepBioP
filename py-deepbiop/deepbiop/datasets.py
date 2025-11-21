@@ -1,16 +1,15 @@
-"""
-PyTorch-compatible dataset wrappers for biological sequence data.
+"""PyTorch-compatible dataset wrappers for biological sequence data.
 
 This module provides simple wrappers to read FASTQ/FASTA files with a
 standard PyTorch Dataset interface (returning individual samples).
 """
 
-from typing import Any, Iterator
+from collections.abc import Iterator
+from typing import Any
 
 
 class FastqDataset:
-    """
-    Simple PyTorch-compatible FASTQ dataset that returns individual records.
+    """Simple PyTorch-compatible FASTQ dataset that returns individual records.
 
     This implementation uses a simple streaming approach with optional caching
     for better performance with PyTorch DataLoader.
@@ -49,37 +48,31 @@ class FastqDataset:
     def _read_all_records(self) -> Iterator[dict[str, Any]]:
         """Read all records from file using Rust streaming dataset."""
         # Iterate through Rust dataset (already returns dicts)
-        for record_dict in self._rust_dataset:
-            # rust_record is already a dict with id, sequence, quality keys
-            yield record_dict
+        yield from self._rust_dataset
 
     def __len__(self) -> int:
         """Return total number of records."""
         return self._total_records
 
     def __getitem__(self, idx: int) -> dict[str, Any]:
-        """
-        Get individual record at index.
+        """Get individual record at index.
 
-        Parameters
-        ----------
-            idx: Record index (0-based)
+        Args:
+            idx (int): Record index (0-based)
 
-        Returns
-        -------
+        Returns:
             Record dict with keys: "id", "sequence", "quality"
         """
         if idx < 0 or idx >= self._total_records:
-            raise IndexError(f"Index {idx} out of range [0, {self._total_records})")
+            msg = f"Index {idx} out of range [0, {self._total_records})"
+            raise IndexError(msg)
 
         return self._records_cache[idx]
 
     def __iter__(self) -> Iterator[dict[str, Any]]:
-        """
-        Iterate over all records.
+        """Iterate over all records.
 
-        Yields
-        ------
+        Yields:
             Record dict with keys: "id", "sequence", "quality"
         """
         return iter(self._records_cache)
@@ -90,8 +83,7 @@ class FastqDataset:
 
 
 class FastaDataset:
-    """
-    Simple PyTorch-compatible FASTA dataset that returns individual records.
+    """Simple PyTorch-compatible FASTA dataset that returns individual records.
 
     This implementation uses a simple streaming approach with optional caching
     for better performance with PyTorch DataLoader.
@@ -130,37 +122,31 @@ class FastaDataset:
     def _read_all_records(self) -> Iterator[dict[str, Any]]:
         """Read all records from file using Rust streaming dataset."""
         # Iterate through Rust dataset (already returns dicts)
-        for record_dict in self._rust_dataset:
-            # rust_record is already a dict with id, sequence, description keys
-            yield record_dict
+        yield from self._rust_dataset
 
     def __len__(self) -> int:
         """Return total number of records."""
         return self._total_records
 
     def __getitem__(self, idx: int) -> dict[str, Any]:
-        """
-        Get individual record at index.
+        """Get individual record at index.
 
-        Parameters
-        ----------
-            idx: Record index (0-based)
+        Args:
+            idx (int): Record index (0-based)
 
-        Returns
-        -------
+        Returns:
             Record dict with keys: "id", "sequence", "description" (optional)
         """
         if idx < 0 or idx >= self._total_records:
-            raise IndexError(f"Index {idx} out of range [0, {self._total_records})")
+            msg = f"Index {idx} out of range [0, {self._total_records})"
+            raise IndexError(msg)
 
         return self._records_cache[idx]
 
     def __iter__(self) -> Iterator[dict[str, Any]]:
-        """
-        Iterate over all records.
+        """Iterate over all records.
 
-        Yields
-        ------
+        Yields:
             Record dict with keys: "id", "sequence", "description" (optional)
         """
         return iter(self._records_cache)
@@ -171,8 +157,7 @@ class FastaDataset:
 
 
 class BamDataset:
-    """
-    Simple PyTorch-compatible BAM dataset that returns individual alignment records.
+    """Simple PyTorch-compatible BAM dataset that returns individual alignment records.
 
     This implementation uses a simple streaming approach with optional caching
     for better performance with PyTorch DataLoader.
@@ -213,37 +198,31 @@ class BamDataset:
     def _read_all_records(self) -> Iterator[dict[str, Any]]:
         """Read all records from file using Rust streaming dataset."""
         # Iterate through Rust dataset (already returns dicts)
-        for record_dict in self._rust_dataset:
-            # rust_record is already a dict with id, sequence, quality keys
-            yield record_dict
+        yield from self._rust_dataset
 
     def __len__(self) -> int:
         """Return total number of records."""
         return self._total_records
 
     def __getitem__(self, idx: int) -> dict[str, Any]:
-        """
-        Get individual record at index.
+        """Get individual record at index.
 
-        Parameters
-        ----------
-            idx: Record index (0-based)
+        Args:
+            idx (int): Record index (0-based)
 
-        Returns
-        -------
+        Returns:
             Record dict with keys: "id", "sequence", "quality"
         """
         if idx < 0 or idx >= self._total_records:
-            raise IndexError(f"Index {idx} out of range [0, {self._total_records})")
+            msg = f"Index {idx} out of range [0, {self._total_records})"
+            raise IndexError(msg)
 
         return self._records_cache[idx]
 
     def __iter__(self) -> Iterator[dict[str, Any]]:
-        """
-        Iterate over all records.
+        """Iterate over all records.
 
-        Yields
-        ------
+        Yields:
             Record dict with keys: "id", "sequence", "quality"
         """
         return iter(self._records_cache)
@@ -254,4 +233,4 @@ class BamDataset:
         return f"BamDataset(file_path='{self.file_path}'{threads_str}, total_records={self._total_records})"
 
 
-__all__ = ["FastqDataset", "FastaDataset", "BamDataset"]
+__all__ = ["BamDataset", "FastaDataset", "FastqDataset"]

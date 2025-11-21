@@ -1,5 +1,4 @@
-"""
-Tests for transform reproducibility with seeds.
+"""Tests for transform reproducibility with seeds.
 
 Tests T022-T025 for User Story 2: Reproducible Analysis.
 """
@@ -8,11 +7,11 @@ import pytest
 
 # Import transforms - these should work once exported
 try:
-    from deepbiop import ReverseComplement, Mutator, Compose
+    from deepbiop import Compose, Mutator, ReverseComplement
 except ImportError:
     # Fallback to pytorch module during development
     try:
-        from deepbiop.pytorch import ReverseComplement, Mutator, Compose
+        from deepbiop.pytorch import Compose, Mutator, ReverseComplement
     except ImportError:
         pytest.skip("Transforms not yet exported", allow_module_level=True)
 
@@ -142,15 +141,9 @@ class TestComposeSeedPropagation:
         sample = {"id": b"@seq1", "sequence": b"ACGTACGTACGT", "quality": b"I" * 12}
 
         # Create composed transform with seeds
-        transform1 = Compose([
-            ReverseComplement(),
-            Mutator(mutation_rate=0.2, seed=42)
-        ])
+        transform1 = Compose([ReverseComplement(), Mutator(mutation_rate=0.2, seed=42)])
 
-        transform2 = Compose([
-            ReverseComplement(),
-            Mutator(mutation_rate=0.2, seed=42)
-        ])
+        transform2 = Compose([ReverseComplement(), Mutator(mutation_rate=0.2, seed=42)])
 
         result1 = transform1(sample.copy())
         result2 = transform2(sample.copy())
@@ -163,10 +156,12 @@ class TestComposeSeedPropagation:
         sample = {"id": b"@seq1", "sequence": b"ATCG", "quality": b"ABCD"}
 
         # First RC, then mutate
-        transform = Compose([
-            ReverseComplement(),
-            Mutator(mutation_rate=0.0, seed=42)  # 0% mutation to test order
-        ])
+        transform = Compose(
+            [
+                ReverseComplement(),
+                Mutator(mutation_rate=0.0, seed=42),  # 0% mutation to test order
+            ]
+        )
 
         result = transform(sample)
 
@@ -251,11 +246,8 @@ class TestQualityFilter:
         filter_fn = QualityFilter(min_mean_quality=30.0)
 
         # High quality: 'I' = 73 - 33 = 40
-        high_quality = b"IIIIIIII"
         # Medium quality: '>' = 62 - 33 = 29
-        medium_quality = b">>>>>>>>"
         # Low quality: '!' = 33 - 33 = 0
-        low_quality = b"!!!!!!!!"
 
         # Note: Quality filter expects sequence, not just quality
         # For testing, we use the passes method which takes a sequence

@@ -12,6 +12,7 @@ For sequence operations, use:
 """
 
 import pytest
+
 from deepbiop import core
 
 
@@ -25,10 +26,8 @@ def test_core_record_exists():
 @pytest.mark.skip(reason="reverse_complement function does not exist in core module")
 def test_reverse_complement():
     """Skipped: Use ReverseComplement transform instead."""
-    pass
 
 
 @pytest.mark.skip(reason="seq_to_kmers function does not exist in core module")
 def test_fq():
     """Skipped: Use KmerEncoder transform instead."""
-    pass

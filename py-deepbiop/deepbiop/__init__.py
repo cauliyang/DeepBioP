@@ -29,16 +29,23 @@ except (ImportError, AttributeError):
     _TRANSFORMS_AVAILABLE = False
 
 # Import core data structures (pure Python)
+# Import collate functions for PyTorch DataLoader (pure Python)
+from deepbiop.collate import (
+    default_collate,
+    get_collate_fn,
+    supervised_collate,
+    tensor_collate,
+)
 from deepbiop.core import Record
 
 # Import base abstractions (pure Python)
 from deepbiop.dataset import Dataset
 
+# Import PyTorch-compatible dataset wrappers (pure Python)
+from deepbiop.datasets import BamDataset, FastaDataset, FastqDataset
+
 # Import Lightning module (pure Python, not from Rust)
 from deepbiop.lightning import BiologicalDataModule
-
-# Import transform composition utilities (pure Python)
-from deepbiop.transforms import Compose, FilterCompose, Transform, TransformDataset
 
 # Import target extraction utilities for supervised learning (pure Python)
 from deepbiop.targets import (
@@ -47,11 +54,8 @@ from deepbiop.targets import (
     get_builtin_extractor,
 )
 
-# Import collate functions for PyTorch DataLoader (pure Python)
-from deepbiop.collate import default_collate, get_collate_fn, supervised_collate, tensor_collate
-
-# Import PyTorch-compatible dataset wrappers (pure Python)
-from deepbiop.datasets import BamDataset, FastaDataset, FastqDataset
+# Import transform composition utilities (pure Python)
+from deepbiop.transforms import Compose, FilterCompose, Transform, TransformDataset
 
 # Register submodules in sys.modules so they can be imported with "from deepbiop.fq import"
 # Only register modules that actually exist
@@ -62,43 +66,44 @@ for _module_name in ["fq", "fa", "bam", "core", "utils", "vcf", "gtf", "pytorch"
 # Import filter classes from Rust fq module
 try:
     from deepbiop.fq import LengthFilter, QualityFilter
+
     _FILTERS_AVAILABLE = True
 except (ImportError, AttributeError):
     _FILTERS_AVAILABLE = False
 
 __all__ = [
-    # Core data structures
-    "Record",
-    "Dataset",
-    "Transform",
-    # Dataset implementations
-    "FastqDataset",
-    "FastaDataset",
     "BamDataset",
     # Lightning integration
     "BiologicalDataModule",
     # Transform composition
     "Compose",
+    "Dataset",
+    "FastaDataset",
+    # Dataset implementations
+    "FastqDataset",
     "FilterCompose",
-    "TransformDataset",
-    # Augmentation transforms (Rust-based)
-    "ReverseComplement",
-    "Mutator",
-    "Sampler",
-    # Encoders (Rust-based)
-    "OneHotEncoder",
     "IntegerEncoder",
     "KmerEncoder",
     # Filters (Rust-based)
     "LengthFilter",
+    "Mutator",
+    # Encoders (Rust-based)
+    "OneHotEncoder",
     "QualityFilter",
+    # Core data structures
+    "Record",
+    # Augmentation transforms (Rust-based)
+    "ReverseComplement",
+    "Sampler",
     # Target extraction for supervised learning
     "TargetExtractor",
-    "get_builtin_extractor",
+    "Transform",
+    "TransformDataset",
     "create_classification_extractor",
     # Collate functions
     "default_collate",
+    "get_builtin_extractor",
+    "get_collate_fn",
     "supervised_collate",
     "tensor_collate",
-    "get_collate_fn",
 ]

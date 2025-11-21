@@ -8,8 +8,7 @@ import typing
 
 @typing.final
 class GenomicInterval:
-    r"""
-    A segment is a genomic interval defined by a chromosome, a start position and an end position.
+    r"""A segment is a genomic interval defined by a chromosome, a start position and an end position.
 
     The start position is inclusive and the end position is exclusive.
     """
@@ -78,8 +77,7 @@ class PslAlignment:
 
 @typing.final
 class CompressedType(enum.Enum):
-    r"""
-    Represents different types of file compression formats.
+    r"""Represents different types of file compression formats.
 
     This enum is used to identify and handle various compression formats commonly used for files.
     It can be used in Python through the deepbiop.utils module.
@@ -116,17 +114,16 @@ class SequenceFileType(enum.Enum):
 def check_compressed_type(
     path: builtins.str | os.PathLike | pathlib.Path,
 ) -> CompressedType:
-    r"""
-    Check the compression type of a file.
+    r"""Check the compression type of a file.
 
     Args:
         path: Path to the file to check
 
-    Returns
+    Returns:
     -------
         The compression type of the file (None, Gzip, Bzip2, Xz)
 
-    Raises
+    Raises:
     ------
         IOError: If the file cannot be opened or read
     """
@@ -159,8 +156,7 @@ def export_to_parquet(
     sequences: typing.Sequence[builtins.bytes],
     qualities: typing.Sequence[builtins.bytes] | None = None,
 ) -> None:
-    r"""
-    Export sequences to Parquet format.
+    r"""Export sequences to Parquet format.
 
     Args:
         path: Output Parquet file path
@@ -177,8 +173,7 @@ def export_to_numpy_int(
     sequences: typing.Sequence[builtins.bytes],
     alphabet: builtins.bytes | None = None,
 ) -> None:
-    r"""
-    Export sequences to NumPy format (integer encoded).
+    r"""Export sequences to NumPy format (integer encoded).
 
     Args:
         path: Output .npy file path
@@ -194,8 +189,7 @@ def export_to_numpy_onehot(
     sequences: typing.Sequence[builtins.bytes],
     alphabet: builtins.bytes | None = None,
 ) -> None:
-    r"""
-    Export sequences to NumPy format (one-hot encoded).
+    r"""Export sequences to NumPy format (one-hot encoded).
 
     Args:
         path: Output .npy file path
@@ -211,8 +205,7 @@ def export_quality_to_numpy(
     qualities: typing.Sequence[builtins.bytes],
     offset: builtins.int = 33,
 ) -> None:
-    r"""
-    Export quality scores to NumPy format.
+    r"""Export quality scores to NumPy format.
 
     Args:
         path: Output .npy file path
@@ -231,8 +224,7 @@ def export_fastq_to_numpy(
     alphabet: builtins.bytes | None = None,
     offset: builtins.int = 33,
 ) -> None:
-    r"""
-    Export FASTQ data to paired NumPy files (sequences + qualities).
+    r"""Export FASTQ data to paired NumPy files (sequences + qualities).
 
     Args:
         seq_path: Output .npy file for sequences

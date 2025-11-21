@@ -1,6 +1,5 @@
 #!/usr/bin/env python3
-"""
-Example demonstrating data augmentation for biological sequences.
+"""Example demonstrating data augmentation for biological sequences.
 
 This script shows how to use DeepBioP's augmentation features to create
 diverse training data for machine learning models.
