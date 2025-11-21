@@ -509,7 +509,7 @@ pub mod python {
     ///
     /// Encodes biological sequences as one-hot matrices for machine learning.
     #[gen_stub_pyclass]
-    #[pyclass(name = "OneHotEncoder")]
+    #[pyclass(name = "OneHotEncoder", module = "deepbiop.fq")]
     pub struct PyOneHotEncoder {
         inner: OneHotEncoder,
     }

@@ -26,7 +26,7 @@ use pyo3_stub_gen::derive::*;
 
 /// Python wrapper for AlignmentFeatures
 #[gen_stub_pyclass]
-#[pyclass(name = "AlignmentFeatures")]
+#[pyclass(name = "AlignmentFeatures", module = "deepbiop.bam")]
 #[derive(Clone)]
 pub struct PyAlignmentFeatures {
     inner: AlignmentFeatures,
@@ -150,7 +150,7 @@ impl From<AlignmentFeatures> for PyAlignmentFeatures {
 
 /// Python wrapper for BamReader
 #[gen_stub_pyclass]
-#[pyclass(name = "BamReader")]
+#[pyclass(name = "BamReader", module = "deepbiop.bam")]
 pub struct PyBamReader {
     inner: BamReader,
 }
@@ -313,18 +313,23 @@ impl PyBamStreamDataset {
     ///
     /// # Performance Warning
     ///
-    /// **This implementation has O(n) complexity and reopens the BAM file for every access.**
+    /// **This implementation has O(n) complexity per call and exhibits O(n²) behavior for batch access.**
     ///
-    /// - Accessing index 1000 requires reading and discarding 1000 records
+    /// Single access complexity:
+    /// - Accessing index 1000 requires reading and discarding 1000 records (O(n))
     /// - Each call reopens the file (costly I/O operation)
     /// - No caching or state preservation between calls
     ///
-    /// This is acceptable for PyTorch DataLoader which uses sequential access patterns,
-    /// but will be extremely inefficient for random access patterns. If you need random
-    /// access to multiple indices, consider loading all records into memory first or
-    /// using sequential iteration instead.
+    /// Batch access complexity (e.g., DataLoader with batch_size=32):
+    /// - Index 0: reads 1 record, Index 1: reads 2 records, ..., Index 31: reads 32 records
+    /// - **Total: 528 record reads + 32 file opens for just 32 records** (O(n²))
+    /// - For batch_size=64: 2080 reads + 64 file opens for 64 records
     ///
-    /// For batch access, use the iterator interface which provides true streaming.
+    /// This is acceptable for PyTorch DataLoader with `num_workers=0` and sequential iteration,
+    /// but will be extremely inefficient for random access or parallel workers. For better
+    /// performance, consider loading all records into memory first or using the iterator interface.
+    ///
+    /// **Recommended**: Use iterator-based access via `__iter__()` for true O(n) streaming.
     fn __getitem__(&self, index: usize, py: Python) -> PyResult<Py<PyDict>> {
         use numpy::ToPyArray;
 

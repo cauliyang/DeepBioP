@@ -14,7 +14,7 @@ use std::collections::HashMap;
 use std::path::PathBuf;
 
 #[gen_stub_pyclass]
-#[pyclass(name = "GtfReader")]
+#[pyclass(name = "GtfReader", module = "deepbiop.gtf")]
 /// Python wrapper for GTF file reader
 pub struct PyGtfReader {
     inner: GtfReader,
@@ -84,7 +84,7 @@ impl PyGtfReader {
 }
 
 #[gen_stub_pyclass]
-#[pyclass(name = "GenomicFeature")]
+#[pyclass(name = "GenomicFeature", module = "deepbiop.gtf")]
 #[derive(Clone)]
 /// Represents a genomic feature from a GTF file
 pub struct PyGenomicFeature {
