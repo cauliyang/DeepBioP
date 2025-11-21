@@ -12,9 +12,10 @@ class TestOneHotEncoder:
     def test_onehot_single_sequence(self):
         """Test encoding a single DNA sequence."""
         encoder = dbp.OneHotEncoder("dna", "skip")
-        sequence = b"ACGT"
+        record = {"sequence": b"ACGT"}
 
-        encoded = encoder.encode(sequence)
+        result = encoder(record)
+        encoded = result["sequence"]
 
         # Shape: (seq_len, 4)
         assert encoded.shape == (4, 4)
@@ -32,9 +33,10 @@ class TestOneHotEncoder:
     def test_onehot_batch_encoding(self):
         """Test encoding multiple sequences in a batch."""
         encoder = dbp.OneHotEncoder("dna", "skip")
-        sequences = [b"ACGT", b"TTAA", b"GGCC"]
+        records = [{"sequence": b"ACGT"}, {"sequence": b"TTAA"}, {"sequence": b"GGCC"}]
 
-        encoded = encoder.encode_batch(sequences)
+        results = [encoder(r) for r in records]
+        encoded = np.array([r["sequence"] for r in results])
 
         # Shape: (batch_size, seq_len, 4)
         assert encoded.shape == (3, 4, 4)
@@ -54,9 +56,10 @@ class TestOneHotEncoder:
     def test_onehot_rna_encoding(self):
         """Test encoding RNA sequences (U instead of T)."""
         encoder = dbp.OneHotEncoder("rna", "skip")
-        sequence = b"ACGU"
+        record = {"sequence": b"ACGU"}
 
-        encoded = encoder.encode(sequence)
+        result = encoder(record)
+        encoded = result["sequence"]
 
         assert encoded.shape == (4, 4)
         # U should be encoded like T
@@ -65,18 +68,20 @@ class TestOneHotEncoder:
     def test_onehot_empty_sequence(self):
         """Test encoding an empty sequence."""
         encoder = dbp.OneHotEncoder("dna", "skip")
-        sequence = b""
+        record = {"sequence": b""}
 
-        encoded = encoder.encode(sequence)
+        result = encoder(record)
+        encoded = result["sequence"]
 
         assert encoded.shape == (0, 4)
 
     def test_onehot_unknown_bases_skip(self):
         """Test encoding with unknown bases (skip mode)."""
         encoder = dbp.OneHotEncoder("dna", "skip")
-        sequence = b"ACNGT"  # N is unknown
+        record = {"sequence": b"ACNGT"}  # N is unknown
 
-        encoded = encoder.encode(sequence)
+        result = encoder(record)
+        encoded = result["sequence"]
 
         assert encoded.shape == (5, 4)
         # N should be encoded as zeros with skip mode
@@ -89,9 +94,10 @@ class TestKmerEncoder:
     def test_kmer_basic_encoding(self):
         """Test basic k-mer encoding with k=3."""
         encoder = dbp.KmerEncoder(k=3, canonical=False, encoding_type="dna")
-        sequence = b"ACGTACGT"  # 8 bases = 6 overlapping 3-mers
+        record = {"sequence": b"ACGTACGT"}  # 8 bases = 6 overlapping 3-mers
 
-        encoded = encoder.encode(sequence)
+        result = encoder(record)
+        encoded = result["sequence"]
 
         # For k=3, there are 4^3 = 64 possible k-mers
         assert encoded.shape == (64,)
@@ -107,10 +113,13 @@ class TestKmerEncoder:
             k=3, canonical=False, encoding_type="dna"
         )
 
-        sequence = b"ACGT"
+        record = {"sequence": b"ACGT"}
 
-        encoded_canonical = encoder_canonical.encode(sequence)
-        encoded_non_canonical = encoder_non_canonical.encode(sequence)
+        result_canonical = encoder_canonical(record)
+        encoded_canonical = result_canonical["sequence"]
+
+        result_non_canonical = encoder_non_canonical(record)
+        encoded_non_canonical = result_non_canonical["sequence"]
 
         # Both should have 64 features for k=3
         assert encoded_canonical.shape == (64,)
@@ -119,9 +128,10 @@ class TestKmerEncoder:
     def test_kmer_batch_encoding(self):
         """Test encoding multiple sequences."""
         encoder = dbp.KmerEncoder(k=2, canonical=False, encoding_type="dna")
-        sequences = [b"ACGT", b"AAAA", b"TTTT"]
+        records = [{"sequence": b"ACGT"}, {"sequence": b"AAAA"}, {"sequence": b"TTTT"}]
 
-        encoded = encoder.encode_batch(sequences)
+        results = [encoder(r) for r in records]
+        encoded = np.array([r["sequence"] for r in results])
 
         # For k=2, there are 4^2 = 16 possible k-mers
         assert encoded.shape == (3, 16)
@@ -133,11 +143,12 @@ class TestKmerEncoder:
 
     def test_kmer_different_k_values(self):
         """Test different k values."""
-        sequence = b"ACGTACGTACGT"
+        record = {"sequence": b"ACGTACGTACGT"}
 
         for k in [2, 3, 4]:
             encoder = dbp.KmerEncoder(k=k, canonical=False, encoding_type="dna")
-            encoded = encoder.encode(sequence)
+            result = encoder(record)
+            encoded = result["sequence"]
 
             expected_size = 4**k
             assert encoded.shape == (expected_size,)
@@ -145,9 +156,10 @@ class TestKmerEncoder:
     def test_kmer_short_sequence(self):
         """Test encoding sequence shorter than k."""
         encoder = dbp.KmerEncoder(k=5, canonical=False, encoding_type="dna")
-        sequence = b"ACG"  # Only 3 bases, but k=5
+        record = {"sequence": b"ACG"}  # Only 3 bases, but k=5
 
-        encoded = encoder.encode(sequence)
+        result = encoder(record)
+        encoded = result["sequence"]
 
         # Should return zeros for sequence shorter than k
         assert encoded.shape == (4**5,)
@@ -160,9 +172,10 @@ class TestIntegerEncoder:
     def test_integer_single_sequence(self):
         """Test encoding a single DNA sequence."""
         encoder = dbp.IntegerEncoder("dna")
-        sequence = b"ACGT"
+        record = {"sequence": b"ACGT"}
 
-        encoded = encoder.encode(sequence)
+        result = encoder(record)
+        encoded = result["sequence"]
 
         assert encoded.shape == (4,)
         assert encoded.dtype == np.float32
@@ -173,9 +186,10 @@ class TestIntegerEncoder:
     def test_integer_batch_encoding(self):
         """Test encoding multiple sequences."""
         encoder = dbp.IntegerEncoder("dna")
-        sequences = [b"ACGT", b"TTAA", b"GGCC"]
+        records = [{"sequence": b"ACGT"}, {"sequence": b"TTAA"}, {"sequence": b"GGCC"}]
 
-        encoded = encoder.encode_batch(sequences)
+        results = [encoder(r) for r in records]
+        encoded = np.array([r["sequence"] for r in results])
 
         assert encoded.shape == (3, 4)
         assert encoded.dtype == np.float32
@@ -188,9 +202,10 @@ class TestIntegerEncoder:
     def test_integer_rna_encoding(self):
         """Test encoding RNA sequences."""
         encoder = dbp.IntegerEncoder("rna")
-        sequence = b"ACGU"
+        record = {"sequence": b"ACGU"}
 
-        encoded = encoder.encode(sequence)
+        result = encoder(record)
+        encoded = result["sequence"]
 
         assert encoded.shape == (4,)
         # RNA encoding: A=0, C=1, G=2, U=3
@@ -199,18 +214,20 @@ class TestIntegerEncoder:
     def test_integer_empty_sequence(self):
         """Test encoding an empty sequence."""
         encoder = dbp.IntegerEncoder("dna")
-        sequence = b""
+        record = {"sequence": b""}
 
-        encoded = encoder.encode(sequence)
+        result = encoder(record)
+        encoded = result["sequence"]
 
         assert encoded.shape == (0,)
 
     def test_integer_long_sequence(self):
         """Test encoding a long sequence."""
         encoder = dbp.IntegerEncoder("dna")
-        sequence = b"ACGT" * 100  # 400 bases
+        record = {"sequence": b"ACGT" * 100}  # 400 bases
 
-        encoded = encoder.encode(sequence)
+        result = encoder(record)
+        encoded = result["sequence"]
 
         assert encoded.shape == (400,)
         assert encoded.dtype == np.float32
@@ -229,9 +246,10 @@ class TestEncoderIntegration:
         import torch
 
         encoder = dbp.OneHotEncoder("dna", "skip")
-        sequence = b"ACGT"
+        record = {"sequence": b"ACGT"}
 
-        encoded = encoder.encode(sequence)
+        result = encoder(record)
+        encoded = result["sequence"]
         tensor = torch.from_numpy(encoded).float()
 
         assert tensor.shape == (4, 4)
@@ -243,9 +261,10 @@ class TestEncoderIntegration:
         import torch
 
         encoder = dbp.IntegerEncoder("dna")
-        sequence = b"ACGT"
+        record = {"sequence": b"ACGT"}
 
-        encoded = encoder.encode(sequence)
+        result = encoder(record)
+        encoded = result["sequence"]
         tensor = torch.from_numpy(encoded).long()
 
         assert tensor.shape == (4,)
@@ -254,9 +273,10 @@ class TestEncoderIntegration:
     def test_kmer_to_numpy_array(self):
         """Test k-mer encoding produces valid numpy arrays."""
         encoder = dbp.KmerEncoder(k=3, canonical=False, encoding_type="dna")
-        sequences = [b"ACGTACGT", b"TTTTAAAA"]
+        records = [{"sequence": b"ACGTACGT"}, {"sequence": b"TTTTAAAA"}]
 
-        encoded = encoder.encode_batch(sequences)
+        results = [encoder(r) for r in records]
+        encoded = np.array([r["sequence"] for r in results])
 
         assert isinstance(encoded, np.ndarray)
         assert encoded.dtype == np.float32
@@ -266,14 +286,15 @@ class TestEncoderIntegration:
     def test_batch_processing_consistency(self):
         """Test that batch encoding equals individual encodings."""
         encoder = dbp.OneHotEncoder("dna", "skip")
-        sequences = [b"ACGT", b"TTAA", b"GGCC"]
+        records = [{"sequence": b"ACGT"}, {"sequence": b"TTAA"}, {"sequence": b"GGCC"}]
 
         # Batch encoding
-        batch_encoded = encoder.encode_batch(sequences)
+        batch_results = [encoder(r) for r in records]
+        batch_encoded = np.array([r["sequence"] for r in batch_results])
 
         # Individual encoding
-        individual_encoded = [encoder.encode(seq) for seq in sequences]
+        individual_encoded = [encoder(r)["sequence"] for r in records]
 
         # Should match
-        for i in range(len(sequences)):
+        for i in range(len(records)):
             np.testing.assert_array_equal(batch_encoded[i], individual_encoded[i])
