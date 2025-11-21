@@ -31,7 +31,7 @@ impl encode::ParquetEncoder {
 }
 
 #[gen_stub_pyclass]
-#[pyclass(name = "RecordData")]
+#[pyclass(name = "RecordData", module = "deepbiop.fa")]
 pub struct PyRecordData(encode::RecordData);
 
 impl From<encode::RecordData> for PyRecordData {

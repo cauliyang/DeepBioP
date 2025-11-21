@@ -19,8 +19,8 @@ use crate::seq::SequenceRecord;
 /// * `quality_scores` - Optional 2D numpy array [batch_size, max_length] containing quality scores
 /// * `attention_mask` - 2D numpy array [batch_size, max_length] (1=real, 0=padding)
 /// * `lengths` - List of original sequence lengths before padding
-#[gen_stub_pyclass()]
-#[pyclass(name = "Batch")]
+#[gen_stub_pyclass]
+#[pyclass(name = "Batch", module = "deepbiop.core")]
 pub struct PyBatch {
     batch: Batch,
 }

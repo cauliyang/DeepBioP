@@ -7,7 +7,7 @@ use pyo3_stub_gen::derive::{gen_stub_pyclass, gen_stub_pymethods};
 use std::path::PathBuf;
 
 #[gen_stub_pyclass]
-#[pyclass(name = "VcfReader")]
+#[pyclass(name = "VcfReader", module = "deepbiop.vcf")]
 /// Python wrapper for VCF file reader
 pub struct PyVcfReader {
     inner: VcfReader,
@@ -74,7 +74,7 @@ impl PyVcfReader {
 }
 
 #[gen_stub_pyclass]
-#[pyclass(name = "Variant")]
+#[pyclass(name = "Variant", module = "deepbiop.vcf")]
 #[derive(Clone)]
 /// Represents a genomic variant from a VCF file
 pub struct PyVariant {

@@ -372,8 +372,8 @@ pub mod python {
     /// Python wrapper for KmerEncoder.
     ///
     /// Encodes biological sequences as k-mer frequency vectors.
-    #[gen_stub_pyclass()]
-    #[pyclass(name = "KmerEncoder")]
+    #[gen_stub_pyclass]
+    #[pyclass(name = "KmerEncoder", module = "deepbiop.core")]
     pub struct PyKmerEncoder {
         inner: KmerEncoder,
     }

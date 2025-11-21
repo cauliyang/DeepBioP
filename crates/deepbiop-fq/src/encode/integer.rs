@@ -256,8 +256,8 @@ pub mod python {
     /// Python wrapper for IntegerEncoder.
     ///
     /// Encodes biological sequences as integer arrays (A=0, C=1, G=2, T/U=3).
-    #[gen_stub_pyclass()]
-    #[pyclass(name = "IntegerEncoder")]
+    #[gen_stub_pyclass]
+    #[pyclass(name = "IntegerEncoder", module = "deepbiop.fq")]
     pub struct PyIntegerEncoder {
         inner: IntegerEncoder,
     }
