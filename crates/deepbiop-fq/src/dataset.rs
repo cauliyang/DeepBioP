@@ -17,10 +17,7 @@ use std::io::{BufReader, Read};
 use pyo3_stub_gen::derive::*;
 
 #[cfg_attr(feature = "python", gen_stub_pyclass)]
-#[cfg_attr(
-    feature = "python",
-    pyclass(get_all, name = "FastqRecord")
-)]
+#[cfg_attr(feature = "python", pyclass(get_all, name = "FastqRecord"))]
 pub struct FastqRecord {
     pub header: String,
     pub sequence: String,
@@ -51,10 +48,7 @@ impl FastqRecord {
 }
 
 #[cfg_attr(feature = "python", gen_stub_pyclass)]
-#[cfg_attr(
-    feature = "python",
-    pyclass(name = "FastqDataset")
-)]
+#[cfg_attr(feature = "python", pyclass(name = "FastqDataset"))]
 #[derive(Clone)]
 #[allow(dead_code)]
 pub struct FastqDataset {
@@ -305,10 +299,7 @@ impl FastqDataset {
 }
 
 #[cfg_attr(feature = "python", gen_stub_pyclass)]
-#[cfg_attr(
-    feature = "python",
-    pyclass(name = "FastqIterator")
-)]
+#[cfg_attr(feature = "python", pyclass(name = "FastqIterator"))]
 #[allow(dead_code)]
 pub struct FastqIterator {
     #[cfg(feature = "python")]

@@ -27,10 +27,7 @@ pub const MIN_SEQ_SIZE: usize = 20;
 // 23      1       0       0       0       0       0       0       +       seq     51      3       27      chr12   133275309       11447342     11447366 1       24,     3,      11447342,
 
 #[cfg_attr(feature = "python", gen_stub_pyclass)]
-#[cfg_attr(
-    feature = "python",
-    pyclass(get_all, set_all)
-)]
+#[cfg_attr(feature = "python", pyclass(get_all, set_all))]
 #[derive(Debug, Default, Builder, Clone, Serialize, Deserialize)]
 pub struct PslAlignment {
     pub qname: String,

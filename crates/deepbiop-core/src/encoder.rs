@@ -175,7 +175,10 @@ pub trait SequenceEncoder {
     ///         .collect()
     /// }
     /// ```
-    fn batch_encode(&self, sequences: &[(&[u8], Option<&[u8]>)]) -> Result<Vec<Self::EncodeOutput>> {
+    fn batch_encode(
+        &self,
+        sequences: &[(&[u8], Option<&[u8]>)],
+    ) -> Result<Vec<Self::EncodeOutput>> {
         sequences
             .iter()
             .map(|(seq, qual)| self.encode_sequence(seq, *qual))
