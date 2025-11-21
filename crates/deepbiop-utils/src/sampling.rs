@@ -96,7 +96,7 @@ where
 #[cfg(test)]
 mod tests {
     use super::*;
-    use std::collections::HashSet;
+    use ahash::HashSet;
 
     #[test]
     fn test_reservoir_sampling_exact_size() {

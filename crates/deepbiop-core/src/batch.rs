@@ -13,11 +13,12 @@ use crate::seq::SequenceRecord;
 pub type BatchResult<T> = Result<T, DPError>;
 
 /// Padding strategy for variable-length sequences in a batch.
-#[derive(Debug, Clone, PartialEq, Eq)]
+#[derive(Debug, Clone, PartialEq, Eq, Default)]
 pub enum PaddingStrategy {
     /// Pad to the longest sequence in the batch (dynamic padding).
     ///
     /// Memory-efficient but batch sizes vary. Best for similar-length sequences.
+    #[default]
     Longest,
 
     /// Pad/truncate all sequences to a fixed length.
@@ -37,12 +38,6 @@ pub enum PaddingStrategy {
         /// Bucket boundaries (e.g., [100, 200, 500] creates buckets 0-100, 101-200, 201-500, 501+)
         boundaries: Vec<usize>,
     },
-}
-
-impl Default for PaddingStrategy {
-    fn default() -> Self {
-        Self::Longest
-    }
 }
 
 /// Batch of sequence records ready for GPU processing.
