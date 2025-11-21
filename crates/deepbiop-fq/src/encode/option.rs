@@ -9,7 +9,7 @@ use pyo3::prelude::*;
 use pyo3_stub_gen::derive::*;
 
 #[cfg_attr(feature = "python", gen_stub_pyclass)]
-#[cfg_attr(feature = "python", pyclass(get_all, set_all, module = "deepbiop.fq"))]
+#[cfg_attr(feature = "python", pyclass(get_all, set_all))]
 #[derive(Debug, Builder, Default, Clone, Serialize, Deserialize)]
 pub struct EncoderOption {
     #[builder(default = "QUAL_OFFSET")]

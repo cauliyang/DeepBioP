@@ -36,7 +36,7 @@ use std::path::PathBuf;
 /// * `Zstd` - Zstandard compression format
 /// * `Unknown` - Unknown or unrecognized compression format
 #[cfg_attr(feature = "python", gen_stub_pyclass_enum)]
-#[cfg_attr(feature = "python", pyclass(eq, eq_int, module = "deepbiop.utils"))]
+#[cfg_attr(feature = "python", pyclass(eq, eq_int))]
 #[derive(Debug, PartialEq, Clone, Eq, Hash)]
 pub enum CompressedType {
     Uncompress,
@@ -358,7 +358,7 @@ where
 
 /// Represents different types of sequence file formats
 #[cfg_attr(feature = "python", gen_stub_pyclass_enum)]
-#[cfg_attr(feature = "python", pyclass(eq, eq_int, module = "deepbiop.utils"))]
+#[cfg_attr(feature = "python", pyclass(eq, eq_int))]
 #[derive(Debug, PartialEq, Eq, Clone, Hash)]
 pub enum SequenceFileType {
     Fasta,

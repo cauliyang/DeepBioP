@@ -8,7 +8,7 @@ use pyo3::prelude::*;
 use pyo3_stub_gen::derive::*;
 
 /// Python wrapper for LengthFilter.
-#[cfg_attr(feature = "python", gen_stub_pyclass(module = "deepbiop.fq"))]
+#[cfg_attr(feature = "python", gen_stub_pyclass())]
 #[cfg_attr(feature = "python", pyclass(name = "LengthFilter"))]
 pub struct PyLengthFilter {
     inner: LengthFilter,
@@ -94,7 +94,7 @@ impl PyLengthFilter {
 }
 
 /// Python wrapper for QualityFilter.
-#[cfg_attr(feature = "python", gen_stub_pyclass(module = "deepbiop.fq"))]
+#[cfg_attr(feature = "python", gen_stub_pyclass())]
 #[cfg_attr(feature = "python", pyclass(name = "QualityFilter"))]
 pub struct PyQualityFilter {
     inner: QualityFilter,
@@ -206,7 +206,7 @@ impl PyQualityFilter {
 }
 
 /// Python wrapper for Deduplicator.
-#[cfg_attr(feature = "python", gen_stub_pyclass(module = "deepbiop.fq"))]
+#[cfg_attr(feature = "python", gen_stub_pyclass())]
 #[cfg_attr(feature = "python", pyclass(name = "Deduplicator"))]
 pub struct PyDeduplicator {
     inner: Deduplicator,
@@ -285,7 +285,7 @@ impl PyDeduplicator {
 }
 
 /// Python wrapper for Subsampler.
-#[cfg_attr(feature = "python", gen_stub_pyclass(module = "deepbiop.fq"))]
+#[cfg_attr(feature = "python", gen_stub_pyclass())]
 #[cfg_attr(feature = "python", pyclass(name = "Subsampler"))]
 pub struct PySubsampler {
     inner: Subsampler,

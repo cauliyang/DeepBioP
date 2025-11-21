@@ -19,7 +19,7 @@ use pyo3::prelude::*;
 #[cfg(feature = "python")]
 use pyo3_stub_gen::derive::*;
 
-#[cfg_attr(feature = "python", gen_stub_pyfunction(module = "deepbiop.utils"))]
+#[cfg_attr(feature = "python", gen_stub_pyfunction())]
 #[cfg_attr(feature = "python", pyfunction)]
 #[cfg_attr(feature = "python", pyo3(signature = (sequence, targets, text_width=None)))]
 pub fn highlight_targets(

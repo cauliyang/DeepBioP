@@ -37,31 +37,31 @@ log = "0.4"
 ndarray = { version = "0.16", features = ["serde", "rayon"] }
 ndarray-npy = "0.9"
 needletail = "0.5"
-noodles = { version = "0.101.0", features = [
-    "bgzf",
-    "core",
-    "csi",
-    "fasta",
-    "fastq",
-    "sam",
-    "bam",
-    "vcf",
-    "gff",
+noodles = { version = "0.102.0", features = [
+  "bgzf",
+  "core",
+  "csi",
+  "fasta",
+  "fastq",
+  "sam",
+  "bam",
+  "vcf",
+  "gff",
 ] }
 num-traits = { version = "0.2" }
 numpy = "0.27"
 parquet = "57.0"
 pyo3 = { version = "0.27.1", features = [
-    "abi3-py310",
-    "extension-module",
-    "anyhow",
+  "abi3-py310",
+  "extension-module",
+  "anyhow",
 ] }
 pyo3-log = "0.13.2"
-pyo3-stub-gen = "0.17.0"
+pyo3-stub-gen = "0.17.1"
 rand = "0.9"
 rand_distr = "0.5"
 rayon = { version = "1.11" }
-rust-numpy = "0.22"
+rust-numpy = "0.1.0"
 serde = { version = "1.0", features = ["derive"] }
 serde_json = "1.0"
 tempfile = "3.23"

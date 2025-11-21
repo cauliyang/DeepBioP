@@ -26,7 +26,7 @@ use pyo3_stub_gen::derive::*;
 
 /// Python wrapper for AlignmentFeatures
 #[gen_stub_pyclass]
-#[pyclass(name = "AlignmentFeatures", module = "deepbiop.bam")]
+#[pyclass(name = "AlignmentFeatures")]
 #[derive(Clone)]
 pub struct PyAlignmentFeatures {
     inner: AlignmentFeatures,
@@ -150,7 +150,7 @@ impl From<AlignmentFeatures> for PyAlignmentFeatures {
 
 /// Python wrapper for BamReader
 #[gen_stub_pyclass]
-#[pyclass(name = "BamReader", module = "deepbiop.bam")]
+#[pyclass(name = "BamReader")]
 pub struct PyBamReader {
     inner: BamReader,
 }
@@ -191,7 +191,7 @@ impl PyBamReader {
 }
 
 /// Calculate the number of chimeric reads in a BAM file.
-#[gen_stub_pyfunction(module = "deepbiop.bam")]
+#[gen_stub_pyfunction()]
 #[pyfunction]
 #[pyo3(signature = (bam, threads=None))]
 fn count_chimeric_reads_for_path(bam: PathBuf, threads: Option<usize>) -> Result<usize> {
@@ -199,7 +199,7 @@ fn count_chimeric_reads_for_path(bam: PathBuf, threads: Option<usize>) -> Result
 }
 
 /// Calculate the number of chimeric reads in multiple BAM files.
-#[gen_stub_pyfunction(module = "deepbiop.bam")]
+#[gen_stub_pyfunction()]
 #[pyfunction]
 #[pyo3(signature = (bams, threads=None))]
 fn count_chimeric_reads_for_paths(
@@ -210,7 +210,7 @@ fn count_chimeric_reads_for_paths(
 }
 
 /// Calculate left and right soft clips from a cigar string.
-#[gen_stub_pyfunction(module = "deepbiop.bam")]
+#[gen_stub_pyfunction()]
 #[pyfunction]
 fn left_right_soft_clip(cigar_string: &str) -> Result<(usize, usize)> {
     let cigar = Cigar::new(cigar_string.as_bytes());

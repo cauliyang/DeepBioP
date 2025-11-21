@@ -29,7 +29,7 @@ pub const MIN_SEQ_SIZE: usize = 20;
 #[cfg_attr(feature = "python", gen_stub_pyclass)]
 #[cfg_attr(
     feature = "python",
-    pyclass(module = "deepbiop.utils", get_all, set_all)
+    pyclass(get_all, set_all)
 )]
 #[derive(Debug, Default, Builder, Clone, Serialize, Deserialize)]
 pub struct PslAlignment {

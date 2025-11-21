@@ -20,7 +20,7 @@ use crate::types::EncodingType;
 /// # Returns
 ///
 /// A normalized DNA sequence as a `String`.
-#[cfg_attr(feature = "python", gen_stub_pyfunction(module = "deepbiop.core"))]
+#[cfg_attr(feature = "python", gen_stub_pyfunction())]
 #[cfg_attr(feature = "python", pyfunction)]
 pub fn normalize_seq(seq: String, iupac: bool) -> String {
     String::from_utf8_lossy(&seq.as_bytes().normalize(iupac)).to_string()
@@ -49,7 +49,7 @@ pub fn normalize_seq(seq: String, iupac: bool) -> String {
 /// let rev_comp = reverse_complement(seq);
 /// assert_eq!(rev_comp, "CGAT");
 /// ```
-#[cfg_attr(feature = "python", gen_stub_pyfunction(module = "deepbiop.core"))]
+#[cfg_attr(feature = "python", gen_stub_pyfunction())]
 #[cfg_attr(feature = "python", pyfunction)]
 pub fn reverse_complement(seq: String) -> String {
     String::from_utf8(seq.as_bytes().reverse_complement()).unwrap()
@@ -60,7 +60,7 @@ pub fn reverse_complement(seq: String) -> String {
 /// This struct represents a single biological sequence, which could be DNA, RNA, or protein.
 /// It includes the sequence identifier, the sequence data itself, optional quality scores
 /// (for FASTQ format), and an optional description string.
-#[cfg_attr(feature = "python", gen_stub_pyclass(module = "deepbiop.core"))]
+#[cfg_attr(feature = "python", gen_stub_pyclass())]
 #[cfg_attr(feature = "python", pyclass(get_all, set_all))]
 #[derive(Debug, Clone, PartialEq, Eq)]
 pub struct SequenceRecord {
