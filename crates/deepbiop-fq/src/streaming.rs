@@ -266,10 +266,7 @@ impl PyStreamingFastqDataset {
 
     /// Make the dataset iterable from Python
     fn __iter__(slf: PyRef<'_, Self>) -> PyResult<Py<PyStreamingFastqIterator>> {
-        let iter = PyStreamingFastqIterator::new(
-            slf.path.clone(),
-            slf.shuffle_buffer_size,
-        )?;
+        let iter = PyStreamingFastqIterator::new(slf.path.clone(), slf.shuffle_buffer_size)?;
 
         Py::new(slf.py(), iter)
     }
@@ -294,8 +291,9 @@ pub struct PyStreamingFastqIterator {
 impl PyStreamingFastqIterator {
     /// Create a new Python streaming iterator (internal helper)
     fn new(path: String, shuffle_buffer_size: usize) -> PyResult<Self> {
-        let inner = StreamingFastqIterator::new(path, shuffle_buffer_size)
-            .map_err(|e| pyo3::exceptions::PyIOError::new_err(format!("Failed to create iterator: {}", e)))?;
+        let inner = StreamingFastqIterator::new(path, shuffle_buffer_size).map_err(|e| {
+            pyo3::exceptions::PyIOError::new_err(format!("Failed to create iterator: {}", e))
+        })?;
 
         Ok(Self { inner })
     }

@@ -6,8 +6,7 @@ use crate::{
     encode::{self, Encoder},
     filter, io,
     predicts::{self, Predict},
-    streaming,
-    utils,
+    streaming, utils,
 };
 
 use ahash::{HashMap, HashSet};
