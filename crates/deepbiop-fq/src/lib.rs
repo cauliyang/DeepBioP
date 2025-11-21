@@ -7,6 +7,7 @@ pub mod error;
 pub mod filter;
 pub mod io;
 pub mod predicts;
+pub mod streaming;
 pub mod types;
 pub mod utils;
 

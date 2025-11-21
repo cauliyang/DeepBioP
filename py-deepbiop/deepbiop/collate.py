@@ -163,6 +163,171 @@ def tensor_collate(batch: list[dict[str, Any]]) -> dict[str, Any]:
     return result
 
 
+def multi_label_collate(batch: list[dict[str, Any]]) -> dict[str, Any]:
+    """Collate function for multi-label/multi-task learning.
+
+    Handles batches where targets can be dict, tuple, or list (from MultiLabelExtractor).
+    Intelligently structures the batch based on target format.
+
+    Args:
+        batch (list[dict[str, Any]]): List of samples with multi-label targets
+
+    Returns:
+        Dictionary with structured batch:
+        - "features": List or stacked tensor of features
+        - "targets": Structured targets based on format:
+            * Dict targets → dict mapping names to lists of values
+            * Tuple/list targets → list of tuples/lists
+        - "ids": List of sequence IDs (if available)
+
+    Example:
+        >>> # With dict targets from MultiLabelExtractor
+        >>> loader = DataLoader(dataset, batch_size=32, collate_fn=multi_label_collate)
+        >>> for batch in loader:
+        ...     features = batch["features"]
+        ...     targets = batch["targets"]  # {"quality": [q1, q2, ...], "gc": [gc1, gc2, ...]}
+        ...     # Use targets["quality"] for one task, targets["gc"] for another
+
+        >>> # With tuple/array targets
+        >>> for batch in loader:
+        ...     features = batch["features"]
+        ...     targets = batch["targets"]  # [(t1_1, t1_2), (t2_1, t2_2), ...]
+    """
+    # Handle empty batch
+    if not batch:
+        return {}
+
+    result = {}
+
+    # Extract features
+    if "features" in batch[0]:
+        result["features"] = [item["features"] for item in batch]
+    elif "sequence" in batch[0]:
+        result["sequences"] = [item["sequence"] for item in batch]
+
+    # Extract and structure multi-label targets
+    if "target" in batch[0]:
+        first_target = batch[0]["target"]
+
+        if isinstance(first_target, dict):
+            # Dict targets: {"quality": 33.75, "gc": 0.5, ...}
+            # Restructure to: {"quality": [33.75, 34.1, ...], "gc": [0.5, 0.48, ...]}
+            target_dict = {}
+            for sample in batch:
+                for key, value in sample["target"].items():
+                    if key not in target_dict:
+                        target_dict[key] = []
+                    target_dict[key].append(value)
+            result["targets"] = target_dict
+
+        elif isinstance(first_target, (tuple, list)):
+            # Tuple/list targets: keep as list of tuples/lists
+            result["targets"] = [item["target"] for item in batch]
+
+        else:
+            # Scalar targets: treat as single-label
+            result["targets"] = [item["target"] for item in batch]
+
+    # Extract IDs for tracking
+    if "id" in batch[0]:
+        result["ids"] = [item["id"] for item in batch]
+
+    # Preserve quality scores if present
+    if "quality" in batch[0]:
+        result["quality"] = [item["quality"] for item in batch]
+
+    return result
+
+
+def multi_label_tensor_collate(batch: list[dict[str, Any]]) -> dict[str, Any]:
+    """Collate function for multi-label learning with tensor conversion.
+
+    Converts multi-label targets to PyTorch tensors for direct use with
+    multi-task learning models.
+
+    Args:
+        batch (list[dict[str, Any]]): List of samples with multi-label targets
+
+    Returns:
+        Dictionary with:
+        - "features": Stacked tensor of shape (batch_size, ...)
+        - "targets": Structured tensors based on format:
+            * Dict targets → dict mapping names to tensors
+            * Tuple/list targets → stacked tensor of shape (batch_size, num_targets)
+        - "ids": List of sequence IDs (if available)
+
+    Example:
+        >>> import torch
+        >>> loader = DataLoader(dataset, batch_size=32, collate_fn=multi_label_tensor_collate)
+        >>> for batch in loader:
+        ...     features = batch["features"]  # torch.Tensor
+        ...     targets = batch["targets"]  # {"quality": torch.Tensor, "gc": torch.Tensor}
+        ...     # Multi-task forward pass
+        ...     quality_pred = model.quality_head(features)
+        ...     gc_pred = model.gc_head(features)
+        ...     loss = criterion_quality(quality_pred, targets["quality"]) + \\
+        ...            criterion_gc(gc_pred, targets["gc"])
+
+    Raises:
+        ImportError: If PyTorch is not installed
+    """
+    try:
+        import torch
+    except ImportError as e:
+        msg = "PyTorch not installed. Install with: pip install torch"
+        raise ImportError(msg) from e
+
+    # Handle empty batch
+    if not batch:
+        return {}
+
+    result = {}
+
+    # Stack features
+    if "features" in batch[0]:
+        features_list = [torch.as_tensor(item["features"]) for item in batch]
+        result["features"] = torch.stack(features_list)
+
+    # Convert multi-label targets to tensors
+    if "target" in batch[0]:
+        first_target = batch[0]["target"]
+
+        if isinstance(first_target, dict):
+            # Dict targets: convert each target type to tensor
+            # {"quality": [33.75, 34.1], "gc": [0.5, 0.48]} →
+            # {"quality": tensor([33.75, 34.1]), "gc": tensor([0.5, 0.48])}
+            target_dict = {}
+            for sample in batch:
+                for key, value in sample["target"].items():
+                    if key not in target_dict:
+                        target_dict[key] = []
+                    target_dict[key].append(value)
+
+            # Convert each list to tensor
+            result["targets"] = {
+                key: torch.tensor(values) for key, values in target_dict.items()
+            }
+
+        elif isinstance(first_target, (tuple, list)):
+            # Tuple/list targets: stack into (batch_size, num_targets) tensor
+            targets_list = [torch.tensor(item["target"]) for item in batch]
+            result["targets"] = torch.stack(targets_list)
+
+        else:
+            # Scalar targets
+            result["targets"] = torch.tensor([item["target"] for item in batch])
+
+    # Keep IDs as list
+    if "id" in batch[0]:
+        result["ids"] = [item["id"] for item in batch]
+
+    # Keep sequences as list (variable length)
+    if "sequence" in batch[0]:
+        result["sequences"] = [item["sequence"] for item in batch]
+
+    return result
+
+
 def get_collate_fn(mode: str = "default"):
     """Get a collate function by name.
 
@@ -171,12 +336,18 @@ def get_collate_fn(mode: str = "default"):
             - "default": Identity function, returns batch as-is
             - "supervised": Separates features and targets
             - "tensor": Converts to PyTorch tensors
+            - "multi_label": Multi-label/multi-task learning
+            - "multi_label_tensor": Multi-label with tensor conversion
 
     Returns:
         Collate function suitable for PyTorch DataLoader
 
     Example:
         >>> collate_fn = get_collate_fn("supervised")
+        >>> loader = DataLoader(dataset, batch_size=32, collate_fn=collate_fn)
+        >>>
+        >>> # For multi-label learning
+        >>> collate_fn = get_collate_fn("multi_label_tensor")
         >>> loader = DataLoader(dataset, batch_size=32, collate_fn=collate_fn)
     """
     if mode == "default":
@@ -185,6 +356,13 @@ def get_collate_fn(mode: str = "default"):
         return supervised_collate
     elif mode == "tensor":
         return tensor_collate
+    elif mode == "multi_label":
+        return multi_label_collate
+    elif mode == "multi_label_tensor":
+        return multi_label_tensor_collate
     else:
-        msg = f"Unknown collate mode: {mode}. Choose from: default, supervised, tensor"
+        msg = (
+            f"Unknown collate mode: {mode}. "
+            "Choose from: default, supervised, tensor, multi_label, multi_label_tensor"
+        )
         raise ValueError(msg)
