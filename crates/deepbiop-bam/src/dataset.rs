@@ -33,6 +33,24 @@ use anyhow::Result;
 use deepbiop_utils as utils;
 use noodles::{bam, bgzf, sam};
 
+/// Count total number of records in a BAM file.
+///
+/// This requires reading through the entire file once, but is necessary for
+/// PyTorch DataLoader compatibility which requires __len__() support.
+fn count_bam_records<P: AsRef<Path>>(file_path: P, threads: Option<usize>) -> Result<usize> {
+    let file = File::open(file_path)?;
+    let worker_count = utils::parallel::calculate_worker_count(threads);
+    let decoder = bgzf::io::MultithreadedReader::with_worker_count(worker_count, file);
+    let mut reader = bam::io::Reader::from(decoder);
+
+    // Read and discard header
+    let _ = reader.read_header()?;
+
+    // Count records
+    let count = reader.records().count();
+    Ok(count)
+}
+
 /// A dataset for streaming BAM files.
 ///
 /// `BamDataset` provides memory-efficient iteration over BAM files by streaming
@@ -74,9 +92,9 @@ impl BamDataset {
             return Err(anyhow::anyhow!("File does not exist: {}", file_path_str));
         }
 
-        // BAM files don't have a quick way to count records without reading through them
-        // So we leave records_count as None for now
-        let records_count = None;
+        // Count records for __len__() support
+        // While this reads through the file once, it's necessary for PyTorch DataLoader compatibility
+        let records_count = Some(count_bam_records(&file_path, threads)?);
 
         Ok(Self {
             file_path: file_path_str,

@@ -293,13 +293,78 @@ impl PyBamStreamDataset {
         Py::new(slf.py(), iter)
     }
 
-    /// Get estimated number of records in dataset.
+    /// Return the number of records in the dataset.
+    ///
+    /// This is computed once at dataset creation by reading through the file.
+    /// Required for PyTorch DataLoader compatibility.
+    fn __len__(&self) -> PyResult<usize> {
+        Ok(self.size_hint.unwrap_or(0))
+    }
+
+    /// Get record by index (map-style dataset access).
+    ///
+    /// # Arguments
+    ///
+    /// * `index` - Index of record to retrieve
     ///
     /// # Returns
     ///
-    /// int - Record count estimate (0 if unavailable)
-    fn __len__(&self) -> PyResult<usize> {
-        Ok(self.size_hint.unwrap_or(0))
+    /// Dict with 'id', 'sequence', 'quality', 'description'
+    ///
+    /// # Note
+    ///
+    /// This requires iterating through the file to reach the index,
+    /// so it's O(n). For sequential access, use iteration instead.
+    fn __getitem__(&self, index: usize, py: Python) -> PyResult<Py<PyDict>> {
+        use numpy::ToPyArray;
+
+        // Create dataset and iterate to index
+        let dataset = crate::dataset::BamDataset::new(self.file_path.clone(), self.threads)
+            .map_err(|e| pyo3::exceptions::PyIOError::new_err(e.to_string()))?;
+
+        let mut iter = dataset.iter();
+
+        // Skip to index
+        for _ in 0..index {
+            if iter.next().is_none() {
+                return Err(pyo3::exceptions::PyIndexError::new_err(format!(
+                    "Index {} out of range for dataset with {} records",
+                    index,
+                    self.size_hint.unwrap_or(0)
+                )));
+            }
+        }
+
+        // Get record at index
+        match iter.next() {
+            None => Err(pyo3::exceptions::PyIndexError::new_err(format!(
+                "Index {} out of range",
+                index
+            ))),
+            Some(Ok(record)) => {
+                let dict = PyDict::new(py);
+                dict.set_item("id", record.id)?;
+
+                // Convert sequence and quality to NumPy arrays
+                let seq_array = record.sequence.to_pyarray(py);
+                dict.set_item("sequence", seq_array)?;
+
+                if let Some(quality) = record.quality_scores {
+                    let qual_array = quality.to_pyarray(py);
+                    dict.set_item("quality", qual_array)?;
+                } else {
+                    dict.set_item("quality", py.None())?;
+                }
+
+                dict.set_item("description", record.description)?;
+
+                Ok(dict.into())
+            }
+            Some(Err(e)) => Err(pyo3::exceptions::PyIOError::new_err(format!(
+                "Failed to read BAM record: {}",
+                e
+            ))),
+        }
     }
 
     /// Human-readable representation.
