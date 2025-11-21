@@ -9,17 +9,22 @@ use arrow::datatypes::{DataType, Field, Schema};
 
 use bstr::BString;
 use derive_builder::Builder;
-use log::{debug, info};
+use log::debug;
+#[cfg(feature = "cache")]
+use log::info;
 use serde::{Deserialize, Serialize};
 
 use crate::types::Element;
+#[cfg(feature = "cache")]
 use deepbiop_utils::io::write_parquet;
 
 use super::{traits::Encoder, EncoderOption, RecordData};
 use anyhow::{Context, Result};
+#[cfg(feature = "python")]
 use pyo3::prelude::*;
 use rayon::prelude::*;
 
+#[cfg(feature = "python")]
 use pyo3_stub_gen::derive::*;
 
 #[derive(Debug, Builder, Default)]
@@ -29,8 +34,8 @@ pub struct ParquetData {
     pub qual: Vec<Element>, // kmer_qual
 }
 
-#[gen_stub_pyclass]
-#[pyclass(module = "deepbiop.fq")]
+#[cfg_attr(feature = "python", gen_stub_pyclass)]
+#[cfg_attr(feature = "python", pyclass())]
 #[derive(Debug, Builder, Default, Clone, Serialize, Deserialize)]
 pub struct ParquetEncoder {
     pub option: EncoderOption,
@@ -100,6 +105,7 @@ impl ParquetEncoder {
         Ok(all_batches)
     }
 
+    #[cfg(feature = "cache")]
     fn generate_batch(&self, records: &[RecordData], schema: &Arc<Schema>) -> Result<RecordBatch> {
         let all_batches = self.generate_batches(records, schema)?;
         // Concatenate all batches
@@ -107,6 +113,7 @@ impl ParquetEncoder {
             .context("Failed to concatenate record batches")
     }
 
+    #[cfg(feature = "cache")]
     pub fn encode_chunk<P: AsRef<Path>>(
         &mut self,
         path: P,
@@ -215,13 +222,14 @@ impl Encoder for ParquetEncoder {
 
 #[cfg(test)]
 mod tests {
-    use deepbiop_utils::io::write_parquet_for_batches;
-
-    use crate::encode::EncoderOptionBuilder;
-
     use super::*;
+
     #[test]
+    #[cfg(feature = "cache")]
     fn test_encode_fq_for_parquet() {
+        use crate::encode::EncoderOptionBuilder;
+        use deepbiop_utils::io::write_parquet_for_batches;
+
         let option = EncoderOptionBuilder::default().build().unwrap();
 
         let mut encoder = ParquetEncoderBuilder::default()

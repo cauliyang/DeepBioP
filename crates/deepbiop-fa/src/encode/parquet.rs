@@ -10,18 +10,23 @@ use arrow::array::{Array, RecordBatch, StringBuilder};
 use arrow::datatypes::{DataType, Field, Schema};
 
 use derive_builder::Builder;
-use log::{debug, info};
+use log::debug;
+#[cfg(feature = "cache")]
+use log::info;
 use serde::{Deserialize, Serialize};
 
 use super::record::RecordDataBuilder;
+#[cfg(feature = "cache")]
 use deepbiop_utils::io::write_parquet;
 
 use super::option::EncoderOption;
 
 use anyhow::{Context, Result};
+#[cfg(feature = "python")]
 use pyo3::prelude::*;
 use rayon::prelude::*;
 
+#[cfg(feature = "python")]
 use pyo3_stub_gen::derive::*;
 
 /// An encoder for converting FASTA records to Parquet format.
@@ -41,8 +46,8 @@ use pyo3_stub_gen::derive::*;
 /// let options = EncoderOption::default();
 /// let encoder = ParquetEncoder::new(options);
 /// ```
-#[gen_stub_pyclass]
-#[pyclass(module = "deepbiop.fa")]
+#[cfg_attr(feature = "python", gen_stub_pyclass)]
+#[cfg_attr(feature = "python", pyclass())]
 #[derive(Debug, Builder, Default, Clone, Serialize, Deserialize)]
 pub struct ParquetEncoder {
     pub option: EncoderOption,
@@ -101,6 +106,7 @@ impl ParquetEncoder {
         Ok(all_batches)
     }
 
+    #[cfg(feature = "cache")]
     fn generate_batch(&self, records: &[RecordData], schema: &Arc<Schema>) -> Result<RecordBatch> {
         let all_batches = self.generate_batches(records, schema)?;
         // Concatenate all batches
@@ -108,6 +114,7 @@ impl ParquetEncoder {
             .context("Failed to concatenate record batches")
     }
 
+    #[cfg(feature = "cache")]
     pub fn encode_chunk<P: AsRef<Path>>(
         &mut self,
         path: P,
@@ -198,13 +205,14 @@ impl Encoder for ParquetEncoder {
 
 #[cfg(test)]
 mod tests {
-    use deepbiop_utils::io::write_parquet_for_batches;
-
-    use crate::encode::option::EncoderOptionBuilder;
-
     use super::*;
+
     #[test]
+    #[cfg(feature = "cache")]
     fn test_encode_fa_for_parquet() {
+        use crate::encode::option::EncoderOptionBuilder;
+        use deepbiop_utils::io::write_parquet_for_batches;
+
         let option = EncoderOptionBuilder::default().build().unwrap();
         let mut encoder = ParquetEncoderBuilder::default()
             .option(option)

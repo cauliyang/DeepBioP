@@ -1,6 +1,11 @@
 use needletail::Sequence;
+#[cfg(feature = "python")]
 use pyo3::prelude::*;
+#[cfg(feature = "python")]
 use pyo3_stub_gen::derive::*;
+
+use crate::error::DPError;
+use crate::types::EncodingType;
 
 /// Normalize a DNA sequence by converting any non-standard nucleotides to standard ones.
 ///
@@ -15,8 +20,8 @@ use pyo3_stub_gen::derive::*;
 /// # Returns
 ///
 /// A normalized DNA sequence as a `String`.
-#[gen_stub_pyfunction(module = "deepbiop.core")]
-#[pyfunction]
+#[cfg_attr(feature = "python", gen_stub_pyfunction())]
+#[cfg_attr(feature = "python", pyfunction)]
 pub fn normalize_seq(seq: String, iupac: bool) -> String {
     String::from_utf8_lossy(&seq.as_bytes().normalize(iupac)).to_string()
 }
@@ -44,8 +49,317 @@ pub fn normalize_seq(seq: String, iupac: bool) -> String {
 /// let rev_comp = reverse_complement(seq);
 /// assert_eq!(rev_comp, "CGAT");
 /// ```
-#[gen_stub_pyfunction(module = "deepbiop.core")]
-#[pyfunction]
+#[cfg_attr(feature = "python", gen_stub_pyfunction())]
+#[cfg_attr(feature = "python", pyfunction)]
 pub fn reverse_complement(seq: String) -> String {
     String::from_utf8(seq.as_bytes().reverse_complement()).unwrap()
+}
+
+/// A biological sequence record with identifier, sequence, and optional metadata.
+///
+/// This struct represents a single biological sequence, which could be DNA, RNA, or protein.
+/// It includes the sequence identifier, the sequence data itself, optional quality scores
+/// (for FASTQ format), and an optional description string.
+#[cfg_attr(feature = "python", gen_stub_pyclass())]
+#[cfg_attr(feature = "python", pyclass(get_all, set_all))]
+#[derive(Debug, Clone, PartialEq, Eq)]
+pub struct SequenceRecord {
+    /// Sequence identifier (e.g., read name, accession number)
+    pub id: String,
+    /// The biological sequence data
+    pub sequence: Vec<u8>,
+    /// Optional Phred quality scores (same length as sequence)
+    pub quality_scores: Option<Vec<u8>>,
+    /// Optional description from the header line
+    pub description: Option<String>,
+}
+
+impl SequenceRecord {
+    /// Create a new sequence record (Rust-only, not exposed to Python).
+    ///
+    /// # Arguments
+    ///
+    /// * `id` - Sequence identifier
+    /// * `sequence` - The sequence data
+    /// * `quality_scores` - Optional quality scores
+    /// * `description` - Optional description
+    ///
+    /// # Returns
+    ///
+    /// A new `SequenceRecord` instance
+    pub fn new(
+        id: String,
+        sequence: Vec<u8>,
+        quality_scores: Option<Vec<u8>>,
+        description: Option<String>,
+    ) -> Self {
+        Self {
+            id,
+            sequence,
+            quality_scores,
+            description,
+        }
+    }
+
+    /// Get the length of the sequence.
+    pub fn len(&self) -> usize {
+        self.sequence.len()
+    }
+
+    /// Check if the sequence is empty.
+    pub fn is_empty(&self) -> bool {
+        self.sequence.is_empty()
+    }
+}
+
+#[cfg(feature = "python")]
+#[pymethods]
+impl SequenceRecord {
+    /// Create a new sequence record.
+    ///
+    /// # Arguments
+    ///
+    /// * `id` - Sequence identifier
+    /// * `sequence` - The sequence data as bytes
+    /// * `quality_scores` - Optional quality scores
+    /// * `description` - Optional description
+    ///
+    /// # Returns
+    ///
+    /// A new `SequenceRecord` instance
+    #[new]
+    #[pyo3(signature = (id, sequence, quality_scores=None, description=None))]
+    pub fn py_new(
+        id: String,
+        sequence: Vec<u8>,
+        quality_scores: Option<Vec<u8>>,
+        description: Option<String>,
+    ) -> Self {
+        Self::new(id, sequence, quality_scores, description)
+    }
+
+    /// Get the length of the sequence.
+    #[pyo3(name = "__len__")]
+    pub fn py_len(&self) -> usize {
+        self.len()
+    }
+
+    /// String representation of the sequence record.
+    #[pyo3(name = "__repr__")]
+    pub fn py_repr(&self) -> String {
+        format!(
+            "SequenceRecord(id='{}', length={}, has_quality={})",
+            self.id,
+            self.len(),
+            self.quality_scores.is_some()
+        )
+    }
+
+    /// Validate the sequence record against a specified encoding type.
+    ///
+    /// # Arguments
+    ///
+    /// * `encoding_type` - The encoding type to validate against ("dna", "rna", or "protein")
+    ///
+    /// # Returns
+    ///
+    /// None if valid, raises ValueError if invalid
+    #[pyo3(name = "validate")]
+    pub fn py_validate(&self, encoding_type: &str) -> PyResult<()> {
+        let enc_type = encoding_type
+            .parse::<EncodingType>()
+            .map_err(|e| PyErr::new::<pyo3::exceptions::PyValueError, _>(e.to_string()))?;
+
+        self.validate(enc_type)
+            .map_err(|e| PyErr::new::<pyo3::exceptions::PyValueError, _>(e.to_string()))
+    }
+
+    /// Compute the reverse complement of this sequence record (for DNA/RNA).
+    ///
+    /// Returns a new SequenceRecord with the reversed and complemented sequence.
+    /// Quality scores are also reversed if present.
+    #[pyo3(name = "reverse_complement")]
+    pub fn py_reverse_complement(&self) -> Self {
+        self.reverse_complement()
+    }
+
+    /// Compute the mean quality score if quality scores are present.
+    ///
+    /// # Returns
+    ///
+    /// Mean quality score or None if no quality scores exist
+    #[pyo3(name = "mean_quality")]
+    pub fn py_mean_quality(&self) -> Option<f32> {
+        self.mean_quality()
+    }
+}
+
+// Continue with the Rust-only validate method
+impl SequenceRecord {
+    /// Validate the sequence record.
+    ///
+    /// Checks that:
+    /// - ID is not empty
+    /// - Sequence is not empty
+    /// - Quality scores (if present) have the same length as the sequence
+    /// - Sequence contains only valid characters for the specified encoding type
+    ///
+    /// # Arguments
+    ///
+    /// * `encoding_type` - The expected sequence type (DNA, RNA, or Protein)
+    ///
+    /// # Returns
+    ///
+    /// `Ok(())` if valid, or an error describing the validation failure
+    pub fn validate(&self, encoding_type: EncodingType) -> Result<(), DPError> {
+        // Check ID is not empty
+        if self.id.is_empty() {
+            return Err(DPError::InvalidValue(
+                "Sequence ID cannot be empty".to_string(),
+            ));
+        }
+
+        // Check sequence is not empty
+        if self.sequence.is_empty() {
+            return Err(DPError::InvalidValue(
+                "Sequence cannot be empty".to_string(),
+            ));
+        }
+
+        // Check quality scores length matches sequence length
+        if let Some(ref qual) = self.quality_scores {
+            if qual.len() != self.sequence.len() {
+                return Err(DPError::QualityMismatch {
+                    seq_len: self.sequence.len(),
+                    qual_len: qual.len(),
+                });
+            }
+        }
+
+        // Validate sequence alphabet
+        for (pos, &base) in self.sequence.iter().enumerate() {
+            if !encoding_type.is_valid_char(base) {
+                return Err(DPError::InvalidAlphabet {
+                    character: base as char,
+                    position: pos,
+                    expected: String::from_utf8_lossy(encoding_type.alphabet()).to_string(),
+                });
+            }
+        }
+
+        Ok(())
+    }
+
+    /// Compute the reverse complement of this sequence record (for DNA/RNA).
+    ///
+    /// Returns a new `SequenceRecord` with the reversed and complemented sequence.
+    /// Quality scores are also reversed if present.
+    ///
+    /// # Returns
+    ///
+    /// A new `SequenceRecord` with reverse complement sequence
+    pub fn reverse_complement(&self) -> Self {
+        let rc_seq = self.sequence.as_slice().reverse_complement();
+        let rc_qual = self.quality_scores.as_ref().map(|q| {
+            let mut reversed = q.clone();
+            reversed.reverse();
+            reversed
+        });
+
+        Self {
+            id: format!("{}_RC", self.id),
+            sequence: rc_seq,
+            quality_scores: rc_qual,
+            description: self.description.as_ref().map(|d| format!("{} (RC)", d)),
+        }
+    }
+
+    /// Compute the mean quality score if quality scores are present.
+    ///
+    /// # Returns
+    ///
+    /// `Some(mean)` if quality scores exist, `None` otherwise
+    pub fn mean_quality(&self) -> Option<f32> {
+        self.quality_scores.as_ref().map(|scores| {
+            let sum: u32 = scores.iter().map(|&q| q as u32).sum();
+            sum as f32 / scores.len() as f32
+        })
+    }
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    #[test]
+    fn test_sequence_record_new() {
+        let record = SequenceRecord::new(
+            "seq1".to_string(),
+            b"ACGT".to_vec(),
+            Some(vec![30, 30, 30, 30]),
+            Some("Test sequence".to_string()),
+        );
+
+        assert_eq!(record.id, "seq1");
+        assert_eq!(record.sequence, b"ACGT");
+        assert_eq!(record.len(), 4);
+        assert!(!record.is_empty());
+    }
+
+    #[test]
+    fn test_sequence_record_validate() {
+        let record = SequenceRecord::new("seq1".to_string(), b"ACGT".to_vec(), None, None);
+
+        assert!(record.validate(EncodingType::DNA).is_ok());
+        assert!(record.validate(EncodingType::RNA).is_err()); // T is invalid for RNA
+    }
+
+    #[test]
+    fn test_sequence_record_validate_quality_mismatch() {
+        let record = SequenceRecord::new(
+            "seq1".to_string(),
+            b"ACGT".to_vec(),
+            Some(vec![30, 30]), // Wrong length
+            None,
+        );
+
+        let result = record.validate(EncodingType::DNA);
+        assert!(result.is_err());
+        if let Err(DPError::QualityMismatch { seq_len, qual_len }) = result {
+            assert_eq!(seq_len, 4);
+            assert_eq!(qual_len, 2);
+        } else {
+            panic!("Expected QualityMismatch error");
+        }
+    }
+
+    #[test]
+    fn test_sequence_record_reverse_complement() {
+        let record = SequenceRecord::new(
+            "seq1".to_string(),
+            b"ACGT".to_vec(),
+            Some(vec![10, 20, 30, 40]),
+            None,
+        );
+
+        let rc = record.reverse_complement();
+        assert_eq!(rc.id, "seq1_RC");
+        assert_eq!(rc.sequence, b"ACGT"); // Reverse complement of ACGT is ACGT
+        assert_eq!(rc.quality_scores, Some(vec![40, 30, 20, 10])); // Reversed
+    }
+
+    #[test]
+    fn test_sequence_record_mean_quality() {
+        let record = SequenceRecord::new(
+            "seq1".to_string(),
+            b"ACGT".to_vec(),
+            Some(vec![10, 20, 30, 40]),
+            None,
+        );
+
+        assert_eq!(record.mean_quality(), Some(25.0));
+
+        let no_qual = SequenceRecord::new("seq2".to_string(), b"ACGT".to_vec(), None, None);
+        assert_eq!(no_qual.mean_quality(), None);
+    }
 }

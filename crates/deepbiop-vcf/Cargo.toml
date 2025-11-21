@@ -1,0 +1,26 @@
+[package]
+name = "deepbiop-vcf"
+version = { workspace = true }
+authors = { workspace = true }
+edition = { workspace = true }
+homepage = { workspace = true }
+repository = { workspace = true }
+keywords = ["deep-learning", "bioinformatics", "vcf", "variants"]
+license = { workspace = true }
+readme = "../../README.md"
+description = "VCF variant file processing for deep learning preprocessing"
+
+[dependencies]
+noodles = { workspace = true }
+ahash = { workspace = true }
+anyhow = { workspace = true }
+rayon = { workspace = true }
+log = { workspace = true }
+serde = { workspace = true }
+thiserror = { workspace = true }
+
+pyo3 = { workspace = true, optional = true }
+pyo3-stub-gen = { workspace = true, optional = true }
+
+[features]
+python = ["dep:pyo3", "dep:pyo3-stub-gen"]

@@ -1,10 +1,11 @@
 use ahash::HashMap;
 use anyhow::Result;
+use deepbiop_utils as utils;
 use noodles::bam;
 use noodles::bgzf;
 use rayon::prelude::*;
+use std::fs::File;
 use std::path::{Path, PathBuf};
-use std::{fs::File, num::NonZeroUsize, thread};
 
 use noodles::sam::alignment::record::data::field::Tag;
 use noodles::sam::alignment::record::data::field::Value;
@@ -50,15 +51,8 @@ pub fn chimeric_reads_for_bam<P: AsRef<Path>>(
     bam: P,
     threads: Option<usize>,
 ) -> Result<Vec<bam::Record>> {
+    let worker_count = utils::parallel::calculate_worker_count(threads);
     let file = File::open(bam)?;
-    let worker_count = if let Some(threads) = threads {
-        NonZeroUsize::new(threads)
-            .unwrap()
-            .min(thread::available_parallelism().unwrap_or(NonZeroUsize::MIN))
-    } else {
-        thread::available_parallelism().unwrap_or(NonZeroUsize::MIN)
-    };
-
     let decoder = bgzf::io::MultithreadedReader::with_worker_count(worker_count, file);
     let mut reader = bam::io::Reader::from(decoder);
     let _header = reader.read_header()?;

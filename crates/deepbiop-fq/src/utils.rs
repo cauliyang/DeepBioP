@@ -1,6 +1,7 @@
 use ahash::HashMap;
 use anyhow::{Error, Result};
 use deepbiop_core::error::DPError;
+#[cfg(feature = "python")]
 use pyo3::prelude::*;
 use rayon::prelude::*;
 use std::ops::Range;
@@ -22,7 +23,7 @@ pub fn split_qual_by_offsets(target: &[usize], offsets: &[(usize, usize)]) -> Re
 }
 
 /// Vertorize the target region.
-#[pyfunction]
+#[cfg_attr(feature = "python", pyfunction)]
 pub fn vertorize_target(start: usize, end: usize, length: usize) -> Result<Vec<usize>> {
     if start > end || end > length {
         return Err(Error::from(DPError::TargetRegionInvalid));

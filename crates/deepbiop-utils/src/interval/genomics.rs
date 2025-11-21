@@ -1,5 +1,6 @@
 use anyhow::Result;
 use derive_builder::Builder;
+#[cfg(feature = "python")]
 use pyo3::prelude::*;
 
 use super::traits::Overlap;
@@ -7,19 +8,18 @@ use super::traits::Overlap;
 use bstr::BString;
 use std::str::FromStr;
 
+#[cfg(feature = "python")]
 use pyo3_stub_gen::derive::*;
 
 /// A segment is a genomic interval defined by a chromosome, a start position and an end position.
 /// The start position is inclusive and the end position is exclusive.
-#[gen_stub_pyclass]
-#[pyclass(module = "deepbiop.utils")]
+#[cfg_attr(feature = "python", gen_stub_pyclass)]
+#[cfg_attr(feature = "python", pyclass())]
 #[derive(Debug, Builder, Clone, PartialEq)]
 #[builder(build_fn(validate = "Self::validate"))]
 pub struct GenomicInterval {
     pub chr: BString,
-    #[pyo3(get, set)]
     pub start: usize,
-    #[pyo3(get, set)]
     pub end: usize,
 }
 
@@ -99,6 +99,55 @@ impl PartialOrd for GenomicInterval {
         } else {
             self.chr.partial_cmp(&other.chr)
         }
+    }
+}
+
+#[cfg(feature = "python")]
+#[pymethods]
+impl GenomicInterval {
+    #[getter]
+    fn chr(&self) -> String {
+        String::from_utf8_lossy(&self.chr).to_string()
+    }
+
+    #[setter]
+    fn set_chr(&mut self, chr: String) {
+        self.chr = chr.into();
+    }
+
+    #[getter]
+    fn start(&self) -> usize {
+        self.start
+    }
+
+    #[setter]
+    fn set_start(&mut self, start: usize) {
+        self.start = start;
+    }
+
+    #[getter]
+    fn end(&self) -> usize {
+        self.end
+    }
+
+    #[setter]
+    fn set_end(&mut self, end: usize) {
+        self.end = end;
+    }
+
+    #[new]
+    fn py_new(chr: String, start: usize, end: usize) -> PyResult<Self> {
+        Self::new(&chr, start, end)
+            .map_err(|e| PyErr::new::<pyo3::exceptions::PyValueError, _>(e.to_string()))
+    }
+
+    fn __repr__(&self) -> String {
+        format!(
+            "GenomicInterval(chr='{}', start={}, end={})",
+            String::from_utf8_lossy(&self.chr),
+            self.start,
+            self.end
+        )
     }
 }
 

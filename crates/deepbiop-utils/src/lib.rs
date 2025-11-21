@@ -1,8 +1,11 @@
 //! **deepbiop-utils** is a collection of utility functions.
 
 pub mod blat;
+pub mod export;
 pub mod interval;
 pub mod io;
+pub mod parallel;
+pub mod sampling;
 pub mod strategy;
 pub mod sv;
 
@@ -10,13 +13,15 @@ pub mod sv;
 pub mod python;
 
 use colored::Colorize;
+#[cfg(feature = "python")]
 use pyo3::prelude::*;
 
+#[cfg(feature = "python")]
 use pyo3_stub_gen::derive::*;
 
-#[gen_stub_pyfunction(module = "deepbiop.utils")]
-#[pyfunction]
-#[pyo3(signature = (sequence, targets, text_width=None))]
+#[cfg_attr(feature = "python", gen_stub_pyfunction())]
+#[cfg_attr(feature = "python", pyfunction)]
+#[cfg_attr(feature = "python", pyo3(signature = (sequence, targets, text_width=None)))]
 pub fn highlight_targets(
     sequence: &str,
     targets: Vec<(usize, usize)>,

@@ -1,28 +1,32 @@
+#[cfg(feature = "python")]
 use pyo3::types::{PyAny, PyDict, PyList};
 use std::fs::File;
+#[cfg(feature = "python")]
 use std::path::Path;
 use std::sync::{Arc, Mutex};
 
 use anyhow::Result;
 use noodles::fastq;
+#[cfg(feature = "python")]
 use pyo3::prelude::*;
+#[cfg(feature = "python")]
 use rayon::prelude::*;
 use std::io::{BufReader, Read};
 
+#[cfg(feature = "python")]
 use pyo3_stub_gen::derive::*;
 
-#[gen_stub_pyclass]
-#[pyclass(name = "FastqRecord", module = "deepbiop.fq")]
+#[cfg_attr(feature = "python", gen_stub_pyclass)]
+#[cfg_attr(feature = "python", pyclass(get_all, name = "FastqRecord"))]
 pub struct FastqRecord {
-    #[pyo3(get)]
-    header: String,
-    #[pyo3(get)]
-    sequence: String,
-    #[pyo3(get)]
-    quality: String,
+    pub header: String,
+    pub sequence: String,
+    pub quality: String,
 }
 
+#[cfg(feature = "python")]
 #[gen_stub_pymethods]
+#[cfg(feature = "python")]
 #[pymethods]
 impl FastqRecord {
     #[new]
@@ -43,9 +47,10 @@ impl FastqRecord {
     }
 }
 
-#[gen_stub_pyclass]
-#[pyclass(name = "FastqDataset", module = "deepbiop.fq")]
+#[cfg_attr(feature = "python", gen_stub_pyclass)]
+#[cfg_attr(feature = "python", pyclass(name = "FastqDataset"))]
 #[derive(Clone)]
+#[allow(dead_code)]
 pub struct FastqDataset {
     file_path: String,
     records_count: usize,
@@ -53,11 +58,13 @@ pub struct FastqDataset {
     current_position: Arc<Mutex<usize>>,
 }
 
+#[cfg(feature = "python")]
 #[gen_stub_pymethods]
+#[cfg(feature = "python")]
 #[pymethods]
 impl FastqDataset {
     #[new]
-    fn new(file_path: String, chunk_size: usize) -> Result<Self> {
+    pub fn new(file_path: String, chunk_size: usize) -> Result<Self> {
         if !Path::new(&file_path).exists() {
             return Err(anyhow::anyhow!("File does not exist: {}", file_path));
         }
@@ -134,7 +141,7 @@ impl FastqDataset {
         Ok(dict.into())
     }
 
-    fn get_records(&self, start: usize, end: usize) -> PyResult<Vec<FastqRecord>> {
+    pub fn get_records(&self, start: usize, end: usize) -> PyResult<Vec<FastqRecord>> {
         // Validate input parameters to prevent bugs
         if end < start {
             return Err(pyo3::exceptions::PyValueError::new_err(
@@ -291,14 +298,18 @@ impl FastqDataset {
     }
 }
 
-#[gen_stub_pyclass]
-#[pyclass(name = "FastqIterator", module = "deepbiop.fq")]
+#[cfg_attr(feature = "python", gen_stub_pyclass)]
+#[cfg_attr(feature = "python", pyclass(name = "FastqIterator"))]
+#[allow(dead_code)]
 pub struct FastqIterator {
+    #[cfg(feature = "python")]
     dataset: Py<FastqDataset>,
     current_batch: usize,
 }
 
+#[cfg(feature = "python")]
 #[gen_stub_pymethods]
+#[cfg(feature = "python")]
 #[pymethods]
 impl FastqIterator {
     fn __iter__(slf: PyRef<'_, Self>) -> PyRef<'_, Self> {
@@ -341,7 +352,96 @@ impl FastqIterator {
     }
 }
 
+// Non-Python methods for FastqDataset
+impl FastqDataset {
+    /// Get total number of records in the dataset.
+    pub fn records_count(&self) -> usize {
+        self.records_count
+    }
+}
+
+// IterableDataset trait implementation for streaming access
+impl deepbiop_core::dataset::IterableDataset for FastqDataset {
+    fn iter(
+        &self,
+    ) -> Box<
+        dyn Iterator<
+                Item = deepbiop_core::dataset::DatasetResult<deepbiop_core::seq::SequenceRecord>,
+            > + '_,
+    > {
+        Box::new(FastqStreamIterator::new(&self.file_path))
+    }
+
+    fn paths(&self) -> Vec<std::path::PathBuf> {
+        vec![std::path::PathBuf::from(&self.file_path)]
+    }
+
+    fn size_hint(&self) -> Option<usize> {
+        Some(self.records_count)
+    }
+}
+
+/// Streaming iterator for IterableDataset trait implementation.
+///
+/// This provides true streaming access without batching.
+struct FastqStreamIterator {
+    reader: fastq::io::Reader<BufReader<Box<dyn Read>>>,
+}
+
+impl FastqStreamIterator {
+    fn new(file_path: &str) -> Self {
+        // Create reader with compression support
+        let file_reader = deepbiop_utils::io::create_reader_for_compressed_file(file_path)
+            .expect("Failed to create file reader");
+
+        let buffered = BufReader::new(file_reader);
+        let reader = fastq::io::Reader::new(buffered);
+
+        Self { reader }
+    }
+}
+
+impl Iterator for FastqStreamIterator {
+    type Item = deepbiop_core::dataset::DatasetResult<deepbiop_core::seq::SequenceRecord>;
+
+    fn next(&mut self) -> Option<Self::Item> {
+        // Read next record
+        match self.reader.records().next() {
+            None => None, // EOF
+            Some(Ok(record)) => {
+                // Convert to SequenceRecord
+                let id = String::from_utf8_lossy(record.name()).into_owned();
+                let sequence = record.sequence().to_vec();
+                let quality_scores = Some(record.quality_scores().to_vec());
+                let desc_bstr = record.definition().description();
+                let description = if desc_bstr.is_empty() {
+                    None
+                } else {
+                    Some(desc_bstr.to_string())
+                };
+
+                let seq_record = deepbiop_core::seq::SequenceRecord::new(
+                    id,
+                    sequence,
+                    quality_scores,
+                    description,
+                );
+
+                Some(Ok(seq_record))
+            }
+            Some(Err(e)) => {
+                // Return error
+                Some(Err(deepbiop_core::error::DPError::InvalidValue(format!(
+                    "Failed to read FASTQ record: {}",
+                    e
+                ))))
+            }
+        }
+    }
+}
+
 // More robust and efficient record counting
+#[allow(dead_code)]
 fn count_records_efficient(file_path: &str) -> Result<usize> {
     let file = File::open(file_path)?;
     let file_size = file.metadata()?.len() as usize;
@@ -387,6 +487,7 @@ fn count_records_efficient(file_path: &str) -> Result<usize> {
 }
 
 // Original counting function renamed for exact counting
+#[allow(dead_code)]
 fn count_records_exact(file_path: &str) -> Result<usize> {
     let file = File::open(file_path)?;
     let mut reader = fastq::io::Reader::new(BufReader::with_capacity(65536, file));
@@ -395,6 +496,7 @@ fn count_records_exact(file_path: &str) -> Result<usize> {
 }
 
 // Legacy function to maintain compatibility
+#[cfg(feature = "python")]
 #[allow(dead_code)]
 fn count_records(file_path: &str) -> PyResult<usize> {
     count_records_efficient(file_path)
