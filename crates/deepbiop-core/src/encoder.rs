@@ -144,6 +144,44 @@ pub trait SequenceEncoder {
     /// ```
     fn encode_sequence(&self, seq: &[u8], qual: Option<&[u8]>) -> Result<Self::EncodeOutput>;
 
+    /// Encodes multiple sequences in batch for potential performance optimization
+    ///
+    /// Default implementation processes sequences sequentially. Implementations can override
+    /// this method to add optimizations such as:
+    /// - Parallel processing with `rayon`
+    /// - SIMD operations for vectorized encoding
+    /// - Memory pool reuse to reduce allocations
+    ///
+    /// # Arguments
+    ///
+    /// * `sequences` - Slice of tuples containing (sequence, optional_quality_scores)
+    ///
+    /// # Returns
+    ///
+    /// Returns a Vec of encoded outputs, one per input sequence, in the same order.
+    ///
+    /// # Example
+    ///
+    /// ```ignore
+    /// // Default sequential processing (automatically provided)
+    /// let results = encoder.batch_encode(&[(b"ACGT", None), (b"TGCA", None)])?;
+    ///
+    /// // Custom parallel implementation (optional override):
+    /// fn batch_encode(&self, sequences: &[(&[u8], Option<&[u8]>)]) -> Result<Vec<Self::EncodeOutput>> {
+    ///     use rayon::prelude::*;
+    ///     sequences
+    ///         .par_iter()
+    ///         .map(|(seq, qual)| self.encode_sequence(seq, *qual))
+    ///         .collect()
+    /// }
+    /// ```
+    fn batch_encode(&self, sequences: &[(&[u8], Option<&[u8]>)]) -> Result<Vec<Self::EncodeOutput>> {
+        sequences
+            .iter()
+            .map(|(seq, qual)| self.encode_sequence(seq, *qual))
+            .collect()
+    }
+
     /// Returns the expected size of the encoded output
     ///
     /// This helps with pre-allocation and validation. The return value

@@ -215,6 +215,8 @@ CLAUDE.md
 .claude
 .specify
 specs
+
+# Claude Code development artifacts
 claudedoc
 .mcp.json
 .serena
