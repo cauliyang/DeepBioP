@@ -265,7 +265,7 @@ class TestLightningTrainer:
         test_files = {
             "fastq": Path(__file__).parent / "data" / "test.fastq",
             "fasta": Path(__file__).parent / "data" / "test.fasta",
-            "bam": Path(__file__).parent / "data" / "test.bam",
+            "bam": Path(__file__).parent / "data" / "test_chimric_reads.bam",
         }
 
         for file_type, test_file in test_files.items():
