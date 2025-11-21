@@ -1,5 +1,4 @@
-"""
-Tests for supervised learning features.
+"""Tests for supervised learning features.
 
 Tests target extraction, collate functions, and BiologicalDataModule
 with supervised learning support.
@@ -28,7 +27,9 @@ class TestTargetExtractor:
         target = extractor(record)
         expected_mean = sum(record["quality"]) / len(record["quality"])
 
-        assert abs(target - expected_mean) < 0.01, f"Expected {expected_mean}, got {target}"
+        assert abs(target - expected_mean) < 0.01, (
+            f"Expected {expected_mean}, got {target}"
+        )
 
     def test_from_quality_median(self):
         """Test extracting median quality score."""
@@ -64,7 +65,9 @@ class TestTargetExtractor:
         """Test extracting target from header using key:value pairs."""
         from deepbiop.targets import TargetExtractor
 
-        extractor = TargetExtractor.from_header(key="class", separator="|", converter=int)
+        extractor = TargetExtractor.from_header(
+            key="class", separator="|", converter=int
+        )
 
         record = {
             "id": b"@read_1|class:1|score:0.95",
@@ -218,14 +221,22 @@ class TestTransformDataset:
 
     def test_transform_dataset_with_target(self):
         """Test TransformDataset with target extraction."""
-        from deepbiop.transforms import TransformDataset
         from deepbiop.targets import TargetExtractor
+        from deepbiop.transforms import TransformDataset
 
         # Create mock dataset
         class MockDataset:
             def __iter__(self):
-                yield {"id": b"read_1", "sequence": b"ACGTACGT", "quality": [30, 32, 35, 38]}
-                yield {"id": b"read_2", "sequence": b"TTGGCCAA", "quality": [40, 42, 44, 46]}
+                yield {
+                    "id": b"read_1",
+                    "sequence": b"ACGTACGT",
+                    "quality": [30, 32, 35, 38],
+                }
+                yield {
+                    "id": b"read_2",
+                    "sequence": b"TTGGCCAA",
+                    "quality": [40, 42, 44, 46],
+                }
 
         # Create target extractor
         target_fn = TargetExtractor.from_quality("mean")
@@ -252,8 +263,8 @@ class TestTransformDataset:
 
     def test_transform_dataset_tuple_return(self):
         """Test TransformDataset returning tuples."""
-        from deepbiop.transforms import TransformDataset
         from deepbiop.targets import TargetExtractor
+        from deepbiop.transforms import TransformDataset
 
         class MockDataset:
             def __iter__(self):
@@ -284,7 +295,9 @@ class TestBiologicalDataModule:
 
     def test_data_module_with_transform_and_target(self):
         """Test BiologicalDataModule with transform and target extraction."""
-        pytest.importorskip("pytorch_lightning", reason="PyTorch Lightning not installed")
+        pytest.importorskip(
+            "pytorch_lightning", reason="PyTorch Lightning not installed"
+        )
 
         from deepbiop.lightning import BiologicalDataModule
         from deepbiop.targets import TargetExtractor
@@ -315,7 +328,7 @@ class TestBiologicalDataModule:
 
         # Check batch structure
         # With supervised collate, batch should have "targets" key
-        assert isinstance(batch, (dict, list))
+        assert isinstance(batch, dict | list)
 
 
 class TestGetBuiltinExtractor:

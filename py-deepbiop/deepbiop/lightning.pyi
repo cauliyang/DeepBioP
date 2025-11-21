@@ -1,5 +1,4 @@
-"""
-PyTorch Lightning integration for biological sequence data.
+"""PyTorch Lightning integration for biological sequence data.
 
 Provides LightningDataModule implementation for seamless integration with
 PyTorch Lightning training workflows.
@@ -15,8 +14,7 @@ from torch.utils.data import DataLoader
 __all__ = ["BiologicalDataModule"]
 
 class BiologicalDataModule(_LightningDataModule):
-    """
-    PyTorch Lightning DataModule for biological sequence data.
+    """PyTorch Lightning DataModule for biological sequence data.
 
     Handles data loading, preprocessing, and splitting for train/val/test sets
     with PyTorch Lightning integration.
@@ -59,8 +57,7 @@ class BiologicalDataModule(_LightningDataModule):
     def prepare_data(self) -> None:
         """Download and prepare data (called once per node)."""
     def setup(self, stage: str | None = None) -> None:
-        """
-        Set up datasets for train/val/test splits.
+        """Set up datasets for train/val/test splits.
 
         Args:
             stage: 'fit', 'test', or None (for both)

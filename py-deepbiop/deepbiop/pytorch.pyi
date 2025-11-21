@@ -1,5 +1,4 @@
-"""
-PyTorch-style Python API for biological sequence data loading.
+"""PyTorch-style Python API for biological sequence data loading.
 
 This module provides PyTorch-compatible Dataset, DataLoader, and transform classes
 for loading and preprocessing FASTQ/FASTA files, enabling researchers to use familiar
@@ -44,8 +43,7 @@ Transform = Callable[[Sample], Sample]
 CollateFunction = Callable[[list[Sample]], Any]
 
 class Dataset:
-    """
-    PyTorch-compatible Dataset for biological sequence files.
+    """PyTorch-compatible Dataset for biological sequence files.
 
     Provides indexed access to FASTQ/FASTA files with optional transformations.
     Compatible with PyTorch DataLoader and other ML frameworks.
@@ -57,7 +55,7 @@ class Dataset:
         cache_dir: Optional directory for caching processed data
         lazy: Load sequences on-demand if True, preload if False (default: True)
 
-    Raises
+    Raises:
     ------
         FileNotFoundError: If the specified file doesn't exist
         ValueError: If file format is invalid or unsupported
@@ -81,17 +79,16 @@ class Dataset:
     def __len__(self) -> int:
         """Return the total number of sequences in the dataset."""
     def __getitem__(self, idx: int) -> Sample:
-        """
-        Get sample at index idx.
+        """Get sample at index idx.
 
         Args:
             idx: Sample index (0 to len(dataset)-1)
 
-        Returns
+        Returns:
         -------
             Dictionary with 'sequence' (bytes) and 'quality' (bytes) keys
 
-        Raises
+        Raises:
         ------
             IndexError: If idx is out of bounds
         """
@@ -100,10 +97,9 @@ class Dataset:
     def __repr__(self) -> str:
         """Return string representation of dataset."""
     def summary(self) -> dict[str, Any]:
-        """
-        Get dataset summary statistics.
+        """Get dataset summary statistics.
 
-        Returns
+        Returns:
         -------
             Dictionary containing:
                 - num_samples: Total number of sequences
@@ -111,10 +107,9 @@ class Dataset:
                 - memory_footprint: Estimated memory usage in bytes
         """
     def validate(self) -> dict[str, Any]:
-        """
-        Validate dataset integrity.
+        """Validate dataset integrity.
 
-        Returns
+        Returns:
         -------
             Dictionary containing:
                 - is_valid: Boolean indicating validity
@@ -129,8 +124,7 @@ class DatasetIterator:
     def __next__(self) -> Sample: ...
 
 class DataLoader:
-    """
-    PyTorch-compatible DataLoader for batching and shuffling.
+    """PyTorch-compatible DataLoader for batching and shuffling.
 
     Wraps a Dataset and provides efficient batch iteration with optional
     shuffling and custom collate functions.
@@ -175,8 +169,7 @@ class DataLoaderIterator:
     def __next__(self) -> list[Sample]: ...
 
 class OneHotEncoder:
-    """
-    One-hot encoding transform for DNA/RNA/protein sequences.
+    """One-hot encoding transform for DNA/RNA/protein sequences.
 
     Encodes biological sequences as one-hot vectors suitable for CNNs and RNNs.
     For DNA: 4 channels (A, C, G, T)
@@ -187,7 +180,7 @@ class OneHotEncoder:
         encoding_type: Type of encoding - "dna", "rna", or "protein"
         unknown_strategy: How to handle unknown bases - "skip", "zero", or "error"
 
-    Returns
+    Returns:
     -------
         Transformed sample with sequence as NumPy array of shape (seq_len, num_channels)
         with dtype float32
@@ -207,8 +200,7 @@ class OneHotEncoder:
     def __repr__(self) -> str: ...
 
 class IntegerEncoder:
-    """
-    Integer encoding transform for DNA/RNA/protein sequences.
+    """Integer encoding transform for DNA/RNA/protein sequences.
 
     Encodes biological sequences as integer arrays suitable for embeddings
     and transformer models.
@@ -217,7 +209,7 @@ class IntegerEncoder:
         encoding_type: Type of encoding - "dna", "rna", or "protein"
         unknown_strategy: How to handle unknown bases - "skip", "zero", or "error"
 
-    Returns
+    Returns:
     -------
         Transformed sample with sequence as NumPy array of dtype int64
 
@@ -236,8 +228,7 @@ class IntegerEncoder:
     def __repr__(self) -> str: ...
 
 class KmerEncoder:
-    """
-    K-mer encoding transform for DNA/RNA/protein sequences.
+    """K-mer encoding transform for DNA/RNA/protein sequences.
 
     Encodes sequences as k-mer frequency vectors suitable for feature-based
     models (Random Forest, SVM, XGBoost).
@@ -248,7 +239,7 @@ class KmerEncoder:
         encoding_type: Type of encoding - "dna", "rna", or "protein"
         unknown_strategy: How to handle unknown bases - "skip" or "error"
 
-    Returns
+    Returns:
     -------
         Transformed sample with sequence as NumPy array of k-mer frequencies
 
@@ -271,8 +262,7 @@ class KmerEncoder:
     def __repr__(self) -> str: ...
 
 class Compose:
-    """
-    Compose multiple transforms into a single transform.
+    """Compose multiple transforms into a single transform.
 
     Applies a sequence of transformations in order.
 
@@ -292,8 +282,7 @@ class Compose:
     def __repr__(self) -> str: ...
 
 class ReverseComplement:
-    """
-    Reverse complement augmentation for DNA/RNA sequences.
+    """Reverse complement augmentation for DNA/RNA sequences.
 
     Randomly applies reverse complement transformation for orientation-invariant
     training data.
@@ -316,8 +305,7 @@ class ReverseComplement:
     def __repr__(self) -> str: ...
 
 class Mutator:
-    """
-    Random mutation augmentation for sequences.
+    """Random mutation augmentation for sequences.
 
     Simulates SNPs and sequencing errors by randomly mutating bases.
 
@@ -339,8 +327,7 @@ class Mutator:
     def __repr__(self) -> str: ...
 
 class Sampler:
-    """
-    Subsequence sampling augmentation.
+    """Subsequence sampling augmentation.
 
     Extracts random or fixed-position windows from sequences.
 
@@ -363,8 +350,7 @@ class Sampler:
     def __repr__(self) -> str: ...
 
 def default_collate(samples: list[Sample]) -> list[Sample]:
-    """
-    Default collate function for DataLoader.
+    """Default collate function for DataLoader.
 
     Currently returns samples as-is. Future implementations may provide
     intelligent batching (e.g., padding sequences to same length).
@@ -372,7 +358,7 @@ def default_collate(samples: list[Sample]) -> list[Sample]:
     Args:
         samples: List of sample dictionaries
 
-    Returns
+    Returns:
     -------
         List of samples (currently unchanged)
 
@@ -384,15 +370,14 @@ def default_collate(samples: list[Sample]) -> list[Sample]:
 def save_cache(
     data: Any, cache_path: str, metadata: dict[str, Any] | None = None
 ) -> None:
-    """
-    Save processed data to cache file.
+    """Save processed data to cache file.
 
     Args:
         data: Data to cache (must be pickle-able)
         cache_path: Path to cache file
         metadata: Optional metadata dictionary (e.g., version, timestamp)
 
-    Raises
+    Raises:
     ------
         IOError: If cache file cannot be written
 
@@ -402,17 +387,16 @@ def save_cache(
     """
 
 def load_cache(cache_path: str) -> tuple[Any, dict[str, Any] | None]:
-    """
-    Load processed data from cache file.
+    """Load processed data from cache file.
 
     Args:
         cache_path: Path to cache file
 
-    Returns
+    Returns:
     -------
         Tuple of (data, metadata)
 
-    Raises
+    Raises:
     ------
         FileNotFoundError: If cache file doesn't exist
         IOError: If cache file is corrupted
@@ -425,15 +409,14 @@ def load_cache(cache_path: str) -> tuple[Any, dict[str, Any] | None]:
 def is_cache_valid(
     cache_path: str, source_files: list[str], max_age_seconds: float | None = None
 ) -> bool:
-    """
-    Check if cache is valid and up-to-date.
+    """Check if cache is valid and up-to-date.
 
     Args:
         cache_path: Path to cache file
         source_files: List of source file paths to check against
         max_age_seconds: Optional maximum cache age in seconds
 
-    Returns
+    Returns:
     -------
         True if cache exists and is newer than all source files (and within max_age if specified)
 

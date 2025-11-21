@@ -1,11 +1,7 @@
-"""
-Tests for Parquet caching functionality.
+"""Tests for Parquet caching functionality.
 
 Tests T057-T058 for Advanced Features: Efficient caching and cache invalidation.
 """
-
-import tempfile
-from pathlib import Path
 
 import pytest
 
@@ -34,7 +30,6 @@ class TestParquetCache:
         #     cached_data = cache.read()
         #     assert len(cached_data) == 2
         #     assert cached_data[0]["sequence"] == b"ACGT"
-        pass
 
     @pytest.mark.skip(reason="Cache implementation pending")
     def test_parquet_cache_10x_speedup(self):
@@ -45,7 +40,6 @@ class TestParquetCache:
         # - Cache to Parquet
         # - Compare load time: FASTQ+transforms vs Parquet cache
         # - Verify >=10x speedup
-        pass
 
 
 class TestCacheInvalidation:
@@ -59,7 +53,6 @@ class TestCacheInvalidation:
         # - Modify source file (update mtime)
         # - Verify cache detects modification
         # - Verify cache rebuild on access
-        pass
 
     @pytest.mark.skip(reason="Cache implementation pending")
     def test_cache_preserves_transform_results(self):
@@ -69,7 +62,6 @@ class TestCacheInvalidation:
         # - Cache results
         # - Load from cache
         # - Verify cached data == transformed data
-        pass
 
 
 if __name__ == "__main__":

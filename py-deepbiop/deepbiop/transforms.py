@@ -1,5 +1,4 @@
-"""
-Transform composition utilities for biological data.
+"""Transform composition utilities for biological data.
 
 This module provides utilities for composing and chaining transformations
 on biological sequence data.
@@ -17,8 +16,7 @@ if TYPE_CHECKING:
 
 
 class Transform(ABC):
-    """
-    Abstract base class for all data transformations.
+    """Abstract base class for all data transformations.
 
     Transforms operate on Record objects and return modified Record objects.
     All transforms must be:
@@ -31,7 +29,7 @@ class Transform(ABC):
     seed : int | None
         Random seed for reproducibility. If None, operations are non-deterministic.
 
-    Examples
+    Examples:
     --------
     >>> class MyTransform(Transform):
     ...     def __call__(self, record):
@@ -40,8 +38,7 @@ class Transform(ABC):
     """
 
     def __init__(self, seed: int | None = None, **kwargs: Any) -> None:
-        """
-        Initialize transform.
+        """Initialize transform.
 
         Parameters
         ----------
@@ -59,20 +56,19 @@ class Transform(ABC):
 
     @abstractmethod
     def __call__(self, record: Record | dict[str, Any]) -> Record | dict[str, Any]:
-        """
-        Apply transform to a record.
+        """Apply transform to a record.
 
         Parameters
         ----------
         record : Record | dict[str, Any]
             Input record
 
-        Returns
+        Returns:
         -------
         Record | dict[str, Any]
             Transformed record
 
-        Notes
+        Notes:
         -----
         Implementations must NOT modify the input record. Create a copy
         if modifications are needed.
@@ -80,10 +76,9 @@ class Transform(ABC):
         ...
 
     def save_state(self) -> dict[str, Any]:
-        """
-        Save internal state for reproducibility.
+        """Save internal state for reproducibility.
 
-        Returns
+        Returns:
         -------
         dict[str, Any]
             State dictionary that can be passed to load_state()
@@ -94,8 +89,7 @@ class Transform(ABC):
         }
 
     def load_state(self, state: dict[str, Any]) -> None:
-        """
-        Restore internal state.
+        """Restore internal state.
 
         Parameters
         ----------
@@ -111,8 +105,7 @@ class Transform(ABC):
 
 
 class Compose:
-    """
-    Compose multiple transforms together.
+    """Compose multiple transforms together.
 
     This class allows chaining multiple transformations that will be
     applied sequentially to data records.
@@ -134,8 +127,7 @@ class Compose:
     """
 
     def __init__(self, transforms: list[Any]):
-        """
-        Initialize Compose with a list of transforms.
+        """Initialize Compose with a list of transforms.
 
         Args:
             transforms: List of transform objects
@@ -143,13 +135,12 @@ class Compose:
         self.transforms = transforms
 
     def __call__(self, record: dict[str, Any]) -> dict[str, Any]:
-        """
-        Apply all transforms sequentially to a record.
+        """Apply all transforms sequentially to a record.
 
         Args:
             record: Input record dict
 
-        Returns
+        Returns:
         -------
             Transformed record dict
         """
@@ -173,15 +164,14 @@ class Compose:
         return result
 
     def filter(self, record: dict[str, Any]) -> bool:
-        """
-        Apply filter transforms.
+        """Apply filter transforms.
 
         Returns False if any filter rejects the record.
 
         Args:
             record: Input record dict
 
-        Returns
+        Returns:
         -------
             True if record passes all filters, False otherwise
         """
@@ -198,8 +188,7 @@ class Compose:
 
 
 class FilterCompose:
-    """
-    Compose multiple filter transforms with AND logic.
+    """Compose multiple filter transforms with AND logic.
 
     All filters must pass for a record to be accepted.
 
@@ -225,8 +214,7 @@ class FilterCompose:
     """
 
     def __init__(self, filters: list[Any]):
-        """
-        Initialize FilterCompose with a list of filters.
+        """Initialize FilterCompose with a list of filters.
 
         Args:
             filters: List of filter objects
@@ -234,13 +222,12 @@ class FilterCompose:
         self.filters = filters
 
     def filter(self, record: dict[str, Any]) -> bool:
-        """
-        Apply all filters with AND logic.
+        """Apply all filters with AND logic.
 
         Args:
             record: Input record dict
 
-        Returns
+        Returns:
         -------
             True if record passes all filters, False otherwise
         """
@@ -257,8 +244,7 @@ class FilterCompose:
 
 
 class TransformDataset:
-    """
-    Wrapper to apply transforms and extract targets from a dataset during iteration.
+    """Wrapper to apply transforms and extract targets from a dataset during iteration.
 
     This allows lazy application of transforms and target extraction as records
     are streamed from the underlying dataset, enabling supervised learning.
@@ -299,10 +285,10 @@ class TransformDataset:
         transform: Any = None,
         target_fn: Any = None,
         filter_fn: Any = None,
+        *,
         return_dict: bool = True,
     ):
-        """
-        Initialize TransformDataset.
+        """Initialize TransformDataset.
 
         Args:
             dataset: Underlying dataset
@@ -318,10 +304,9 @@ class TransformDataset:
         self.return_dict = return_dict
 
     def __iter__(self):
-        """
-        Iterate with transforms, filters, and target extraction applied.
+        """Iterate with transforms, filters, and target extraction applied.
 
-        Yields
+        Yields:
         ------
             Transformed records (dict or tuple based on return_dict parameter)
         """
@@ -354,7 +339,8 @@ class TransformDataset:
                 if callable(self.target_fn):
                     target = self.target_fn(original_record)
                 else:
-                    raise TypeError(f"target_fn must be callable, got {type(self.target_fn)}")
+                    msg = f"target_fn must be callable, got {type(self.target_fn)}"
+                    raise TypeError(msg)
 
                 # Add target to record
                 if isinstance(record, dict):
@@ -374,8 +360,7 @@ class TransformDataset:
                 yield record
 
     def __len__(self):
-        """
-        Return dataset length if available.
+        """Return dataset length if available.
 
         Note: Length may not be accurate if filtering is applied.
         """
@@ -384,22 +369,20 @@ class TransformDataset:
         return 0
 
     def __getitem__(self, idx):
-        """
-        Get item by index (for PyTorch DataLoader compatibility).
+        """Get item by index (for PyTorch DataLoader compatibility).
 
-        Parameters
-        ----------
-            idx: Index of item to retrieve
+        Args:
+            idx (int): Index of item to retrieve
 
-        Returns
-        -------
+        Returns:
             Transformed record at index idx
         """
         if not hasattr(self.dataset, "__getitem__"):
-            raise TypeError(
+            msg = (
                 f"Underlying dataset {type(self.dataset).__name__} does not support indexing. "
                 f"Use iteration instead or ensure dataset has __getitem__ method."
             )
+            raise TypeError(msg)
 
         # Get record from underlying dataset
         record = self.dataset[idx]
@@ -423,7 +406,8 @@ class TransformDataset:
             if callable(self.target_fn):
                 target = self.target_fn(original_record)
             else:
-                raise TypeError(f"target_fn must be callable, got {type(self.target_fn)}")
+                msg = f"target_fn must be callable, got {type(self.target_fn)}"
+                raise TypeError(msg)
 
             # Add target to record
             if isinstance(record, dict):
@@ -452,4 +436,4 @@ class TransformDataset:
         )
 
 
-__all__ = ["Transform", "Compose", "FilterCompose", "TransformDataset"]
+__all__ = ["Compose", "FilterCompose", "Transform", "TransformDataset"]

@@ -1,5 +1,4 @@
-"""
-Tests for PyTorch Lightning integration.
+"""Tests for PyTorch Lightning integration.
 
 This module tests the integration with PyTorch Lightning's
 LightningDataModule for train/val/test splits and Trainer integration.
@@ -294,6 +293,7 @@ class TestLightningCheckpoints:
             import pytorch_lightning as pl
             import torch
             import torch.nn as nn
+
             from deepbiop.lightning import BiologicalDataModule
         except ImportError:
             pytest.skip("pytorch_lightning not installed")
@@ -329,6 +329,7 @@ class TestLightningCheckpoints:
 
         # Create temporary checkpoint directory
         import tempfile
+
         with tempfile.TemporaryDirectory() as tmpdir:
             # Create explicit checkpoint callback
             checkpoint_callback = pl.callbacks.ModelCheckpoint(
@@ -349,13 +350,16 @@ class TestLightningCheckpoints:
 
             # Train and save checkpoint
             import warnings
+
             with warnings.catch_warnings():
                 warnings.filterwarnings("ignore")  # Ignore all warnings
                 trainer.fit(model, data_module)
 
             # Check that checkpoint was created
             checkpoints = list(Path(tmpdir).glob("*.ckpt"))
-            assert len(checkpoints) > 0, f"At least one checkpoint should be saved in {tmpdir}"
+            assert len(checkpoints) > 0, (
+                f"At least one checkpoint should be saved in {tmpdir}"
+            )
 
             # Load from checkpoint (verify it works)
             checkpoint_file = checkpoints[0]
@@ -368,7 +372,7 @@ class TestMultiWorkerLightning:
 
     @pytest.mark.skipif(
         pytest.importorskip("sys").platform == "win32",
-        reason="Multi-worker DataLoader not reliable on Windows"
+        reason="Multi-worker DataLoader not reliable on Windows",
     )
     def test_multiworker_dataloader_lightning(self):
         """Test that BiologicalDataModule works with num_workers > 0."""
@@ -376,6 +380,7 @@ class TestMultiWorkerLightning:
             import pytorch_lightning as pl
             import torch
             import torch.nn as nn
+
             from deepbiop.lightning import BiologicalDataModule
         except ImportError:
             pytest.skip("pytorch_lightning not installed")
@@ -420,8 +425,11 @@ class TestMultiWorkerLightning:
         # Should work without errors despite multiple workers
         try:
             import warnings
+
             with warnings.catch_warnings():
-                warnings.filterwarnings("ignore")  # Ignore all warnings for multi-worker test
+                warnings.filterwarnings(
+                    "ignore"
+                )  # Ignore all warnings for multi-worker test
                 trainer.fit(model, data_module)
             assert True, "Multi-worker training completed successfully"
         except Exception as e:
@@ -430,7 +438,6 @@ class TestMultiWorkerLightning:
     def test_multiworker_deterministic(self):
         """Test that multi-worker DataLoader produces deterministic results with seed."""
         try:
-            import pytorch_lightning as pl
             from deepbiop.lightning import BiologicalDataModule
         except ImportError:
             pytest.skip("pytorch_lightning not installed")

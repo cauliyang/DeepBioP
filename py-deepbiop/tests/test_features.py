@@ -1,5 +1,4 @@
-"""
-Tests for feature extraction functionality.
+"""Tests for feature extraction functionality.
 
 Test T059 for Advanced Features: GC content and k-mer frequency extraction.
 """
@@ -23,7 +22,6 @@ class TestGCContent:
         # sequence2 = b"AAAA"  # 0% GC
         # gc_pct2 = gc_content(sequence2)
         # assert gc_pct2 == 0.0
-        pass
 
     @pytest.mark.skip(reason="Feature extractors pending implementation")
     def test_gc_content_with_n_bases(self):
@@ -34,7 +32,6 @@ class TestGCContent:
         # sequence = b"ACGTNNN"  # Should handle N bases appropriately
         # gc_pct = gc_content(sequence, ignore_n=True)
         # assert abs(gc_pct - 0.5) < 0.01  # 2 GC out of 4 valid bases
-        pass
 
 
 class TestKmerFrequencies:
@@ -54,7 +51,6 @@ class TestKmerFrequencies:
         # assert freqs[b"CGT"] == 2
         # assert freqs[b"GTA"] == 1
         # assert freqs[b"TAC"] == 1
-        pass
 
     @pytest.mark.skip(reason="Feature extractors pending implementation")
     def test_kmer_canonical_mode(self):
@@ -68,7 +64,6 @@ class TestKmerFrequencies:
         # # ACG and CGT are reverse complements
         # # Should be counted together in canonical mode
         # assert (b"ACG" in freqs) or (b"CGT" in freqs)
-        pass
 
     @pytest.mark.skip(reason="Feature extractors pending implementation")
     def test_kmer_frequencies_as_array(self):
@@ -84,7 +79,6 @@ class TestKmerFrequencies:
         # assert isinstance(vector, np.ndarray)
         # assert len(vector) == 64
         # assert vector.sum() > 0  # Should have some counts
-        pass
 
 
 if __name__ == "__main__":

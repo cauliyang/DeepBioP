@@ -1,6 +1,5 @@
 #!/usr/bin/env python3
-"""
-Example demonstrating data export to ML formats (Parquet, NumPy, Arrow).
+"""Example demonstrating data export to ML formats (Parquet, NumPy, Arrow).
 
 This script shows how to use DeepBioP's export features to convert
 biological sequence data into formats ready for machine learning.

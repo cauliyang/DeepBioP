@@ -150,6 +150,7 @@ ignore = [
   # TODO: Remove errors below to further improve docstring linting
   # Ordered from most common to least common errors.
   "D105", # Missing docstring in magic method
+  "D107", # Missing docstring in __init__
   "D100", # Missing docstring in public module
   "D104", # Missing docstring in public package
   # flake8-todos
@@ -170,7 +171,7 @@ ignore = [
 max-doc-length = 88
 
 [tool.ruff.lint.pydocstyle]
-convention = "numpy"
+convention = "google"
 
 [tool.ruff.lint.flake8-tidy-imports]
 ban-relative-imports = "all"

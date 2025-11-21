@@ -1,5 +1,4 @@
-"""
-Performance benchmarks for PyTorch API.
+"""Performance benchmarks for PyTorch API.
 
 This module contains performance tests to validate throughput and
 efficiency targets for the PyTorch-style Python API.

@@ -1,6 +1,5 @@
 #!/usr/bin/env python3
-"""
-Example demonstrating format conversion between FASTA and FASTQ.
+"""Example demonstrating format conversion between FASTA and FASTQ.
 
 This script shows how to use DeepBioP's conversion features to convert
 between FASTA and FASTQ formats.

@@ -1,25 +1,24 @@
-"""
-PyTorch Lightning integration for biological data.
+"""PyTorch Lightning integration for biological data.
 
 This module provides LightningDataModule for seamless integration
 with PyTorch Lightning training workflows, supporting both unsupervised
 and supervised learning with easy target extraction.
 """
 
+from collections.abc import Callable
 from pathlib import Path
-from typing import Any, Callable
+from typing import Any
 
 
 def _identity_collate(batch):
-    """
-    Identity collate function for variable-length biological sequences.
+    """Identity collate function for variable-length biological sequences.
 
     This function can be pickled for multiprocessing (unlike lambda).
 
     Args:
         batch: List of samples from the dataset
 
-    Returns
+    Returns:
     -------
         The batch as-is (list of samples)
     """
@@ -42,8 +41,7 @@ except ImportError:
 
 
 class BiologicalDataModule(pl.LightningDataModule):
-    """
-    PyTorch Lightning DataModule for biological sequence data.
+    """PyTorch Lightning DataModule for biological sequence data.
 
     This class provides a Lightning-compatible interface for loading
     FASTQ, FASTA, and BAM files with automatic train/val/test splitting
@@ -103,6 +101,7 @@ class BiologicalDataModule(pl.LightningDataModule):
         target_fn: Callable | Any | None = None,
         label_file: str | None = None,
         collate_mode: str = "default",
+        *,
         return_dict: bool = True,
     ):
         super().__init__()
@@ -121,6 +120,7 @@ class BiologicalDataModule(pl.LightningDataModule):
         # Create target extractor from label file if provided
         if label_file is not None and target_fn is None:
             from deepbiop.targets import TargetExtractor
+
             self.target_fn = TargetExtractor.from_file(label_file)
 
         # Datasets will be created in setup()
@@ -129,8 +129,7 @@ class BiologicalDataModule(pl.LightningDataModule):
         self.test_dataset = None
 
     def prepare_data(self):
-        """
-        Called only once to download/prepare data.
+        """Called only once to download/prepare data.
 
         This is called on a single GPU in distributed training.
         Use this to download or prepare data that should not be
@@ -140,8 +139,7 @@ class BiologicalDataModule(pl.LightningDataModule):
         # This could be extended to download data, create caches, etc.
 
     def setup(self, stage: str | None = None):
-        """
-        Called on every process in distributed training.
+        """Called on every process in distributed training.
 
         Creates train/val/test datasets based on stage.
 
@@ -166,14 +164,13 @@ class BiologicalDataModule(pl.LightningDataModule):
                 self.test_dataset = self._create_dataset(self.test_path, file_type)
 
     def _create_dataset(self, file_path: str, file_type: str | None = None):
-        """
-        Create appropriate dataset based on file type with transforms and targets.
+        """Create appropriate dataset based on file type with transforms and targets.
 
         Args:
             file_path: Path to data file
             file_type: File type ('fastq', 'fasta', 'bam'), auto-detected if None
 
-        Returns
+        Returns:
         -------
             Dataset wrapped with transforms and target extraction if configured
         """
@@ -226,14 +223,14 @@ class BiologicalDataModule(pl.LightningDataModule):
         return base_dataset
 
     def train_dataloader(self):
-        """
-        Create training DataLoader.
+        """Create training DataLoader.
 
-        Returns
+        Returns:
         -------
             PyTorch DataLoader for training data
         """
         from torch.utils.data import DataLoader
+
         from deepbiop.collate import get_collate_fn
 
         if self.train_dataset is None:
@@ -251,14 +248,14 @@ class BiologicalDataModule(pl.LightningDataModule):
         )
 
     def val_dataloader(self):
-        """
-        Create validation DataLoader.
+        """Create validation DataLoader.
 
-        Returns
+        Returns:
         -------
             PyTorch DataLoader for validation data
         """
         from torch.utils.data import DataLoader
+
         from deepbiop.collate import get_collate_fn
 
         if self.val_dataset is None:
@@ -276,14 +273,14 @@ class BiologicalDataModule(pl.LightningDataModule):
         )
 
     def test_dataloader(self):
-        """
-        Create test DataLoader.
+        """Create test DataLoader.
 
-        Returns
+        Returns:
         -------
             PyTorch DataLoader for test data
         """
         from torch.utils.data import DataLoader
+
         from deepbiop.collate import get_collate_fn
 
         if self.test_dataset is None:

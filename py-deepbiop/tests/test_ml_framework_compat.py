@@ -1,5 +1,4 @@
-"""
-Integration tests for PyTorch and HuggingFace Transformers compatibility.
+"""Integration tests for PyTorch and HuggingFace Transformers compatibility.
 
 These tests verify that DeepBioP encodings work seamlessly with major ML frameworks.
 
@@ -341,8 +340,7 @@ class TestDataTypeConversions:
 
 
 def test_numpy_compatibility_placeholder():
-    """
-    Placeholder test to ensure test file is valid.
+    """Placeholder test to ensure test file is valid.
 
     Remove this once actual bindings are implemented.
     """

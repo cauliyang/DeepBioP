@@ -1,17 +1,17 @@
-"""
-Cross-platform reproducibility tests.
+"""Cross-platform reproducibility tests.
 
 Test T024 for User Story 2: Verify reproducibility across Linux/macOS/Windows.
 """
 
 import platform
+
 import pytest
 
 try:
-    from deepbiop import Mutator, ReverseComplement, Compose
+    from deepbiop import Compose, Mutator, ReverseComplement
 except ImportError:
     try:
-        from deepbiop.pytorch import Mutator, ReverseComplement, Compose
+        from deepbiop.pytorch import Compose, Mutator, ReverseComplement
     except ImportError:
         pytest.skip("Transforms not yet exported", allow_module_level=True)
 
@@ -30,6 +30,7 @@ class TestCrossPlatformReproducibility:
         # Expected result (precomputed on reference platform)
         # This hash should be identical on Linux/macOS/Windows
         import hashlib
+
         result_hash = hashlib.sha256(result["sequence"]).hexdigest()
 
         # Store platform-specific results for debugging
@@ -47,10 +48,7 @@ class TestCrossPlatformReproducibility:
         """Composed transforms should be platform-independent."""
         sample = {"id": b"@seq1", "sequence": b"ATCGATCGATCG", "quality": b"I" * 12}
 
-        transform = Compose([
-            ReverseComplement(),
-            Mutator(mutation_rate=0.1, seed=42)
-        ])
+        transform = Compose([ReverseComplement(), Mutator(mutation_rate=0.1, seed=42)])
 
         result = transform(sample.copy())
 

@@ -1,5 +1,4 @@
-"""
-Tests for Hugging Face Transformers integration.
+"""Tests for Hugging Face Transformers integration.
 
 This module tests the integration with Hugging Face's Trainer API
 for training models on biological sequence data.

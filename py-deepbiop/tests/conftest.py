@@ -50,7 +50,7 @@ def temp_cache_dir(tmp_path: Path) -> "Iterator[Path]":
     """Create temporary directory for cache tests."""
     cache_dir = tmp_path / "cache"
     cache_dir.mkdir()
-    yield cache_dir
+    return cache_dir
     # Cleanup is automatic with tmp_path
 
 

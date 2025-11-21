@@ -1,5 +1,4 @@
-"""
-Tests for PyTorch DataLoader integration.
+"""Tests for PyTorch DataLoader integration.
 
 This module tests the integration between our streaming datasets
 and PyTorch's DataLoader, including:
@@ -23,8 +22,7 @@ def identity_collate(batch):
 
 
 def worker_init_fn(worker_id):
-    """
-    Initialize worker with deterministic seed.
+    """Initialize worker with deterministic seed.
 
     This function is defined at module level so it can be pickled for multiprocessing.
 

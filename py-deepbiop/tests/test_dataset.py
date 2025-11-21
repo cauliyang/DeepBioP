@@ -9,8 +9,7 @@ import pytest
 
 @pytest.mark.slow
 def test_fastq_memory_streaming():
-    """
-    Test FASTQ streaming keeps memory usage under 500MB.
+    """Test FASTQ streaming keeps memory usage under 500MB.
 
     Requirements:
     - FR-001: Stream FASTQ files without loading entire file into memory
@@ -77,8 +76,7 @@ def test_fastq_memory_streaming():
 
 
 def test_bam_batching_memory():
-    """
-    Test BAM batching without loading entire file.
+    """Test BAM batching without loading entire file.
 
     Requirements:
     - FR-003: Stream BAM files efficiently
@@ -128,8 +126,7 @@ def test_bam_batching_memory():
 
 
 def test_multi_file_streaming():
-    """
-    Test sequential iteration over multiple files.
+    """Test sequential iteration over multiple files.
 
     Requirements:
     - FR-002: Handle multiple input files
@@ -171,8 +168,7 @@ def test_multi_file_streaming():
 
 
 def test_zero_copy_arrays():
-    """
-    Test zero-copy NumPy array access from Rust.
+    """Test zero-copy NumPy array access from Rust.
 
     Requirements:
     - FR-014: Zero-copy data transfer between Rust and Python
@@ -218,10 +214,9 @@ def test_zero_copy_arrays():
 
 
 def _get_memory_mb() -> float:
-    """
-    Get current process memory usage in MB.
+    """Get current process memory usage in MB.
 
-    Returns
+    Returns:
     -------
         Memory usage in megabytes.
     """
@@ -285,12 +280,12 @@ class TestFastaDataset:
         assert "sequence" in record
 
         # ID should be bytes or str
-        assert isinstance(record["id"], (bytes, str))
+        assert isinstance(record["id"], bytes | str)
 
         # Sequence should be bytes or numpy array
         import numpy as np
 
-        assert isinstance(record["sequence"], (bytes, np.ndarray))
+        assert isinstance(record["sequence"], bytes | np.ndarray)
 
     def test_fasta_dataset_iteration(self):
         """Test FastaDataset __iter__ method."""
@@ -357,7 +352,9 @@ class TestFastaDatasetDataLoader:
         dataset = FastaDataset(str(FASTA_TEST_FILE))
 
         # Use default_collate to handle variable-length sequences
-        loader = DataLoader(dataset, batch_size=2, shuffle=False, collate_fn=default_collate)
+        loader = DataLoader(
+            dataset, batch_size=2, shuffle=False, collate_fn=default_collate
+        )
 
         # Should be able to iterate through DataLoader
         batches = list(loader)
@@ -389,7 +386,10 @@ class TestFastaDatasetDataLoader:
         # Test different batch sizes
         for batch_size in [1, 2, 4]:
             loader = DataLoader(
-                dataset, batch_size=batch_size, shuffle=False, collate_fn=default_collate
+                dataset,
+                batch_size=batch_size,
+                shuffle=False,
+                collate_fn=default_collate,
             )
             batches = list(loader)
 
@@ -426,8 +426,9 @@ class TestFastaDatasetTransforms:
         from deepbiop import FastaDataset
 
         try:
-            from deepbiop import IntegerEncoder
             import numpy as np
+
+            from deepbiop import IntegerEncoder
         except ImportError:
             pytest.skip("IntegerEncoder not available")
 
@@ -579,7 +580,9 @@ class TestBamDatasetDataLoader:
         dataset = BamDataset(str(BAM_TEST_FILE))
 
         # Use default_collate to handle variable-length sequences
-        loader = DataLoader(dataset, batch_size=2, shuffle=False, collate_fn=default_collate)
+        loader = DataLoader(
+            dataset, batch_size=2, shuffle=False, collate_fn=default_collate
+        )
 
         # Should be able to iterate through DataLoader
         batches = list(loader)
@@ -612,7 +615,10 @@ class TestBamDatasetDataLoader:
         # Test different batch sizes
         for batch_size in [1, 2, 4]:
             loader = DataLoader(
-                dataset, batch_size=batch_size, shuffle=False, collate_fn=default_collate
+                dataset,
+                batch_size=batch_size,
+                shuffle=False,
+                collate_fn=default_collate,
             )
             batches = list(loader)
 
@@ -681,6 +687,7 @@ class TestDatasetPerformance:
         efficiently with acceptable throughput.
         """
         import time
+
         from deepbiop import FastaDataset
 
         dataset = FastaDataset(str(FASTA_TEST_FILE))
@@ -699,7 +706,7 @@ class TestDatasetPerformance:
 
         throughput = count / elapsed if elapsed > 0 else 0
 
-        print(f"\nFASTA Performance:")
+        print("\nFASTA Performance:")
         print(f"  Records: {count}")
         print(f"  Time: {elapsed:.4f}s")
         print(f"  Throughput: {throughput:,.0f} records/sec")
@@ -717,6 +724,7 @@ class TestDatasetPerformance:
         efficiently with acceptable throughput.
         """
         import time
+
         from deepbiop import BamDataset
 
         dataset = BamDataset(str(BAM_TEST_FILE))
@@ -735,7 +743,7 @@ class TestDatasetPerformance:
 
         throughput = count / elapsed if elapsed > 0 else 0
 
-        print(f"\nBAM Performance:")
+        print("\nBAM Performance:")
         print(f"  Records: {count}")
         print(f"  Time: {elapsed:.4f}s")
         print(f"  Throughput: {throughput:,.0f} records/sec")
@@ -753,6 +761,7 @@ class TestDatasetPerformance:
         decompression performance for BAM files.
         """
         import time
+
         from deepbiop import BamDataset
 
         # Test with single thread
@@ -773,7 +782,7 @@ class TestDatasetPerformance:
         throughput_single = count_single / elapsed_single if elapsed_single > 0 else 0
         throughput_multi = count_multi / elapsed_multi if elapsed_multi > 0 else 0
 
-        print(f"\nBAM Multithreaded Performance:")
+        print("\nBAM Multithreaded Performance:")
         print(f"  Single thread: {throughput_single:,.0f} records/sec")
         print(f"  Multi thread (4): {throughput_multi:,.0f} records/sec")
         print(f"  Speedup: {throughput_multi / throughput_single:.2f}x")
