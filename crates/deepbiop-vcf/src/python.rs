@@ -143,7 +143,21 @@ impl PyVariant {
 
 /// Register VCF module with Python
 pub fn register_vcf_module(parent_module: &Bound<'_, PyModule>) -> PyResult<()> {
-    parent_module.add_class::<PyVcfReader>()?;
-    parent_module.add_class::<PyVariant>()?;
+    let vcf_module = PyModule::new(parent_module.py(), "vcf")?;
+
+    // Module docstring
+    vcf_module.add(
+        "__doc__",
+        "VCF (Variant Call Format) file processing.\n\n\
+         Provides VcfReader and Variant classes for reading and analyzing genomic variants.",
+    )?;
+
+    // Register classes
+    vcf_module.add_class::<PyVcfReader>()?;
+    vcf_module.add_class::<PyVariant>()?;
+
+    // Add as submodule
+    parent_module.add_submodule(&vcf_module)?;
+
     Ok(())
 }

@@ -71,6 +71,15 @@ try:
 except (ImportError, AttributeError):
     _FILTERS_AVAILABLE = False
 
+# Import VCF and GTF classes for genomic variant and annotation processing
+try:
+    from deepbiop.gtf import GenomicFeature, GtfReader
+    from deepbiop.vcf import Variant, VcfReader
+
+    _VCF_GTF_AVAILABLE = True
+except (ImportError, AttributeError):
+    _VCF_GTF_AVAILABLE = False
+
 __all__ = [
     "BamDataset",
     # Lightning integration
@@ -82,6 +91,9 @@ __all__ = [
     # Dataset implementations
     "FastqDataset",
     "FilterCompose",
+    # Genomic annotations (GTF)
+    "GenomicFeature",
+    "GtfReader",
     "IntegerEncoder",
     "KmerEncoder",
     # Filters (Rust-based)
@@ -99,6 +111,9 @@ __all__ = [
     "TargetExtractor",
     "Transform",
     "TransformDataset",
+    # Genomic variants (VCF)
+    "Variant",
+    "VcfReader",
     "create_classification_extractor",
     # Collate functions
     "default_collate",
