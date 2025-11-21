@@ -16,6 +16,8 @@ use std::path::Path;
 #[cfg(feature = "python")]
 use pyo3::prelude::*;
 #[cfg(feature = "python")]
+use pyo3::types::PyAny;
+#[cfg(feature = "python")]
 use pyo3_stub_gen::derive::*;
 
 /// FASTQ record for streaming iteration
@@ -38,7 +40,7 @@ impl StreamingRecord {
 
     /// Convert to Python dictionary
     #[cfg(feature = "python")]
-    pub fn to_py_dict(&self, py: Python) -> PyResult<PyObject> {
+    pub fn to_py_dict(&self, py: Python) -> PyResult<Py<PyAny>> {
         let dict = pyo3::types::PyDict::new(py);
         dict.set_item("id", self.id.as_slice())?;
         dict.set_item("sequence", self.sequence.as_slice())?;
@@ -282,26 +284,32 @@ impl PyStreamingFastqDataset {
 
 #[cfg(feature = "python")]
 /// Python iterator wrapper for streaming FASTQ
-#[pyclass]
-struct PyStreamingFastqIterator {
+#[cfg_attr(feature = "python", gen_stub_pyclass)]
+#[pyclass(unsendable)]
+pub struct PyStreamingFastqIterator {
     inner: StreamingFastqIterator,
 }
 
 #[cfg(feature = "python")]
-#[pymethods]
 impl PyStreamingFastqIterator {
+    /// Create a new Python streaming iterator (internal helper)
     fn new(path: String, shuffle_buffer_size: usize) -> PyResult<Self> {
         let inner = StreamingFastqIterator::new(path, shuffle_buffer_size)
             .map_err(|e| pyo3::exceptions::PyIOError::new_err(format!("Failed to create iterator: {}", e)))?;
 
         Ok(Self { inner })
     }
+}
 
+#[cfg(feature = "python")]
+#[gen_stub_pymethods]
+#[pymethods]
+impl PyStreamingFastqIterator {
     fn __iter__(slf: PyRef<'_, Self>) -> PyRef<'_, Self> {
         slf
     }
 
-    fn __next__(mut slf: PyRefMut<'_, Self>) -> PyResult<Option<PyObject>> {
+    fn __next__(mut slf: PyRefMut<'_, Self>) -> PyResult<Option<Py<PyAny>>> {
         match slf.inner.next() {
             Some(Ok(record)) => {
                 let dict = record.to_py_dict(slf.py())?;
