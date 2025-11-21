@@ -381,19 +381,24 @@ class MultiLabelExtractor:
 
     Example:
         >>> # Named targets (dict output)
-        >>> extractor = MultiLabelExtractor({
-        ...     "quality": TargetExtractor.from_quality(stat="mean"),
-        ...     "gc": TargetExtractor.from_sequence(feature="gc_content"),
-        ...     "length": TargetExtractor.from_sequence(feature="length"),
-        ... })
+        >>> extractor = MultiLabelExtractor(
+        ...     {
+        ...         "quality": TargetExtractor.from_quality(stat="mean"),
+        ...         "gc": TargetExtractor.from_sequence(feature="gc_content"),
+        ...         "length": TargetExtractor.from_sequence(feature="length"),
+        ...     }
+        ... )
         >>> targets = extractor({"sequence": b"ACGT", "quality": [30, 32, 35, 38]})
         >>> # Returns: {"quality": 33.75, "gc": 0.5, "length": 4}
         >>>
         >>> # Positional targets (tuple output)
-        >>> extractor = MultiLabelExtractor([
-        ...     TargetExtractor.from_quality(stat="mean"),
-        ...     TargetExtractor.from_sequence(feature="gc_content"),
-        ... ], output_format="tuple")
+        >>> extractor = MultiLabelExtractor(
+        ...     [
+        ...         TargetExtractor.from_quality(stat="mean"),
+        ...         TargetExtractor.from_sequence(feature="gc_content"),
+        ...     ],
+        ...     output_format="tuple",
+        ... )
         >>> targets = extractor(record)
         >>> # Returns: (33.75, 0.5)
         >>>

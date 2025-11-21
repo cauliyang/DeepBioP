@@ -61,7 +61,6 @@ class Variant:
     def quality(self) -> builtins.float | None: ...
     @property
     def filter(self) -> builtins.list[builtins.str]: ...
-
     def is_snp(self) -> builtins.bool:
         """Check if variant is a SNP (single nucleotide polymorphism)."""
 
