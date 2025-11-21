@@ -33,6 +33,8 @@ except (ImportError, AttributeError):
 from deepbiop.collate import (
     default_collate,
     get_collate_fn,
+    multi_label_collate,
+    multi_label_tensor_collate,
     supervised_collate,
     tensor_collate,
 )
@@ -49,6 +51,7 @@ from deepbiop.lightning import BiologicalDataModule
 
 # Import target extraction utilities for supervised learning (pure Python)
 from deepbiop.targets import (
+    MultiLabelExtractor,
     TargetExtractor,
     create_classification_extractor,
     get_builtin_extractor,
@@ -98,6 +101,8 @@ __all__ = [
     "KmerEncoder",
     # Filters (Rust-based)
     "LengthFilter",
+    # Target extraction for supervised learning (multi-label)
+    "MultiLabelExtractor",
     "Mutator",
     # Encoders (Rust-based)
     "OneHotEncoder",
@@ -119,6 +124,8 @@ __all__ = [
     "default_collate",
     "get_builtin_extractor",
     "get_collate_fn",
+    "multi_label_collate",
+    "multi_label_tensor_collate",
     "supervised_collate",
     "tensor_collate",
 ]

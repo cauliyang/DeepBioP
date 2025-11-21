@@ -6,6 +6,7 @@ use crate::{
     encode::{self, Encoder},
     filter, io,
     predicts::{self, Predict},
+    streaming,
     utils,
 };
 
@@ -576,6 +577,9 @@ pub fn register_fq_module(parent_module: &Bound<'_, PyModule>) -> PyResult<()> {
     child_module.add_class::<filter::python::PyQualityFilter>()?;
     child_module.add_class::<filter::python::PyDeduplicator>()?;
     child_module.add_class::<filter::python::PySubsampler>()?;
+
+    // Add streaming dataset class
+    child_module.add_class::<streaming::PyStreamingFastqDataset>()?;
 
     // Add augmentation classes
     crate::augment::python::register_augmentation_classes(&child_module)?;

@@ -368,6 +368,140 @@ class TargetExtractor:
         return TargetExtractor(lambda record: value)
 
 
+class MultiLabelExtractor:
+    """Extractor for multiple targets per record (multi-task learning).
+
+    Combines multiple TargetExtractor instances to extract multiple targets
+    from a single record. Useful for multi-task learning scenarios where you
+    need to predict multiple properties simultaneously.
+
+    Args:
+        extractors: Dictionary mapping target names to extractors, or list of extractors
+        output_format: Format for returned targets ("dict", "tuple", or "array")
+
+    Example:
+        >>> # Named targets (dict output)
+        >>> extractor = MultiLabelExtractor({
+        ...     "quality": TargetExtractor.from_quality(stat="mean"),
+        ...     "gc": TargetExtractor.from_sequence(feature="gc_content"),
+        ...     "length": TargetExtractor.from_sequence(feature="length"),
+        ... })
+        >>> targets = extractor({"sequence": b"ACGT", "quality": [30, 32, 35, 38]})
+        >>> # Returns: {"quality": 33.75, "gc": 0.5, "length": 4}
+        >>>
+        >>> # Positional targets (tuple output)
+        >>> extractor = MultiLabelExtractor([
+        ...     TargetExtractor.from_quality(stat="mean"),
+        ...     TargetExtractor.from_sequence(feature="gc_content"),
+        ... ], output_format="tuple")
+        >>> targets = extractor(record)
+        >>> # Returns: (33.75, 0.5)
+        >>>
+        >>> # Array output for tensor conversion
+        >>> extractor = MultiLabelExtractor([...], output_format="array")
+        >>> targets = extractor(record)
+        >>> # Returns: [33.75, 0.5]
+    """
+
+    def __init__(
+        self,
+        extractors: dict[str, TargetExtractor] | list[TargetExtractor],
+        output_format: str = "dict",
+    ):
+        """Initialize MultiLabelExtractor.
+
+        Args:
+            extractors: Dictionary mapping names to extractors, or list of extractors
+            output_format: "dict", "tuple", or "array"
+        """
+        if output_format not in ["dict", "tuple", "array"]:
+            msg = f"Invalid output_format: {output_format}. Choose from: dict, tuple, array"
+            raise ValueError(msg)
+
+        self.extractors = extractors
+        self.output_format = output_format
+
+        # Validate extractors
+        if isinstance(extractors, dict):
+            if not extractors:
+                msg = "extractors dict cannot be empty"
+                raise ValueError(msg)
+            for name, ext in extractors.items():
+                if not callable(ext):
+                    msg = f"Extractor '{name}' must be callable"
+                    raise TypeError(msg)
+        elif isinstance(extractors, list):
+            if not extractors:
+                msg = "extractors list cannot be empty"
+                raise ValueError(msg)
+            for i, ext in enumerate(extractors):
+                if not callable(ext):
+                    msg = f"Extractor at index {i} must be callable"
+                    raise TypeError(msg)
+        else:
+            msg = "extractors must be dict or list"
+            raise TypeError(msg)
+
+    def __call__(self, record: dict[str, Any]) -> dict | tuple | list:
+        """Extract multiple targets from a record.
+
+        Args:
+            record: Record dict with keys like "id", "sequence", "quality"
+
+        Returns:
+            Targets in format specified by output_format:
+            - "dict": Dictionary mapping target names to values
+            - "tuple": Tuple of target values
+            - "array": List of target values
+        """
+        if isinstance(self.extractors, dict):
+            # Named extractors
+            results = {name: ext(record) for name, ext in self.extractors.items()}
+
+            if self.output_format == "dict":
+                return results
+            elif self.output_format == "tuple":
+                # Return values in consistent order (sorted by key)
+                return tuple(results[k] for k in sorted(results.keys()))
+            else:  # array
+                # Return values in consistent order (sorted by key)
+                return [results[k] for k in sorted(results.keys())]
+
+        else:  # list
+            # Positional extractors
+            results = [ext(record) for ext in self.extractors]
+
+            if self.output_format == "tuple":
+                return tuple(results)
+            elif self.output_format == "array":
+                return results
+            else:  # dict
+                # Create dict with generic keys
+                return {f"target_{i}": val for i, val in enumerate(results)}
+
+    @property
+    def target_names(self) -> list[str] | None:
+        """Get names of targets (if using named extractors).
+
+        Returns:
+            List of target names, or None if using positional extractors
+        """
+        if isinstance(self.extractors, dict):
+            return sorted(self.extractors.keys())
+        return None
+
+    @property
+    def num_targets(self) -> int:
+        """Get number of targets.
+
+        Returns:
+            Number of targets extracted
+        """
+        if isinstance(self.extractors, dict):
+            return len(self.extractors)
+        return len(self.extractors)
+
+
 # Convenience functions for common use cases
 
 
