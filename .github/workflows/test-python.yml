@@ -73,12 +73,6 @@ jobs:
           restore-keys: |
             ${{ runner.os }}-py${{ matrix.python-version }}-uv-
 
-      # - name: Build Python package
-      #   working-directory: py-deepbiop
-      #   run: |
-      #     uv sync
-      #     uv tool run maturin develop --release
-
       - name: Run Python tests
         working-directory: py-deepbiop
         run: uv run pytest -vls --tb=short
@@ -122,13 +116,7 @@ jobs:
 
       - name: Install uv
         run: curl -LsSf https://astral.sh/uv/install.sh | sh
-      #
-      # - name: Install dependencies
-      #   working-directory: py-deepbiop
-      #   run: |
-      #     uv sync
-      #     uv tool run maturin develop --release
-      #
+
       - name: Run ruff check
         working-directory: py-deepbiop
         run: uvx ruff check .

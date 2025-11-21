@@ -218,7 +218,9 @@ specs
 
 # Claude Code development artifacts
 claudedoc
+claudedocs
 .mcp.json
 .serena
+
 # End of https://www.toptal.com/developers/gitignore/api/python
 #

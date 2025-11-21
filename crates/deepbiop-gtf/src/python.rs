@@ -182,7 +182,21 @@ impl PyGenomicFeature {
 
 /// Register GTF module with Python
 pub fn register_gtf_module(parent_module: &Bound<'_, PyModule>) -> PyResult<()> {
-    parent_module.add_class::<PyGtfReader>()?;
-    parent_module.add_class::<PyGenomicFeature>()?;
+    let gtf_module = PyModule::new(parent_module.py(), "gtf")?;
+
+    // Module docstring
+    gtf_module.add(
+        "__doc__",
+        "GTF (Gene Transfer Format) annotation file processing.\n\n\
+         Provides GtfReader and GenomicFeature classes for reading and analyzing genomic annotations.",
+    )?;
+
+    // Register classes
+    gtf_module.add_class::<PyGtfReader>()?;
+    gtf_module.add_class::<PyGenomicFeature>()?;
+
+    // Add as submodule
+    parent_module.add_submodule(&gtf_module)?;
+
     Ok(())
 }

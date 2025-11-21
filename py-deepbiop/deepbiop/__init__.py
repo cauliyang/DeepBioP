@@ -33,6 +33,8 @@ except (ImportError, AttributeError):
 from deepbiop.collate import (
     default_collate,
     get_collate_fn,
+    multi_label_collate,
+    multi_label_tensor_collate,
     supervised_collate,
     tensor_collate,
 )
@@ -49,6 +51,7 @@ from deepbiop.lightning import BiologicalDataModule
 
 # Import target extraction utilities for supervised learning (pure Python)
 from deepbiop.targets import (
+    MultiLabelExtractor,
     TargetExtractor,
     create_classification_extractor,
     get_builtin_extractor,
@@ -71,6 +74,15 @@ try:
 except (ImportError, AttributeError):
     _FILTERS_AVAILABLE = False
 
+# Import VCF and GTF classes for genomic variant and annotation processing
+try:
+    from deepbiop.gtf import GenomicFeature, GtfReader
+    from deepbiop.vcf import Variant, VcfReader
+
+    _VCF_GTF_AVAILABLE = True
+except (ImportError, AttributeError):
+    _VCF_GTF_AVAILABLE = False
+
 __all__ = [
     "BamDataset",
     # Lightning integration
@@ -82,10 +94,15 @@ __all__ = [
     # Dataset implementations
     "FastqDataset",
     "FilterCompose",
+    # Genomic annotations (GTF)
+    "GenomicFeature",
+    "GtfReader",
     "IntegerEncoder",
     "KmerEncoder",
     # Filters (Rust-based)
     "LengthFilter",
+    # Target extraction for supervised learning (multi-label)
+    "MultiLabelExtractor",
     "Mutator",
     # Encoders (Rust-based)
     "OneHotEncoder",
@@ -99,11 +116,16 @@ __all__ = [
     "TargetExtractor",
     "Transform",
     "TransformDataset",
+    # Genomic variants (VCF)
+    "Variant",
+    "VcfReader",
     "create_classification_extractor",
     # Collate functions
     "default_collate",
     "get_builtin_extractor",
     "get_collate_fn",
+    "multi_label_collate",
+    "multi_label_tensor_collate",
     "supervised_collate",
     "tensor_collate",
 ]
