@@ -185,7 +185,9 @@ def multi_label_collate(batch: list[dict[str, Any]]) -> dict[str, Any]:
         >>> loader = DataLoader(dataset, batch_size=32, collate_fn=multi_label_collate)
         >>> for batch in loader:
         ...     features = batch["features"]
-        ...     targets = batch["targets"]  # {"quality": [q1, q2, ...], "gc": [gc1, gc2, ...]}
+        ...     targets = batch[
+        ...         "targets"
+        ...     ]  # {"quality": [q1, q2, ...], "gc": [gc1, gc2, ...]}
         ...     # Use targets["quality"] for one task, targets["gc"] for another
 
         >>> # With tuple/array targets
@@ -240,7 +242,7 @@ def multi_label_collate(batch: list[dict[str, Any]]) -> dict[str, Any]:
 
 
 def multi_label_tensor_collate(batch: list[dict[str, Any]]) -> dict[str, Any]:
-    """Collate function for multi-label learning with tensor conversion.
+    r"""Collate function for multi-label learning with tensor conversion.
 
     Converts multi-label targets to PyTorch tensors for direct use with
     multi-task learning models.

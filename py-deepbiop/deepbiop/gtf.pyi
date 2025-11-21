@@ -69,7 +69,6 @@ class GenomicFeature:
     def frame(self) -> builtins.int | None: ...
     @property
     def attributes(self) -> builtins.dict[builtins.str, builtins.str]: ...
-
     def gene_id(self) -> builtins.str | None:
         """Get gene ID from attributes.
 
