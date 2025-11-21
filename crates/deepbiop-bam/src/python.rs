@@ -311,10 +311,20 @@ impl PyBamStreamDataset {
     ///
     /// Dict with 'id', 'sequence', 'quality', 'description'
     ///
-    /// # Note
+    /// # Performance Warning
     ///
-    /// This requires iterating through the file to reach the index,
-    /// so it's O(n). For sequential access, use iteration instead.
+    /// **This implementation has O(n) complexity and reopens the BAM file for every access.**
+    ///
+    /// - Accessing index 1000 requires reading and discarding 1000 records
+    /// - Each call reopens the file (costly I/O operation)
+    /// - No caching or state preservation between calls
+    ///
+    /// This is acceptable for PyTorch DataLoader which uses sequential access patterns,
+    /// but will be extremely inefficient for random access patterns. If you need random
+    /// access to multiple indices, consider loading all records into memory first or
+    /// using sequential iteration instead.
+    ///
+    /// For batch access, use the iterator interface which provides true streaming.
     fn __getitem__(&self, index: usize, py: Python) -> PyResult<Py<PyDict>> {
         use numpy::ToPyArray;
 

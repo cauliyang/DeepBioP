@@ -35,8 +35,22 @@ use noodles::{bam, bgzf, sam};
 
 /// Count total number of records in a BAM file.
 ///
-/// This requires reading through the entire file once, but is necessary for
-/// PyTorch DataLoader compatibility which requires __len__() support.
+/// # Performance Impact
+///
+/// **This function performs a full scan of the BAM file**, which can be expensive for large files:
+/// - Small files (<100MB): ~1-2 seconds
+/// - Medium files (1-5GB): ~10-30 seconds
+/// - Large files (>10GB): Several minutes
+///
+/// The counting is performed once during dataset creation to enable PyTorch DataLoader
+/// compatibility (which requires `__len__()`). Uses multithreaded bgzf decompression
+/// to minimize overhead.
+///
+/// # Note
+///
+/// Creating multiple dataset instances from the same file will repeat the counting.
+/// If this becomes a bottleneck, consider caching the count externally or reusing
+/// the same dataset instance.
 fn count_bam_records<P: AsRef<Path>>(file_path: P, threads: Option<usize>) -> Result<usize> {
     let file = File::open(file_path)?;
     let worker_count = utils::parallel::calculate_worker_count(threads);
@@ -72,6 +86,16 @@ impl BamDataset {
     /// # Returns
     ///
     /// A Result containing the BamDataset or an error if the file cannot be opened.
+    ///
+    /// # Performance Note
+    ///
+    /// **This reads through the entire BAM file once to count records** for PyTorch
+    /// DataLoader compatibility (`__len__()` support). For large files (>1GB), initialization
+    /// may take several seconds to minutes. The counting uses multithreaded bgzf decompression
+    /// for efficiency.
+    ///
+    /// If you don't need random access or `len()` support, consider using the iterator
+    /// interface directly for instant initialization.
     ///
     /// # Example
     ///
