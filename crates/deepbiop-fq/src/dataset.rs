@@ -19,7 +19,7 @@ use pyo3_stub_gen::derive::*;
 #[cfg_attr(feature = "python", gen_stub_pyclass)]
 #[cfg_attr(
     feature = "python",
-    pyclass(get_all, name = "FastqRecord", module = "deepbiop.fq")
+    pyclass(get_all, name = "FastqRecord")
 )]
 pub struct FastqRecord {
     pub header: String,
@@ -53,7 +53,7 @@ impl FastqRecord {
 #[cfg_attr(feature = "python", gen_stub_pyclass)]
 #[cfg_attr(
     feature = "python",
-    pyclass(name = "FastqDataset", module = "deepbiop.fq")
+    pyclass(name = "FastqDataset")
 )]
 #[derive(Clone)]
 #[allow(dead_code)]
@@ -307,7 +307,7 @@ impl FastqDataset {
 #[cfg_attr(feature = "python", gen_stub_pyclass)]
 #[cfg_attr(
     feature = "python",
-    pyclass(name = "FastqIterator", module = "deepbiop.fq")
+    pyclass(name = "FastqIterator")
 )]
 #[allow(dead_code)]
 pub struct FastqIterator {

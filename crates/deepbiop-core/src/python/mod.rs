@@ -22,7 +22,7 @@ use rayon::prelude::*;
 /// # Returns
 ///
 /// A vector of k-mers as `String`s
-#[gen_stub_pyfunction(module = "deepbiop.core")]
+#[gen_stub_pyfunction()]
 #[pyfunction]
 fn seq_to_kmers(seq: String, k: usize, overlap: bool) -> Vec<String> {
     let normalized_seq = seq.as_bytes().normalize(false);
@@ -44,7 +44,7 @@ fn seq_to_kmers(seq: String, k: usize, overlap: bool) -> Vec<String> {
 /// # Returns
 ///
 /// The reconstructed DNA sequence as a `String`, wrapped in a `Result`
-#[gen_stub_pyfunction(module = "deepbiop.core")]
+#[gen_stub_pyfunction()]
 #[pyfunction]
 fn kmers_to_seq(kmers: Vec<String>) -> Result<String> {
     let kmers_as_bytes: Vec<&[u8]> = kmers.par_iter().map(|s| s.as_bytes()).collect();
@@ -64,7 +64,7 @@ fn kmers_to_seq(kmers: Vec<String>) -> Result<String> {
 /// # Returns
 ///
 /// A HashMap mapping k-mer byte sequences to integer IDs
-#[gen_stub_pyfunction(module = "deepbiop.core")]
+#[gen_stub_pyfunction()]
 #[pyfunction]
 fn generate_kmers_table(base: String, k: usize) -> types::Kmer2IdTable {
     let base = base.as_bytes();
@@ -84,7 +84,7 @@ fn generate_kmers_table(base: String, k: usize) -> types::Kmer2IdTable {
 /// # Returns
 ///
 /// A vector containing all possible k-mer combinations as strings
-#[gen_stub_pyfunction(module = "deepbiop.core")]
+#[gen_stub_pyfunction()]
 #[pyfunction]
 fn generate_kmers(base: String, k: usize) -> Vec<String> {
     let base = base.as_bytes();

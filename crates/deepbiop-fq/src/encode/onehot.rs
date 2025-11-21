@@ -508,7 +508,7 @@ pub mod python {
     /// Python wrapper for OneHotEncoder.
     ///
     /// Encodes biological sequences as one-hot matrices for machine learning.
-    #[gen_stub_pyclass(module = "deepbiop.fq")]
+    #[gen_stub_pyclass]
     #[pyclass(name = "OneHotEncoder")]
     pub struct PyOneHotEncoder {
         inner: OneHotEncoder,

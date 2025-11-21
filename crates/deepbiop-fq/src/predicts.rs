@@ -52,7 +52,7 @@ pub fn summary_predict_generic<D: PartialEq + Send + Sync + Copy>(
 
 /// A struct to store the prediction result
 #[cfg_attr(feature = "python", gen_stub_pyclass)]
-#[cfg_attr(feature = "python", pyclass(get_all, set_all, module = "deepbiop.fq"))]
+#[cfg_attr(feature = "python", pyclass(get_all, set_all))]
 #[cfg_attr(feature = "python", derive(FromPyObject))]
 #[derive(Debug, Default, Deserialize, Serialize)]
 pub struct Predict {

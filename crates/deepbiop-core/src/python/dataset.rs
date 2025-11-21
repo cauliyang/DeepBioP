@@ -19,7 +19,7 @@ use crate::seq::SequenceRecord;
 /// * `quality_scores` - Optional 2D numpy array [batch_size, max_length] containing quality scores
 /// * `attention_mask` - 2D numpy array [batch_size, max_length] (1=real, 0=padding)
 /// * `lengths` - List of original sequence lengths before padding
-#[gen_stub_pyclass(module = "deepbiop.core")]
+#[gen_stub_pyclass()]
 #[pyclass(name = "Batch")]
 pub struct PyBatch {
     batch: Batch,
@@ -143,7 +143,7 @@ impl PyBatch {
 /// # Fixed-length padding
 /// batch = collate_batch(records, padding="fixed", max_length=10)
 /// ```
-#[gen_stub_pyfunction(module = "deepbiop.core")]
+#[gen_stub_pyfunction()]
 #[pyfunction]
 #[pyo3(signature = (records, padding="longest", max_length=None, pad_value=0, truncate=false))]
 fn collate_batch(

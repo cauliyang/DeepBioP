@@ -35,7 +35,7 @@ pub struct ParquetData {
 }
 
 #[cfg_attr(feature = "python", gen_stub_pyclass)]
-#[cfg_attr(feature = "python", pyclass(module = "deepbiop.fq"))]
+#[cfg_attr(feature = "python", pyclass())]
 #[derive(Debug, Builder, Default, Clone, Serialize, Deserialize)]
 pub struct ParquetEncoder {
     pub option: EncoderOption,
