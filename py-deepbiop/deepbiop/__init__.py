@@ -1,1 +1,131 @@
+import sys
+
+# Make submodules importable (e.g., "from deepbiop.fq import X")
+# The Rust extension already creates these as attributes, we just need to register them
+from deepbiop import deepbiop as _deepbiop_ext
+
+# Import everything from the Rust extension first
 from deepbiop.deepbiop import *  # noqa: F403
+
+# Now OVERRIDE PyTorch-compatible transforms with explicit assignment
+# Note: We must use explicit assignment because Python import semantics don't
+# allow later imports to override wildcard imports
+# The pytorch module has the __call__ interface we need for transforms
+try:
+    from deepbiop import pytorch as _pytorch_module
+
+    # Explicitly override the low-level transforms with PyTorch-compatible ones
+    IntegerEncoder = _pytorch_module.IntegerEncoder
+    KmerEncoder = _pytorch_module.KmerEncoder
+    Mutator = _pytorch_module.Mutator
+    OneHotEncoder = _pytorch_module.OneHotEncoder
+    ReverseComplement = _pytorch_module.ReverseComplement
+    Sampler = _pytorch_module.Sampler
+    _PytorchCompose = _pytorch_module.Compose
+
+    _TRANSFORMS_AVAILABLE = True
+except (ImportError, AttributeError):
+    # Transforms not built yet - will use Python fallback Compose
+    _TRANSFORMS_AVAILABLE = False
+
+# Import core data structures (pure Python)
+# Import collate functions for PyTorch DataLoader (pure Python)
+from deepbiop.collate import (
+    default_collate,
+    get_collate_fn,
+    multi_label_collate,
+    multi_label_tensor_collate,
+    supervised_collate,
+    tensor_collate,
+)
+from deepbiop.core import Record
+
+# Import base abstractions (pure Python)
+from deepbiop.dataset import Dataset
+
+# Import PyTorch-compatible dataset wrappers (pure Python)
+from deepbiop.datasets import BamDataset, FastaDataset, FastqDataset
+
+# Import Lightning module (pure Python, not from Rust)
+from deepbiop.lightning import BiologicalDataModule
+
+# Import target extraction utilities for supervised learning (pure Python)
+from deepbiop.targets import (
+    MultiLabelExtractor,
+    TargetExtractor,
+    create_classification_extractor,
+    get_builtin_extractor,
+)
+
+# Import transform composition utilities (pure Python)
+from deepbiop.transforms import Compose, FilterCompose, Transform, TransformDataset
+
+# Register submodules in sys.modules so they can be imported with "from deepbiop.fq import"
+# Only register modules that actually exist
+for _module_name in ["fq", "fa", "bam", "core", "utils", "vcf", "gtf", "pytorch"]:
+    if hasattr(_deepbiop_ext, _module_name):
+        sys.modules[f"deepbiop.{_module_name}"] = getattr(_deepbiop_ext, _module_name)
+
+# Import filter classes from Rust fq module
+try:
+    from deepbiop.fq import LengthFilter, QualityFilter
+
+    _FILTERS_AVAILABLE = True
+except (ImportError, AttributeError):
+    _FILTERS_AVAILABLE = False
+
+# Import VCF and GTF classes for genomic variant and annotation processing
+try:
+    from deepbiop.gtf import GenomicFeature, GtfReader
+    from deepbiop.vcf import Variant, VcfReader
+
+    _VCF_GTF_AVAILABLE = True
+except (ImportError, AttributeError):
+    _VCF_GTF_AVAILABLE = False
+
+__all__ = [
+    "BamDataset",
+    # Lightning integration
+    "BiologicalDataModule",
+    # Transform composition
+    "Compose",
+    "Dataset",
+    "FastaDataset",
+    # Dataset implementations
+    "FastqDataset",
+    "FilterCompose",
+    # Genomic annotations (GTF)
+    "GenomicFeature",
+    "GtfReader",
+    "IntegerEncoder",
+    "KmerEncoder",
+    # Filters (Rust-based)
+    "LengthFilter",
+    # Target extraction for supervised learning (multi-label)
+    "MultiLabelExtractor",
+    "Mutator",
+    # Encoders (Rust-based)
+    "OneHotEncoder",
+    "QualityFilter",
+    # Core data structures
+    "Record",
+    # Augmentation transforms (Rust-based)
+    "ReverseComplement",
+    "Sampler",
+    # Target extraction for supervised learning
+    "TargetExtractor",
+    "Transform",
+    "TransformDataset",
+    # Genomic variants (VCF)
+    "Variant",
+    "VcfReader",
+    "create_classification_extractor",
+    # Collate functions
+    "default_collate",
+    "get_builtin_extractor",
+    "get_collate_fn",
+    "multi_label_collate",
+    "multi_label_tensor_collate",
+    "supervised_collate",
+    "tensor_collate",
+]

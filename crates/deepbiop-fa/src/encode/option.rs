@@ -2,7 +2,9 @@ use derive_builder::Builder;
 use serde::{Deserialize, Serialize};
 use std::fmt::{self, Display, Formatter};
 
+#[cfg(feature = "python")]
 use pyo3::prelude::*;
+#[cfg(feature = "python")]
 use pyo3_stub_gen::derive::*;
 
 pub const BASES: &[u8] = b"ATCGN";
@@ -23,16 +25,17 @@ pub const BASES: &[u8] = b"ATCGN";
 ///
 /// let options = EncoderOption::default();
 /// ```
-#[gen_stub_pyclass]
-#[pyclass(module = "deepbiop.fa")]
+#[cfg_attr(feature = "python", gen_stub_pyclass)]
+#[cfg_attr(feature = "python", pyclass(get_all, set_all))]
 #[derive(Debug, Builder, Default, Clone, Serialize, Deserialize)]
 pub struct EncoderOption {
-    #[pyo3(get, set)]
     #[builder(default = "BASES.to_vec()")]
     pub bases: Vec<u8>,
 }
 
+#[cfg(feature = "python")]
 #[gen_stub_pymethods]
+#[cfg(feature = "python")]
 #[pymethods]
 impl EncoderOption {
     #[new]

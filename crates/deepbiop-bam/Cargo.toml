@@ -13,8 +13,9 @@ description = "Deep Learning Processing Library for Bam Format"
 [dependencies]
 anyhow = { workspace = true }
 noodles = { workspace = true }
-pyo3 = { workspace = true }
-pyo3-stub-gen = { workspace = true }
+pyo3 = { workspace = true, optional = true }
+pyo3-stub-gen = { workspace = true, optional = true }
+numpy = { workspace = true, optional = true }
 flate2 = { workspace = true }
 bstr = { workspace = true }
 rayon = { workspace = true }
@@ -23,6 +24,7 @@ log = { workspace = true }
 lexical = { workspace = true }
 
 derive_builder = { workspace = true }
+deepbiop-core = { workspace = true }
 deepbiop-utils = { workspace = true }
 deepbiop-fq = { workspace = true }
 
@@ -32,4 +34,4 @@ tempfile = { workspace = true }
 
 
 [features]
-python = []
+python = ["dep:pyo3", "dep:pyo3-stub-gen", "dep:numpy"]

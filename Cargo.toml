@@ -25,7 +25,9 @@ deepbiop-bam = { version = "0.1.16", path = "crates/deepbiop-bam" }
 deepbiop-core = { version = "0.1.14", path = "crates/deepbiop-core" }
 deepbiop-fa = { version = "0.1.15", path = "crates/deepbiop-fa" }
 deepbiop-fq = { version = "0.1.16", path = "crates/deepbiop-fq" }
+deepbiop-gtf = { version = "0.1.16", path = "crates/deepbiop-gtf" }
 deepbiop-utils = { version = "0.1.16", path = "crates/deepbiop-utils" }
+deepbiop-vcf = { version = "0.1.16", path = "crates/deepbiop-vcf" }
 derive_builder = "0.20"
 flate2 = { version = "1.1.5", features = ["zlib-rs"], default-features = false }
 itertools = "0.14.0"
@@ -33,26 +35,29 @@ lazy_static = "1.5.0"
 lexical = "7.0"
 log = "0.4"
 ndarray = { version = "0.16", features = ["serde", "rayon"] }
+ndarray-npy = "0.9"
 needletail = "0.5"
-noodles = { version = "0.101.0", features = [
-    "bgzf",
-    "core",
-    "csi",
-    "fasta",
-    "fastq",
-    "sam",
-    "bam",
+noodles = { version = "0.102.0", features = [
+  "bgzf",
+  "core",
+  "csi",
+  "fasta",
+  "fastq",
+  "sam",
+  "bam",
+  "vcf",
+  "gff",
 ] }
 num-traits = { version = "0.2" }
 numpy = "0.27"
 parquet = "57.0"
 pyo3 = { version = "0.27.1", features = [
-    "abi3-py310",
-    "extension-module",
-    "anyhow",
+  "abi3-py310",
+  "extension-module",
+  "anyhow",
 ] }
 pyo3-log = "0.13.2"
-pyo3-stub-gen = "0.17.0"
+pyo3-stub-gen = "0.17.1"
 rand = "0.9"
 rand_distr = "0.5"
 rayon = { version = "1.11" }

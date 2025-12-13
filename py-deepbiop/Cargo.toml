@@ -7,12 +7,20 @@ edition = { workspace = true }
 name = "deepbiop"
 crate-type = ["cdylib", "rlib"]
 
+# Binary disabled due to linking issues with extension-module feature
+# Stubs are maintained manually in deepbiop/*.pyi files
+# [[bin]]
+# name = "stub_gen"
+# path = "src/bin/stub_gen.rs"
+
 [dependencies]
 deepbiop-fq = { workspace = true, features = ['python'] }
 deepbiop-bam = { workspace = true, features = ['python'] }
-deepbiop-utils = { workspace = true, features = ['python'] }
+deepbiop-utils = { workspace = true, features = ['python', 'cache'] }
 deepbiop-fa = { workspace = true, features = ['python'] }
 deepbiop-core = { workspace = true, features = ['python'] }
+deepbiop-vcf = { workspace = true, features = ['python'] }
+deepbiop-gtf = { workspace = true, features = ['python'] }
 
 pyo3-stub-gen = { workspace = true }
 pyo3 = { workspace = true }
@@ -24,6 +32,7 @@ anyhow = { workspace = true }
 needletail = { workspace = true }
 numpy = { workspace = true }
 parquet = { workspace = true }
+rand = { workspace = true }
 
 [build-dependencies]
-pyo3-build-config = "0.23"
+pyo3-build-config = "0.27"

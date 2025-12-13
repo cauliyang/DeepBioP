@@ -1,146 +1,64 @@
-use crate::blat;
-use crate::io;
-
-use crate::{
-    blat::PslAlignment,
-    interval::{self, GenomicInterval, Overlap},
-    strategy,
-};
+use crate::{blat, highlight_targets, interval::GenomicInterval, io};
 
 use ahash::HashMap;
-use anyhow::Result;
 use pyo3::prelude::*;
-use rayon::prelude::*;
-use std::ops::Range;
 use std::path::PathBuf;
 
-use pyo3_stub_gen::derive::*;
-
-#[gen_stub_pymethods]
-#[pymethods]
-impl PslAlignment {
-    fn __repr__(&self) -> PyResult<String> {
-        Ok(format!(
-            "PslAlignment(qname={}, qsize={}, qstart={}, qend={}, qmatch={}, tname={}, tsize={}, tstart={}, tend={}, identity={})",
-            self.qname, self.qsize, self.qstart, self.qend, self.qmatch, self.tname, self.tsize, self.tstart, self.tend, self.identity
-        ))
-    }
-}
-
-#[gen_stub_pymethods]
-#[pymethods]
-impl GenomicInterval {
-    #[new]
-    fn py_new(chr: &str, start: usize, end: usize) -> Self {
-        GenomicInterval {
-            chr: chr.into(),
-            start,
-            end,
-        }
-    }
-
-    #[getter]
-    fn get_chr(&self) -> String {
-        self.chr.to_string()
-    }
-    #[setter]
-    fn set_chr(&mut self, chr: &str) {
-        self.chr = chr.into();
-    }
-
-    #[pyo3(name = "overlap")]
-    fn py_overlap(&self, other: &GenomicInterval) -> bool {
-        self.overlap(other)
-    }
-
-    fn __repr__(&self) -> String {
-        format!(
-            "Segment(chr={}, start={}, end={})",
-            self.chr, self.start, self.end
-        )
-    }
-}
-
-#[gen_stub_pyfunction(module = "deepbiop.utils")]
+/// Check the compression type of a file
 #[pyfunction]
-fn majority_voting(labels: Vec<i8>, window_size: usize) -> Vec<i8> {
-    strategy::majority_voting(&labels, window_size)
+fn check_compressed_type(file_path: PathBuf) -> PyResult<io::CompressedType> {
+    io::check_compressed_type(file_path)
+        .map_err(|e| PyErr::new::<pyo3::exceptions::PyIOError, _>(e.to_string()))
 }
 
-/// Parse PSL file by query name.
-#[gen_stub_pyfunction(module = "deepbiop.utils")]
+/// Check if a file is compressed
 #[pyfunction]
-fn parse_psl_by_qname(file_path: PathBuf) -> Result<HashMap<String, Vec<blat::PslAlignment>>> {
+fn is_compressed(file_path: PathBuf) -> PyResult<bool> {
+    io::is_compressed(file_path)
+        .map_err(|e| PyErr::new::<pyo3::exceptions::PyIOError, _>(e.to_string()))
+}
+
+/// Check the sequence file type
+#[pyfunction]
+fn check_sequence_file_type(file_path: PathBuf) -> PyResult<io::SequenceFileType> {
+    io::check_sequence_file_type(file_path)
+        .map_err(|e| PyErr::new::<pyo3::exceptions::PyIOError, _>(e.to_string()))
+}
+
+/// Parse PSL file and return alignments grouped by query name
+#[pyfunction]
+fn parse_psl_by_qname(file_path: PathBuf) -> PyResult<HashMap<String, Vec<blat::PslAlignment>>> {
     blat::parse_psl_by_qname(file_path)
+        .map_err(|e| PyErr::new::<pyo3::exceptions::PyIOError, _>(e.to_string()))
 }
 
-#[allow(clippy::type_complexity)]
-#[gen_stub_pyfunction(module = "deepbiop.utils")]
+/// Parse PSL file and return all alignments
 #[pyfunction]
-fn remove_intervals_and_keep_left(
-    seq: String,
-    intervals: Vec<(usize, usize)>,
-) -> Result<(Vec<String>, Vec<(usize, usize)>)> {
-    let intervals: Vec<Range<usize>> = intervals
-        .par_iter()
-        .map(|(start, end)| *start..*end)
-        .collect();
-
-    let (seqs, intevals) = interval::remove_intervals_and_keep_left(seq.as_bytes(), &intervals)?;
-    Ok((
-        seqs.par_iter().map(|s| s.to_string()).collect(),
-        intevals.par_iter().map(|r| (r.start, r.end)).collect(),
-    ))
+fn parse_psl(file_path: PathBuf) -> PyResult<Vec<blat::PslAlignment>> {
+    blat::parse_psl(file_path)
+        .map_err(|e| PyErr::new::<pyo3::exceptions::PyIOError, _>(e.to_string()))
 }
 
-#[gen_stub_pyfunction(module = "deepbiop.utils")]
-#[pyfunction]
-fn generate_unmaped_intervals(
-    input: Vec<(usize, usize)>,
-    total_length: usize,
-) -> Vec<(usize, usize)> {
-    let ranges: Vec<Range<usize>> = input.par_iter().map(|(start, end)| *start..*end).collect();
-    interval::generate_unmaped_intervals(&ranges, total_length)
-        .par_iter()
-        .map(|r| (r.start, r.end))
-        .collect()
-}
-
-/// Check the compression type of a file.
-///
-/// Args:
-///     path: Path to the file to check
-///
-/// Returns:
-///     The compression type of the file (None, Gzip, Bzip2, Xz)
-///
-/// Raises:
-///     IOError: If the file cannot be opened or read
-#[gen_stub_pyfunction(module = "deepbiop.utils")]
-#[pyfunction(name = "check_compressed_type")]
-fn py_check_compressed_type(path: PathBuf) -> Result<io::CompressedType> {
-    io::check_compressed_type(path)
-}
-
-// register utils module
+/// Register the utils module with Python
 pub fn register_utils_module(parent_module: &Bound<'_, PyModule>) -> PyResult<()> {
     let sub_module_name = "utils";
     let child_module = PyModule::new(parent_module.py(), sub_module_name)?;
 
+    // Add classes
     child_module.add_class::<GenomicInterval>()?;
-    child_module.add_class::<PslAlignment>()?;
     child_module.add_class::<io::CompressedType>()?;
+    child_module.add_class::<io::SequenceFileType>()?;
+    child_module.add_class::<blat::PslAlignment>()?;
 
-    child_module.add_function(wrap_pyfunction!(majority_voting, &child_module)?)?;
-    child_module.add_function(wrap_pyfunction!(crate::highlight_targets, &child_module)?)?;
+    // Add functions
+    child_module.add_function(wrap_pyfunction!(highlight_targets, &child_module)?)?;
+    child_module.add_function(wrap_pyfunction!(check_compressed_type, &child_module)?)?;
+    child_module.add_function(wrap_pyfunction!(is_compressed, &child_module)?)?;
+    child_module.add_function(wrap_pyfunction!(check_sequence_file_type, &child_module)?)?;
     child_module.add_function(wrap_pyfunction!(parse_psl_by_qname, &child_module)?)?;
-    child_module.add_function(wrap_pyfunction!(
-        remove_intervals_and_keep_left,
-        &child_module
-    )?)?;
-    child_module.add_function(wrap_pyfunction!(generate_unmaped_intervals, &child_module)?)?;
-    child_module.add_function(wrap_pyfunction!(py_check_compressed_type, &child_module)?)?;
+    child_module.add_function(wrap_pyfunction!(parse_psl, &child_module)?)?;
 
     parent_module.add_submodule(&child_module)?;
+
     Ok(())
 }

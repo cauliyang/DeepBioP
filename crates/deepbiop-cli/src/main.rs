@@ -1,7 +1,6 @@
 use clap::{Command, CommandFactory, Parser, Subcommand};
 use env_logger::Builder;
 use human_panic::setup_panic;
-use log::debug;
 use log::info;
 use log::LevelFilter;
 use std::fmt::Display;
@@ -55,6 +54,12 @@ pub enum Commands {
 
     /// Profile sequences in a fasta file.
     CountFx(cli::CountFx),
+
+    /// Encode sequences for machine learning (one-hot, k-mer, integer).
+    Encode(cli::Encode),
+
+    /// Export sequences to ML-friendly formats (Parquet, NumPy).
+    Export(cli::Export),
 }
 
 impl Display for Commands {
@@ -68,6 +73,8 @@ impl Display for Commands {
             Commands::ExtractFx(_) => write!(f, "extractfx"),
             Commands::FxsToOne(_) => write!(f, "fxs2one"),
             Commands::CountFx(_) => write!(f, "countfx"),
+            Commands::Encode(_) => write!(f, "encode"),
+            Commands::Export(_) => write!(f, "export"),
         }
     }
 }
@@ -102,7 +109,6 @@ fn main() -> Result<()> {
         print_completions(generator, &mut cmd);
         return Ok(());
     }
-
 
     if cli.markdown_help {
         clap_markdown::print_help_markdown::<Cli>();
@@ -140,6 +146,14 @@ fn main() -> Result<()> {
 
         Some(Commands::CountFx(countfx)) => {
             countfx.run().unwrap();
+        }
+
+        Some(Commands::Encode(encode)) => {
+            encode.run().unwrap();
+        }
+
+        Some(Commands::Export(export)) => {
+            export.run().unwrap();
         }
 
         None => {

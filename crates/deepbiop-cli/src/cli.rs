@@ -14,6 +14,10 @@ pub mod fxs2one;
 pub use fxs2one::*;
 pub mod countfx;
 pub use countfx::*;
+pub mod encode;
+pub use encode::*;
+pub mod export;
+pub use export::*;
 
 use anyhow::Result;
 // Set up threads only once, using the common_opts from the top-level Cli struct
