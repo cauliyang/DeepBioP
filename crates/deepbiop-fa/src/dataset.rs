@@ -159,6 +159,8 @@ impl Iterator for FastaStreamIterator {
     }
 }
 
+// TODO: reomplement the count func in an more efficient way
+
 /// Estimate the number of records in a FASTA file.
 ///
 /// For large files, this samples the file to estimate the count.

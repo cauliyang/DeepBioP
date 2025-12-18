@@ -28,18 +28,14 @@ classifiers = [
   "Programming Language :: Rust",
   "Topic :: Scientific/Engineering",
 ]
-dependencies = [
-    "numpy>=1.24.0",
-    "einops>=0.8.0",
-    "jaxtyping>=0.2.34",
-]
+dependencies = ["numpy>=1.24.0", "einops>=0.8.0", "jaxtyping>=0.2.34"]
 
 [project.optional-dependencies]
 dev-extra = [
-    "typeguard>=4.0.0",
-    "pytest-benchmark>=4.0.0",
-    "mypy>=1.0.0",
-    "pyright>=1.1.0",
+  "typeguard>=4.0.0",
+  "pytest-benchmark>=4.0.0",
+  "mypy>=1.0.0",
+  "pyright>=1.1.0",
 ]
 
 [dependency-groups]

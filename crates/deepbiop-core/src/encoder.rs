@@ -79,6 +79,7 @@ use anyhow::Result;
 ///             Some(quality_scores) => {
 ///                 // Use quality scores to weight the encoding
 ///                 for (base, &q) in seq.iter().zip(quality_scores.iter()) {
+///                     TODO: Use other standarlization method to encode quality scores
 ///                     let weight = (q - 33) as f32 / 40.0; // Phred+33 to [0, 1]
 ///                     output.push(weight);
 ///                 }

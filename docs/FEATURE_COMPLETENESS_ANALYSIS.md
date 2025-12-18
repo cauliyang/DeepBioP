@@ -10,6 +10,7 @@
 DeepBioP is designed as a comprehensive deep learning preprocessing library for biological data formats (FASTQ, FASTA, BAM, VCF, GTF). The library provides three interfaces: Rust API, Python bindings, and CLI tools.
 
 **Current Status**: **34% Complete** (34/100 core tasks)
+
 - ✅ **User Story 1 (FASTQ/FASTA Encoding)**: 83% complete (34/41 tasks)
 - ⏳ **User Story 2 (BAM Analysis)**: 0% complete (0/18 tasks)
 - ⏳ **User Story 3 (Data Augmentation)**: 0% complete (0/22 tasks)
@@ -19,9 +20,10 @@ DeepBioP is designed as a comprehensive deep learning preprocessing library for 
 
 ---
 
-##  What's Currently Implemented
+## What's Currently Implemented
 
 ### ✅ Core Infrastructure (100% Complete)
+
 1. **Multi-crate workspace** with proper feature flags
 2. **Error handling** with user-friendly messages (DPError types)
 3. **Type system** for encoding schemes and augmentation
@@ -30,6 +32,7 @@ DeepBioP is designed as a comprehensive deep learning preprocessing library for 
 6. **CLI** foundation with clap
 
 ### ✅ File I/O (100% Complete for FASTQ/FASTA)
+
 1. **FASTQ reading** with streaming, compression detection (gzip, bgzip)
 2. **FASTA reading** with streaming, compression detection
 3. **Format detection** based on extensions and magic bytes
@@ -37,6 +40,7 @@ DeepBioP is designed as a comprehensive deep learning preprocessing library for 
 5. **Memory-efficient streaming** (no full-file loading)
 
 ### ✅ Sequence Encoding (95% Complete)
+
 1. **One-hot encoding** for DNA/RNA/Protein
    - Ambiguous base handling (skip, mask, random)
    - Configurable random seed for reproducibility
@@ -52,6 +56,7 @@ DeepBioP is designed as a comprehensive deep learning preprocessing library for 
 5. **CLI commands** (`dbp encode onehot|kmer|integer`)
 
 ### ✅ ML Framework Compatibility (100% Complete)
+
 1. **PyTorch compatibility** verified (100%)
 2. **HuggingFace Transformers** compatibility verified (95%)
 3. **Zero-copy NumPy** array conversion
@@ -59,6 +64,7 @@ DeepBioP is designed as a comprehensive deep learning preprocessing library for 
 5. **Working examples** for PyTorch and HuggingFace
 
 ### ✅ Documentation (85% Complete)
+
 1. **README** with quickstart examples
 2. **Inline Rust doc comments** on all public APIs
 3. **ML framework compatibility guide**
@@ -69,10 +75,12 @@ DeepBioP is designed as a comprehensive deep learning preprocessing library for 
 ## ❌ Critical Missing Features for Complete DL Library
 
 ### 1. **Data Processing & Filtering** (Priority: HIGH)
+
 **Status**: 0% implemented
 **Impact**: Cannot prepare real-world messy data for ML
 
-#### Missing Features:
+#### Missing Features
+
 - **FR-014**: Filter sequences by length (min/max thresholds)
   - Use case: Remove too-short or too-long reads
   - Implementation: Simple predicate filtering
@@ -94,6 +102,7 @@ DeepBioP is designed as a comprehensive deep learning preprocessing library for 
   - Implementation: Hash-based deduplication
 
 **Example API Needed**:
+
 ```python
 import deepbiop as dbp
 
@@ -114,10 +123,12 @@ encoded = encoder.encode_batch(filtered)
 ---
 
 ### 2. **Data Augmentation** (Priority: HIGH)
+
 **Status**: 0% implemented (User Story 3)
 **Impact**: Cannot generate training data variations for robust models
 
-#### Missing Features:
+#### Missing Features
+
 - **FR-020**: Reverse complement transformation
   - Use case: Double training data by using both strands
   - Essential for DNA sequence models
@@ -139,6 +150,7 @@ encoded = encoder.encode_batch(filtered)
   - Implementation: Trait-based extension point
 
 **Example API Needed**:
+
 ```python
 import deepbiop as dbp
 
@@ -156,6 +168,7 @@ for record in reader:
 ```
 
 **Rust API Needed**:
+
 ```rust
 use deepbiop::fq::augment::{ReverseComplement, Mutator, Sampler};
 
@@ -167,10 +180,12 @@ let sampled = mutator.apply(&rc.apply(&sequence)?)?;
 ---
 
 ### 3. **BAM/Alignment Analysis** (Priority: HIGH)
+
 **Status**: 5% implemented (count_chimeric exists)
 **Impact**: Cannot extract features from aligned sequencing data
 
-#### Missing Features:
+#### Missing Features
+
 - **FR-025**: Parse SAM/BAM with full field access
   - Status: Partially implemented via noodles
   - Need: Wrapper API for ML feature extraction
@@ -188,6 +203,7 @@ let sampled = mutator.apply(&rc.apply(&sequence)?)?;
   - Use case: Extract features for specific genes/regions
 
 **Example API Needed**:
+
 ```python
 import deepbiop as dbp
 
@@ -207,10 +223,12 @@ for aln in alignments:
 ---
 
 ### 4. **Format Conversion & Export** (Priority: MEDIUM)
+
 **Status**: 20% implemented (some conversions exist in CLI)
 **Impact**: Cannot integrate with modern ML infrastructure
 
-#### Missing Features:
+#### Missing Features
+
 - **FR-030**: FASTA → FASTQ with quality simulation
   - Use case: Create FASTQ for pipelines expecting quality scores
 
@@ -227,6 +245,7 @@ for aln in alignments:
   - Implementation: Zero-copy when possible
 
 **Example API Needed**:
+
 ```python
 import deepbiop as dbp
 
@@ -253,10 +272,12 @@ dbp.to_numpy(
 ---
 
 ### 5. **VCF/GTF Genomic Annotations** (Priority: LOW)
+
 **Status**: 0% implemented (User Story 5)
 **Impact**: Cannot process variant or gene annotation data
 
-#### Missing Features:
+#### Missing Features
+
 - **FR-035**: Parse VCF files (variant calling)
 - **FR-036**: Parse GTF files (gene annotations)
 - **FR-037**: Filter VCF by quality, depth, genotype
@@ -267,10 +288,12 @@ dbp.to_numpy(
 ---
 
 ### 6. **Python API Enhancements** (Priority: MEDIUM)
+
 **Status**: 40% implemented (basic bindings exist)
 **Impact**: Poor user experience for data scientists
 
-#### Missing Features:
+#### Missing Features
+
 - **Method chaining** / fluent API
 - **to_numpy()** and **to_pandas()** convenience methods
 - **Comprehensive docstrings** with examples
@@ -279,6 +302,7 @@ dbp.to_numpy(
 - **Error messages** with full context
 
 **Example of Fluent API Needed**:
+
 ```python
 import deepbiop as dbp
 
@@ -298,10 +322,12 @@ dataset = torch.utils.data.TensorDataset(torch.from_numpy(encoded))
 ---
 
 ### 7. **Performance & Monitoring** (Priority: MEDIUM)
+
 **Status**: Partially implemented
 **Impact**: Cannot monitor long-running operations
 
-#### Missing Features:
+#### Missing Features
+
 - **FR-046**: Progress reporting for long operations
   - Use case: Show % complete for large file processing
   - Implementation: Progress bars via indicatif
@@ -311,6 +337,7 @@ dataset = torch.utils.data.TensorDataset(torch.from_numpy(encoded))
   - Implementation: Thread pool management
 
 **Example API Needed**:
+
 ```python
 import deepbiop as dbp
 
@@ -326,6 +353,7 @@ with dbp.FastqReader("large.fq.gz", show_progress=True) as reader:
 ## 📊 Prioritized Feature Roadmap
 
 ### Phase 1: Complete User Story 1 (MVP Extension)
+
 **Timeline**: 1-2 weeks
 **Goal**: Make encoding production-ready
 
@@ -343,6 +371,7 @@ with dbp.FastqReader("large.fq.gz", show_progress=True) as reader:
 ---
 
 ### Phase 2: Data Augmentation (User Story 3)
+
 **Timeline**: 2-3 weeks
 **Goal**: Enable training data generation
 
@@ -358,6 +387,7 @@ with dbp.FastqReader("large.fq.gz", show_progress=True) as reader:
 ---
 
 ### Phase 3: BAM Analysis (User Story 2)
+
 **Timeline**: 2-3 weeks
 **Goal**: Extract features from aligned reads
 
@@ -373,6 +403,7 @@ with dbp.FastqReader("large.fq.gz", show_progress=True) as reader:
 ---
 
 ### Phase 4: Export & Integration (User Story 4)
+
 **Timeline**: 1-2 weeks
 **Goal**: Integrate with ML infrastructure
 
@@ -387,6 +418,7 @@ with dbp.FastqReader("large.fq.gz", show_progress=True) as reader:
 ---
 
 ### Phase 5: Python API Polish (User Story 6)
+
 **Timeline**: 1-2 weeks
 **Goal**: Pandas-like user experience
 
@@ -402,6 +434,7 @@ with dbp.FastqReader("large.fq.gz", show_progress=True) as reader:
 ---
 
 ### Phase 6: VCF/GTF Support (User Story 5) - OPTIONAL
+
 **Timeline**: 3-4 weeks
 **Goal**: Genomic variant and annotation processing
 
@@ -418,6 +451,7 @@ with dbp.FastqReader("large.fq.gz", show_progress=True) as reader:
 ## 🎯 Recommended Next Steps
 
 ### Immediate (This Week)
+
 1. ✅ **Implement random ambiguity strategy** (DONE)
 2. ✅ **Add CLI encode commands** (DONE)
 3. **Add sequence filtering functions** (length, quality)
@@ -428,12 +462,14 @@ with dbp.FastqReader("large.fq.gz", show_progress=True) as reader:
    - Python API: `encoder.to_numpy(path)`
 
 ### Short-term (Next 2 Weeks)
+
 1. **Implement data augmentation** (reverse complement, mutations)
 2. **Add subsampling** and **deduplication**
 3. **Python fluent API** with method chaining
 4. **Progress bars** for CLI commands
 
 ### Medium-term (Next Month)
+
 1. **BAM feature extraction** for alignment analysis
 2. **Parquet export** for cloud ML pipelines
 3. **Jupyter notebook tutorials**

@@ -4,6 +4,8 @@ use crate::error::DPError;
 use serde::{Deserialize, Serialize};
 use std::str::FromStr;
 
+// TODO: consider add N for dna and rna
+
 /// Encoding scheme enum defining different types of sequence encodings.
 #[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize)]
 pub enum EncodingScheme {
@@ -49,25 +51,6 @@ impl EncodingType {
     /// Check if a character is valid for this encoding type.
     pub fn is_valid_char(&self, c: u8) -> bool {
         self.alphabet().contains(&c.to_ascii_uppercase())
-    }
-
-    /// Parse an EncodingType from a string.
-    ///
-    /// # Arguments
-    ///
-    /// * `s` - String representation ("dna", "rna", or "protein", case insensitive)
-    ///
-    /// # Returns
-    ///
-    /// The corresponding EncodingType or an error
-    ///
-    /// # Note
-    ///
-    /// Use the standard `FromStr` trait instead for better Rust idioms.
-    #[allow(clippy::should_implement_trait)]
-    #[deprecated(since = "0.1.16", note = "Use FromStr trait instead")]
-    pub fn from_str(s: &str) -> Result<Self, DPError> {
-        s.parse()
     }
 }
 

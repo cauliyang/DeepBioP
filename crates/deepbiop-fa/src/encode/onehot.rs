@@ -3,6 +3,7 @@
 //! This module provides one-hot encoding for FASTA sequences, supporting DNA, RNA, and protein sequences.
 
 use anyhow::Result;
+use log::warn;
 use ndarray::{Array2, Array3};
 use rayon::prelude::*;
 
@@ -109,6 +110,7 @@ impl OneHotEncoder {
 
             // Check if base is valid
             if !self.encoding_type.is_valid_char(base_upper) {
+                warn!("unexpected base '{}' at position {}", base as char, i);
                 match self.ambiguous_strategy {
                     AmbiguousStrategy::Skip => {
                         return Err(DPError::InvalidAlphabet {
