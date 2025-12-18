@@ -54,6 +54,7 @@ dev = [
   "transformers>=4.30.0",
   "accelerate>=1.11.0",
   "pytest-cov>=7.0.0",
+  "patchelf",
 ]
 
 [project.urls]
