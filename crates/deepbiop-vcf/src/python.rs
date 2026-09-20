@@ -2,6 +2,7 @@
 
 use crate::reader::VcfReader;
 use crate::types::Variant;
+use ahash::HashMap;
 use pyo3::prelude::*;
 use pyo3_stub_gen::derive::{gen_stub_pyclass, gen_stub_pymethods};
 use std::path::PathBuf;
@@ -92,6 +93,11 @@ pub struct PyVariant {
     pub quality: Option<f32>,
     #[pyo3(get)]
     pub filter: Vec<String>,
+    /// INFO fields as parsed from the record.
+    ///
+    /// One entry per key: flags as "true", arrays comma-joined, missing values as ".".
+    #[pyo3(get)]
+    pub info: HashMap<String, String>,
 }
 
 impl From<Variant> for PyVariant {
@@ -104,6 +110,7 @@ impl From<Variant> for PyVariant {
             alternate_alleles: v.alternate_alleles,
             quality: v.quality,
             filter: v.filter,
+            info: v.info,
         }
     }
 }
@@ -126,6 +133,11 @@ impl PyVariant {
         self.alternate_alleles
             .iter()
             .any(|alt| alt.len() != ref_len || alt == "*")
+    }
+
+    /// Look up a single INFO field, or None when the record has no such key.
+    pub fn get_info_field(&self, key: &str) -> Option<String> {
+        self.info.get(key).cloned()
     }
 
     /// Check if variant passes all filters

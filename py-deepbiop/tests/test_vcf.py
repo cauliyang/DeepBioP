@@ -23,6 +23,8 @@ def minimal_vcf_file():
     content = """##fileformat=VCFv4.2
 ##contig=<ID=chr1,length=249250621>
 ##INFO=<ID=DP,Number=1,Type=Integer,Description="Total Depth">
+##INFO=<ID=AF,Number=A,Type=Float,Description="Allele Frequency">
+##INFO=<ID=DB,Number=0,Type=Flag,Description="dbSNP membership">
 ##FILTER=<ID=PASS,Description="All filters passed">
 ##FILTER=<ID=LowQual,Description="Low quality">
 #CHROM\tPOS\tID\tREF\tALT\tQUAL\tFILTER\tINFO
@@ -30,7 +32,7 @@ chr1\t1000\trs123\tA\tT\t30.0\tPASS\tDP=10
 chr1\t2000\trs456\tG\tC\t20.0\tPASS\tDP=15
 chr1\t3000\t.\tAT\tA\t25.0\tLowQual\tDP=8
 chr1\t4000\t.\tC\tCAT\t40.0\tPASS\tDP=20
-chr1\t5000\trs789\tT\tG,A\t35.0\tPASS\tDP=12
+chr1\t5000\trs789\tT\tG,A\t35.0\tPASS\tDP=12;AF=0.5,0.25;DB
 """
 
     with tempfile.NamedTemporaryFile(mode="w", suffix=".vcf", delete=False) as f:
@@ -350,3 +352,24 @@ class TestVcfIntegration:
         assert "position" in df.columns
         assert df["is_snp"].sum() >= 2
         assert df["is_indel"].sum() >= 2
+
+    def test_info_fields_are_parsed_per_key(self, minimal_vcf_file):
+        """INFO is parsed into one entry per key, arrays comma-joined, flags as true."""
+        reader = dbp.VcfReader(minimal_vcf_file)
+        variants = reader.read_all()
+
+        assert variants[0].info["DP"] == "10"
+        assert variants[0].get_info_field("DP") == "10"
+        assert variants[0].get_info_field("AF") is None
+
+        multi = variants[4]
+        assert multi.info["AF"] == "0.5,0.25"
+        assert multi.info["DB"] == "true"
+
+    def test_reader_can_be_queried_repeatedly(self, minimal_vcf_file):
+        """A single reader supports several queries (the file is parsed once)."""
+        reader = dbp.VcfReader(minimal_vcf_file)
+
+        assert len(reader.read_all()) == 5
+        assert len(reader.filter_passing()) == 4
+        assert len(reader.read_all()) == 5

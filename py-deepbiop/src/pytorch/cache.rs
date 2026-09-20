@@ -5,8 +5,8 @@
 //! source file's size/mtime for staleness checks.
 
 use pyo3::prelude::*;
-use pyo3_stub_gen::derive::*;
 use pyo3::types::{PyBytes, PyDict, PyList};
+use pyo3_stub_gen::derive::*;
 use std::fs;
 use std::io::Write;
 use std::path::Path;

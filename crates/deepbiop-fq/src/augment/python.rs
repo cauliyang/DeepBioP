@@ -8,7 +8,10 @@ use super::{
 use pyo3::prelude::*;
 
 /// Python wrapper for ReverseComplement.
-#[cfg_attr(feature = "python", pyclass(name = "ReverseComplement", module = "deepbiop.fq"))]
+#[cfg_attr(
+    feature = "python",
+    pyclass(name = "ReverseComplement", module = "deepbiop.fq")
+)]
 pub struct PyReverseComplement {
     inner: ReverseComplement,
 }
@@ -145,7 +148,10 @@ impl PySampler {
 }
 
 /// Python wrapper for QualityModel.
-#[cfg_attr(feature = "python", pyclass(name = "QualityModel", from_py_object, module = "deepbiop.fq"))]
+#[cfg_attr(
+    feature = "python",
+    pyclass(name = "QualityModel", from_py_object, module = "deepbiop.fq")
+)]
 #[derive(Clone)]
 pub struct PyQualityModel {
     inner: QualityModel,
@@ -229,7 +235,10 @@ impl PyQualityModel {
 }
 
 /// Python wrapper for QualitySimulator.
-#[cfg_attr(feature = "python", pyclass(name = "QualitySimulator", module = "deepbiop.fq"))]
+#[cfg_attr(
+    feature = "python",
+    pyclass(name = "QualitySimulator", module = "deepbiop.fq")
+)]
 pub struct PyQualitySimulator {
     inner: QualitySimulator,
 }

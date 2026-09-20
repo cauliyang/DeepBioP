@@ -22,14 +22,10 @@ except ImportError:
     exit(1)
 
 # Will work once Python bindings are implemented (T028-T032)
-try:
-    import deepbiop as dbp
+import deepbiop as dbp
+from deepbiop import core, fq
 
-    BINDINGS_AVAILABLE = True
-except ImportError:
-    print("DeepBioP Python bindings not yet available.")
-    print("This example will work after completing tasks T028-T032.")
-    BINDINGS_AVAILABLE = False
+BINDINGS_AVAILABLE = True
 
 
 # ==============================================================================
@@ -56,7 +52,7 @@ class DNADataset(Dataset):
 
     def __getitem__(self, idx):
         # Encode sequence
-        encoded = self.encoder.encode(self.sequences[idx])
+        encoded = self.encoder.encode_batch([self.sequences[idx]])[0]
 
         # Convert to tensor
         X = torch.from_numpy(encoded)
@@ -131,7 +127,7 @@ def train_cnn_classifier():
     labels = [0, 0, 1, 1] * 25
 
     # Create encoder
-    encoder = dbp.OneHotEncoder("dna", "skip")
+    encoder = fq.OneHotEncoder("dna", "skip")
 
     # Create dataset
     dataset = DNADataset(sequences, labels, encoder)
@@ -199,7 +195,7 @@ def train_kmer_classifier():
     print("=" * 70)
 
     # Create k-mer encoder
-    encoder = dbp.KmerEncoder(k=5, canonical=True, encoding_type="dna")
+    encoder = core.KmerEncoder(5, True, "dna")
 
     # Synthetic data
     sequences = [b"ACGTACGT" * 20 for _ in range(50)] + [
@@ -214,8 +210,9 @@ def train_kmer_classifier():
     X = torch.from_numpy(encoded_batch)
     y = torch.tensor(labels, dtype=torch.long)
 
-    # Create model (4^5 = 1024 possible 5-mers)
-    model = KmerClassifierMLP(num_kmers=1024, num_classes=2)
+    # Create model sized to the encoder's vocabulary. Canonical 5-mers fold a
+    # k-mer with its reverse complement, so 4^5 = 1024 becomes 512.
+    model = KmerClassifierMLP(num_kmers=encoded_batch.shape[1], num_classes=2)
     criterion = nn.CrossEntropyLoss()
     optimizer = optim.Adam(model.parameters(), lr=0.001)
 
@@ -284,7 +281,7 @@ def train_lstm_classifier():
     print("=" * 70)
 
     # Create integer encoder
-    encoder = dbp.IntegerEncoder("dna")
+    encoder = fq.IntegerEncoder("dna")
 
     # Synthetic data
     sequences = [b"ACGTACGT" * 10 for _ in range(50)] + [

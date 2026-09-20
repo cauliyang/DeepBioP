@@ -67,7 +67,7 @@ def main():
     print("-" * 60)
 
     # Random sampling
-    sampler_random = deepbiop.fq.Sampler.random(10, 42)
+    sampler_random = deepbiop.fq.Sampler(10, "random", 42)
     sample1 = sampler_random.apply(original_seq)
     sample2 = sampler_random.apply(original_seq)
     print("Random (10bp):")
@@ -75,9 +75,9 @@ def main():
     print(f"  Sample 2: {sample2.decode()} (different position)")
 
     # Fixed position sampling
-    sampler_start = deepbiop.fq.Sampler.from_start(10)
-    sampler_center = deepbiop.fq.Sampler.from_center(10)
-    sampler_end = deepbiop.fq.Sampler.from_end(10)
+    sampler_start = deepbiop.fq.Sampler(10, "start")
+    sampler_center = deepbiop.fq.Sampler(10, "center")
+    sampler_end = deepbiop.fq.Sampler(10, "end")
 
     print("\nFixed position sampling (10bp):")
     print(f"  Start:  {sampler_start.apply(original_seq).decode()}")
@@ -95,7 +95,7 @@ def main():
     sequences = []
     for i in range(5):
         # Random subsequence
-        sampler = deepbiop.fq.Sampler.random(20, 100 + i)
+        sampler = deepbiop.fq.Sampler(20, "random", 100 + i)
         sampled = sampler.apply(original_seq)
 
         # Add mutations
@@ -129,7 +129,7 @@ def main():
 
     print("Processing batch of sequences:")
     augmenter = deepbiop.fq.Mutator(0.10, 42)
-    sampler = deepbiop.fq.Sampler.random(10, 42)
+    sampler = deepbiop.fq.Sampler(10, "random", 42)
 
     for i, seq in enumerate(test_sequences, 1):
         sampled = sampler.apply(seq)

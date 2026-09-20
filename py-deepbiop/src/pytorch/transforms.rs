@@ -4,8 +4,8 @@
 //! augmentations, exposing them with a PyTorch-compatible Transform interface.
 
 use pyo3::prelude::*;
-use pyo3_stub_gen::derive::*;
 use pyo3::types::PyDict;
+use pyo3_stub_gen::derive::*;
 
 // Import existing encoders from deepbiop-fq and deepbiop-core
 use deepbiop_core::kmer::encode::python::PyKmerEncoder as InnerKmerEncoder;

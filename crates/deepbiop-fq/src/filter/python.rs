@@ -9,7 +9,10 @@ use pyo3_stub_gen::derive::*;
 
 /// Python wrapper for LengthFilter.
 #[cfg_attr(feature = "python", gen_stub_pyclass(module = "deepbiop.fq"))]
-#[cfg_attr(feature = "python", pyclass(name = "LengthFilter", module = "deepbiop.fq"))]
+#[cfg_attr(
+    feature = "python",
+    pyclass(name = "LengthFilter", module = "deepbiop.fq")
+)]
 pub struct PyLengthFilter {
     inner: LengthFilter,
 }
@@ -95,7 +98,10 @@ impl PyLengthFilter {
 
 /// Python wrapper for QualityFilter.
 #[cfg_attr(feature = "python", gen_stub_pyclass(module = "deepbiop.fq"))]
-#[cfg_attr(feature = "python", pyclass(name = "QualityFilter", module = "deepbiop.fq"))]
+#[cfg_attr(
+    feature = "python",
+    pyclass(name = "QualityFilter", module = "deepbiop.fq")
+)]
 pub struct PyQualityFilter {
     inner: QualityFilter,
 }
@@ -207,7 +213,10 @@ impl PyQualityFilter {
 
 /// Python wrapper for Deduplicator.
 #[cfg_attr(feature = "python", gen_stub_pyclass(module = "deepbiop.fq"))]
-#[cfg_attr(feature = "python", pyclass(name = "Deduplicator", module = "deepbiop.fq"))]
+#[cfg_attr(
+    feature = "python",
+    pyclass(name = "Deduplicator", module = "deepbiop.fq")
+)]
 pub struct PyDeduplicator {
     inner: Deduplicator,
 }
@@ -268,7 +277,10 @@ impl PyDeduplicator {
 
 /// Python wrapper for Subsampler.
 #[cfg_attr(feature = "python", gen_stub_pyclass(module = "deepbiop.fq"))]
-#[cfg_attr(feature = "python", pyclass(name = "Subsampler", module = "deepbiop.fq"))]
+#[cfg_attr(
+    feature = "python",
+    pyclass(name = "Subsampler", module = "deepbiop.fq")
+)]
 pub struct PySubsampler {
     inner: Subsampler,
 }

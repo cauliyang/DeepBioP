@@ -452,11 +452,7 @@ else:
     data = [dataset[i] for i in range(len(dataset))]
 
     # Save to cache
-    save_cache(
-        data,
-        cache_path,
-        metadata={"version": "1.0", "num_samples": len(data)}
-    )
+    save_cache(data, cache_path, source_file="data.fastq")  # every sample key is cached
 ```
 
 ### Custom Collate Function
@@ -552,9 +548,12 @@ for batch in loader:
 
 2. **Enable caching**: Cache preprocessed data for repeated experiments
 
-3. **Streaming for large files**: Dataset uses streaming I/O for memory efficiency
+3. **Streaming for large files**: `Dataset` indexes the file on open and reads records
+   on demand (8 bytes per record of index). Use `fq.FastqStreamDataset` for a single
+   forward pass with no index at all.
 
-4. **Parallel processing**: Use `num_workers > 0` in DataLoader for multi-process loading
+4. **Parallel processing**: `deepbiop.pytorch.DataLoader` runs in-process; for
+   multi-process loading wrap the dataset in `torch.utils.data.DataLoader(num_workers=N)`.
 
 5. **Rust-backed operations**: Encoding and augmentation are implemented in Rust for speed
 

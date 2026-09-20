@@ -5,8 +5,8 @@
 
 use numpy::{PyArray2, PyArrayMethods, PyUntypedArrayMethods};
 use pyo3::prelude::*;
-use pyo3_stub_gen::derive::*;
 use pyo3::types::{PyDict, PyList};
+use pyo3_stub_gen::derive::*;
 
 /// Default collate function for batching variable-length sequences.
 ///
@@ -55,7 +55,7 @@ pub fn default_collate(py: Python, samples: &Bound<'_, PyList>) -> PyResult<Py<P
 
     // Extract sequences and find max length
     let mut sequences = Vec::new();
-    let mut lengths = Vec::new();
+    let mut lengths: Vec<i32> = Vec::new();
     let mut max_len = 0;
     let mut feature_dim = 0;
 
@@ -87,7 +87,7 @@ pub fn default_collate(py: Python, samples: &Bound<'_, PyList>) -> PyResult<Py<P
         }
 
         max_len = max_len.max(seq_len);
-        lengths.push(seq_len);
+        lengths.push(seq_len as i32);
         sequences.push(seq_array);
     }
 
@@ -114,7 +114,7 @@ pub fn default_collate(py: Python, samples: &Bound<'_, PyList>) -> PyResult<Py<P
         for (batch_idx, seq) in sequences.iter().enumerate() {
             let seq_data = seq.readonly();
             let seq_slice = seq_data.as_slice()?;
-            let seq_len = lengths[batch_idx] * feature_dim;
+            let seq_len = lengths[batch_idx] as usize * feature_dim;
 
             // Copy sequence data
             let batch_offset = batch_idx * max_len * feature_dim;

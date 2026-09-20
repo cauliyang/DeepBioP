@@ -27,10 +27,18 @@ class Variant:
     def quality(self) -> builtins.float | None: ...
     @property
     def filter(self) -> builtins.list[builtins.str]: ...
+    @property
+    def info(self) -> builtins.dict[builtins.str, builtins.str]:
+        r"""INFO fields as parsed from the record.
+
+        One entry per key: flags as "true", arrays comma-joined, missing values as ".".
+        """
     def is_snp(self) -> builtins.bool:
         r"""Check if variant is a SNP (single nucleotide polymorphism)."""
     def is_indel(self) -> builtins.bool:
         r"""Check if variant is an indel (insertion/deletion)."""
+    def get_info_field(self, key: builtins.str) -> builtins.str | None:
+        r"""Look up a single INFO field, or None when the record has no such key."""
     def passes_filter(self) -> builtins.bool:
         r"""Check if variant passes all filters."""
     def __repr__(self) -> builtins.str: ...

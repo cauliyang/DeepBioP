@@ -439,3 +439,26 @@ class TestGtfIntegration:
         # Calculate CDS coverage
         coverage = total_cds / total_exon
         assert 0 < coverage < 1
+
+    def test_repeated_attributes_and_quoted_semicolons(self):
+        """Repeated keys keep every value; ';' inside quotes does not split fields."""
+        content = (
+            "chr1\ttest\tgene\t10\t20\t.\t+\t.\t"
+            'gene_id "G1"; tag "a"; tag "b"; note "x; y";\n'
+        )
+        with tempfile.NamedTemporaryFile(mode="w", suffix=".gtf", delete=False) as f:
+            f.write(content)
+            path = f.name
+
+        try:
+            reader = dbp.GtfReader(path)
+            features = reader.read_all()
+            assert features[0].attributes["tag"] == "a,b"
+            assert features[0].attributes["note"] == "x; y"
+
+            # The reader stays usable after a consuming query.
+            assert len(reader.read_all()) == 1
+            assert len(reader.filter_by_type("gene")) == 1
+            assert len(reader.build_gene_index()) == 1
+        finally:
+            Path(path).unlink()

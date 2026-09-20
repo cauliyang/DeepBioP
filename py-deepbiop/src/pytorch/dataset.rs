@@ -5,8 +5,8 @@
 //! `__getitem__`, `__iter__`) for FASTQ files.
 
 use pyo3::prelude::*;
-use pyo3_stub_gen::derive::*;
 use pyo3::types::PyDict;
+use pyo3_stub_gen::derive::*;
 use std::fs::File;
 use std::io::{BufReader, Seek, SeekFrom};
 use std::path::Path;

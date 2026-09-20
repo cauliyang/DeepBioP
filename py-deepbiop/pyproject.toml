@@ -224,6 +224,9 @@ filterwarnings = [
   # Introspection under PyCharm IDE can generate this in Python 3.12
   "ignore:.*co_lnotab is deprecated, use co_lines.*:DeprecationWarning",
   "ignore:unclosed file.*:ResourceWarning",
+  # torch.utils._pytree deprecation raised from inside pytorch-lightning internals
+  "ignore:.*isinstance\\(treespec, LeafSpec\\).*:FutureWarning",
+  "ignore:.*isinstance\\(treespec, LeafSpec\\).*:DeprecationWarning",
   # Ignore invalid warnings when running earlier versions of SQLAlchemy (we
   # know they are invalid because our standard tests run the latest version)
   "ignore:Deprecated API features detected.*:DeprecationWarning",

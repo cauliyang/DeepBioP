@@ -208,7 +208,10 @@ impl Iterator for StreamingFastqIterator {
 #[cfg(feature = "python")]
 /// Python wrapper for streaming FASTQ dataset
 #[cfg_attr(feature = "python", gen_stub_pyclass)]
-#[cfg_attr(feature = "python", pyclass(name = "StreamingFastqDataset", module = "deepbiop.fq"))]
+#[cfg_attr(
+    feature = "python",
+    pyclass(name = "StreamingFastqDataset", module = "deepbiop.fq")
+)]
 pub struct PyStreamingFastqDataset {
     path: String,
     shuffle_buffer_size: usize,

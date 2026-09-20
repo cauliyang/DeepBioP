@@ -77,11 +77,12 @@ jobs:
         working-directory: py-deepbiop
         run: uv run pytest -vls --tb=short
 
-      - name: Run Python tests with coverage (Linux only)
+      - name: Run Python tests with ML frameworks and coverage (Linux only)
         if: runner.os == 'Linux' && matrix.python-version == '3.10'
         working-directory: py-deepbiop
         run: |
-          uv run pytest --cov=deepbiop --cov-report=xml --cov-report=term
+          uv sync --group ml
+          uv run pytest -m "" --cov=deepbiop --cov-report=xml --cov-report=term
 
       - name: Upload coverage to Codecov (Linux only)
         if: runner.os == 'Linux' && matrix.python-version == '3.10'

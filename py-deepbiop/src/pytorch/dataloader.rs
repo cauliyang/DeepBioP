@@ -4,8 +4,8 @@
 //! and provides batching, shuffling, and parallel loading capabilities.
 
 use pyo3::prelude::*;
-use pyo3_stub_gen::derive::*;
 use pyo3::types::PyList;
+use pyo3_stub_gen::derive::*;
 use rand::rngs::SmallRng;
 use rand::seq::SliceRandom;
 use rand::SeedableRng;

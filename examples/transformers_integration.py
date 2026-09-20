@@ -22,14 +22,10 @@ except ImportError:
     exit(1)
 
 # Will work once Python bindings are implemented
-try:
-    import deepbiop as dbp
+import deepbiop as dbp
+from deepbiop import core, fq
 
-    BINDINGS_AVAILABLE = True
-except ImportError:
-    print("DeepBioP Python bindings not yet available.")
-    print("This example will work after completing tasks T028-T032.")
-    BINDINGS_AVAILABLE = False
+BINDINGS_AVAILABLE = True
 
 
 # ==============================================================================
@@ -126,15 +122,16 @@ def create_dna_bert_model(num_labels=2, max_length=512):
 
     config = BertConfig(
         vocab_size=9,  # PAD, CLS, SEP, MASK, UNK, A, C, G, T
-        hidden_size=256,
+        hidden_size=192,  # must be divisible by num_attention_heads
         num_hidden_layers=6,
-        num_attention_heads=8,
+        num_attention_heads=8,  # must divide hidden_size
         intermediate_size=1024,
         max_position_embeddings=max_length,
         type_vocab_size=1,  # No segment embeddings needed
+        num_labels=num_labels,
     )
 
-    model = BertForSequenceClassification(config, num_labels=num_labels)
+    model = BertForSequenceClassification(config)
 
     return model
 
@@ -151,7 +148,7 @@ def example_bert_classification():
     print("=" * 70)
 
     # Create encoder
-    encoder = dbp.IntegerEncoder("dna")
+    encoder = fq.IntegerEncoder("dna")
 
     # Sample sequences (synthetic data)
     sequences = [
@@ -206,7 +203,7 @@ def example_bert_pretraining():
     from transformers import BertForMaskedLM
 
     # Create encoder
-    encoder = dbp.IntegerEncoder("dna")
+    encoder = fq.IntegerEncoder("dna")
 
     # Sample sequences
     sequences = [b"ACGTACGT" * 20 for _ in range(100)]  # 160 bp each
@@ -249,7 +246,7 @@ def example_sequence_embeddings():
     print("=" * 70)
 
     # Create encoder
-    encoder = dbp.IntegerEncoder("dna")
+    encoder = fq.IntegerEncoder("dna")
 
     # Sample sequences
     sequences = [
@@ -263,7 +260,7 @@ def example_sequence_embeddings():
     input_ids, attention_mask = prepare_transformer_inputs(encoded_batch)
 
     # Create BERT model (without classification head)
-    config = BertConfig(vocab_size=9, hidden_size=256, num_hidden_layers=4)
+    config = BertConfig(vocab_size=9, hidden_size=192, num_hidden_layers=4)
     model = BertModel(config)
     model.eval()
 
@@ -332,7 +329,7 @@ def example_trainer_api():
     print("=" * 70)
 
     # Create encoder
-    encoder = dbp.IntegerEncoder("dna")
+    encoder = fq.IntegerEncoder("dna")
 
     # Synthetic dataset
     train_sequences = [b"ACGT" * 20 for _ in range(80)] + [

@@ -7,6 +7,20 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Fixed
+- Canonical k-mer encoding folds a k-mer with its reverse complement, `k` is bounded
+  (vocabulary capped at 16M), and too-short sequences error instead of returning zeros.
+- Streaming datasets (`FastqStreamDataset`, `FastaStreamDataset`, `BamStreamDataset`) hold
+  one live reader: iteration is O(n) instead of re-opening and re-scanning per record.
+- `deepbiop.pytorch.Dataset` random access is O(1) via a byte-offset index.
+- Quality models and samplers reject invalid parameters with errors instead of panicking;
+  `Sampler("random")` keeps quality aligned with the sampled sequence.
+- GTF attributes are parsed quote-aware and keep repeated keys; feature length no longer
+  underflows on malformed coordinates.
+- VCF INFO is parsed per key, IDs split on `;`, and `.vcf.gz`/`.gtf.gz` inputs work.
+- BAM `query_region` is implemented via a sidecar `.bai`; `count_chimeric` propagates errors.
+- The shuffle buffer uses O(1) swaps, allocates nothing per record, and reads compressed input.
+
 ## [0.2.0] - 2025-11-03
 
 ### Added
@@ -77,7 +91,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Fixed noodles API compatibility for BAM Record trait methods returning Results
 - Fixed mapping quality extraction from BAM records (Option<Result<MappingQuality>>)
 - Fixed data tag iteration in BAM records to handle Result types
-- Fixed rand API usage for Rust 0.9 (gen_range ’ random_range, seed-based RNG)
+- Fixed rand API usage for Rust 0.9 (gen_range -> random_range, seed-based RNG)
 - Resolved borrow checker issues in quality score generation loops
 
 ### Performance

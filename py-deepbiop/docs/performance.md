@@ -42,6 +42,9 @@ Measured on MacBook Pro M1 Max (32GB RAM):
 
 Workers vs. throughput (batch_size=32):
 
+_These figures come from `torch.utils.data.DataLoader` driving a DeepBioP dataset;
+`deepbiop.pytorch.DataLoader` itself is single-process._
+
 | num_workers | Throughput | Speedup |
 |-------------|------------|---------|
 | 0 | 100K rec/sec | 1.0x |
@@ -57,13 +60,17 @@ Workers vs. throughput (batch_size=32):
 
 ### 1. Use Appropriate num_workers
 
+`deepbiop.pytorch.DataLoader` is single-process; multi-process loading comes from
+`torch.utils.data.DataLoader`, which DeepBioP datasets plug into directly.
+
 ```python
 import multiprocessing
+import torch.utils.data
 
 # Rule of thumb: num_workers = CPU cores - 1
 optimal_workers = multiprocessing.cpu_count() - 1
 
-loader = DataLoader(
+loader = torch.utils.data.DataLoader(
     dataset,
     batch_size=32,
     num_workers=optimal_workers,
@@ -76,7 +83,7 @@ loader = DataLoader(
 import time
 
 for num_workers in [0, 2, 4, 8]:
-    loader = DataLoader(dataset, num_workers=num_workers, batch_size=32)
+    loader = torch.utils.data.DataLoader(dataset, num_workers=num_workers, batch_size=32)
 
     start = time.time()
     for i, batch in enumerate(loader):
