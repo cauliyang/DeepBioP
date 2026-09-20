@@ -15,7 +15,6 @@ from pathlib import Path
 
 import numpy as np
 
-import deepbiop
 from deepbiop import fq
 
 SAMPLE_FASTQ = """@seq1

@@ -31,10 +31,12 @@ Use the correct import style:
 ```python
 # Correct
 from deepbiop import fq
+
 dataset = fq.FastqStreamDataset("file.fastq")
 
 # Or
 import deepbiop
+
 dataset = deepbiop.fq.FastqStreamDataset("file.fastq")
 ```
 
@@ -105,11 +107,7 @@ dataset = fq.FastqStreamDataset("data.fastq")
 
 # Wrap with transforms
 processed = TransformDataset(
-    dataset,
-    transform=Compose([
-        fq.Mutator(mutation_rate=0.1),
-        fq.OneHotEncoder()
-    ])
+    dataset, transform=Compose([fq.Mutator(mutation_rate=0.1), fq.OneHotEncoder()])
 )
 
 for record in processed:  # Now transforms are applied
@@ -134,7 +132,8 @@ DataLoader freezes when using multiple workers.
 ```python
 # Workaround for macOS
 import os
-os.environ['OBJC_DISABLE_INITIALIZE_FORK_SAFETY'] = 'YES'
+
+os.environ["OBJC_DISABLE_INITIALIZE_FORK_SAFETY"] = "YES"
 
 loader = DataLoader(dataset, num_workers=4)
 ```
@@ -154,15 +153,17 @@ Use custom collate function with padding:
 import torch
 from torch.utils.data import DataLoader
 
+
 def collate_fn(batch):
-    sequences = [torch.from_numpy(item['sequence']) for item in batch]
+    sequences = [torch.from_numpy(item["sequence"]) for item in batch]
     max_len = max(seq.shape[0] for seq in sequences)
 
     padded = torch.zeros(len(sequences), max_len, dtype=sequences[0].dtype)
     for i, seq in enumerate(sequences):
-        padded[i, :seq.shape[0]] = seq
+        padded[i, : seq.shape[0]] = seq
 
-    return {'sequences': padded}
+    return {"sequences": padded}
+
 
 loader = DataLoader(dataset, batch_size=32, collate_fn=collate_fn)
 ```
@@ -182,7 +183,7 @@ RuntimeError: Train dataset not set up. Call setup(stage='fit') first.
 Call `setup()` before getting dataloaders:
 ```python
 dm = BiologicalDataModule(train_path="train.fastq", batch_size=32)
-dm.setup(stage='fit')  # Must call setup first
+dm.setup(stage="fit")  # Must call setup first
 train_loader = dm.train_dataloader()
 ```
 
@@ -218,10 +219,12 @@ trainer.fit(model, dm)  # Trainer calls setup() for you
 4. **Profile bottlenecks:**
    ```python
    import time
+
    start = time.time()
    for i, batch in enumerate(loader):
-       if i >= 100: break
-   print(f"Time per batch: {(time.time()-start)/100:.3f}s")
+       if i >= 100:
+           break
+   print(f"Time per batch: {(time.time() - start) / 100:.3f}s")
    ```
 
 ---
@@ -310,7 +313,7 @@ Use appropriate `unknown_strategy`:
 ```python
 encoder = fq.OneHotEncoder(
     encoding_type="dna",
-    unknown_strategy="skip"  # or "mask" or "error"
+    unknown_strategy="skip",  # or "mask" or "error"
 )
 ```
 

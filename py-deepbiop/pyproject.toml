@@ -56,7 +56,8 @@ dev = [
   "pytest-sugar>=1.0.0",
   "pytest-benchmark>=4.0.0",
   "pytest-cov>=7.0.0",
-  "patchelf",
+  # maturin needs patchelf to repair Linux wheels; it does not build on Windows/macOS.
+  "patchelf; sys_platform == 'linux'",
 ]
 ml = ["deepbiop[all]"]
 

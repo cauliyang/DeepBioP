@@ -112,6 +112,7 @@ print(int_encoded.shape)  # (3, 8) - [batch, seq_len]
 
 # Use with PyTorch
 import torch
+
 tensor = torch.from_numpy(encoded)
 
 # Use with HuggingFace Transformers
@@ -132,10 +133,12 @@ dataset = pytorch.Dataset("sequences.fastq")
 print(f"Loaded {len(dataset)} sequences")  # Fast - doesn't load all data
 
 # 2. Create transforms for data preprocessing
-transform = pytorch.Compose([
-    pytorch.Sampler(length=150, strategy="start"),  # Extract fixed-length windows
-    pytorch.OneHotEncoder(encoding_type="dna"),     # Encode as one-hot arrays
-])
+transform = pytorch.Compose(
+    [
+        pytorch.Sampler(length=150, strategy="start"),  # Extract fixed-length windows
+        pytorch.OneHotEncoder(encoding_type="dna"),  # Encode as one-hot arrays
+    ]
+)
 
 # Apply transform to a sample
 sample = dataset[0]
@@ -157,11 +160,12 @@ for batch in loader:
     # Collate into batch tensors with padding
     batch_dict = pytorch.default_collate(encoded_samples)
 
-    sequences = batch_dict['sequences']  # Shape: [batch_size, max_len, 4]
-    lengths = batch_dict['lengths']      # Original lengths before padding
+    sequences = batch_dict["sequences"]  # Shape: [batch_size, max_len, 4]
+    lengths = batch_dict["lengths"]  # Original lengths before padding
 
     # Convert to PyTorch tensors (zero-copy)
     import torch
+
     tensor = torch.from_numpy(sequences)
 
     # Ready for model training!
@@ -175,12 +179,14 @@ for batch in loader:
 from deepbiop import pytorch
 
 # Create augmentation pipeline
-augmentation = pytorch.Compose([
-    pytorch.Sampler(length=100, strategy="random"),     # Random 100bp windows
-    pytorch.Mutator(mutation_rate=0.02, seed=42),       # 2% random mutations
-    pytorch.ReverseComplement(),                         # 50% chance flip strand
-    pytorch.OneHotEncoder(encoding_type="dna"),         # Encode to array
-])
+augmentation = pytorch.Compose(
+    [
+        pytorch.Sampler(length=100, strategy="random"),  # Random 100bp windows
+        pytorch.Mutator(mutation_rate=0.02, seed=42),  # 2% random mutations
+        pytorch.ReverseComplement(),  # 50% chance flip strand
+        pytorch.OneHotEncoder(encoding_type="dna"),  # Encode to array
+    ]
+)
 
 # Apply to dataset
 dataset = pytorch.Dataset("reads.fastq")
@@ -220,7 +226,9 @@ cached_data = pytorch.load_cache("processed_data.npz")
 print(f"Loaded {len(cached_data)} samples from cache")
 
 # Automatic cache invalidation
-is_valid = pytorch.is_cache_valid("processed_data.npz", source_file="large_dataset.fastq")
+is_valid = pytorch.is_cache_valid(
+    "processed_data.npz", source_file="large_dataset.fastq"
+)
 if not is_valid:
     print("Source file changed - need to regenerate cache")
 ```
@@ -237,7 +245,7 @@ summary = dataset.summary()
 print(f"Num samples: {summary['num_samples']}")
 print(f"Length stats: {summary['length_stats']}")
 # Output: {'min': 50, 'max': 300, 'mean': 150.5, 'median': 151.0}
-print(f"Memory footprint: {summary['memory_footprint']/1e6:.1f} MB")
+print(f"Memory footprint: {summary['memory_footprint'] / 1e6:.1f} MB")
 
 # Validate data quality
 validation = dataset.validate()
@@ -262,14 +270,17 @@ import torch.nn as nn
 dataset = pytorch.Dataset("training_data.fastq")
 
 # 2. Define transform pipeline
-transform = pytorch.Compose([
-    pytorch.Sampler(length=200, strategy="random"),
-    pytorch.Mutator(mutation_rate=0.01, seed=None),  # Different each epoch
-    pytorch.OneHotEncoder(encoding_type="dna"),
-])
+transform = pytorch.Compose(
+    [
+        pytorch.Sampler(length=200, strategy="random"),
+        pytorch.Mutator(mutation_rate=0.01, seed=None),  # Different each epoch
+        pytorch.OneHotEncoder(encoding_type="dna"),
+    ]
+)
 
 # 3. Create data loader
 train_loader = pytorch.DataLoader(dataset, batch_size=32, shuffle=True)
+
 
 # 4. Define a simple CNN model
 class DNAClassifier(nn.Module):
@@ -290,6 +301,7 @@ class DNAClassifier(nn.Module):
         x = x.view(x.size(0), -1)
         return self.fc(x)
 
+
 # 5. Training loop
 model = DNAClassifier(num_classes=2)
 criterion = nn.CrossEntropyLoss()
@@ -302,7 +314,7 @@ for epoch in range(3):
         batch_dict = pytorch.default_collate(transformed)
 
         # Convert to tensors
-        sequences = torch.from_numpy(batch_dict['sequences'])
+        sequences = torch.from_numpy(batch_dict["sequences"])
         labels = torch.randint(0, 2, (len(sequences),))  # Dummy labels
 
         # Forward pass
@@ -314,7 +326,7 @@ for epoch in range(3):
         loss.backward()
         optimizer.step()
 
-    print(f"Epoch {epoch+1}/3 - Loss: {loss.item():.4f}")
+    print(f"Epoch {epoch + 1}/3 - Loss: {loss.item():.4f}")
 ```
 
 For complete examples, see:
@@ -417,11 +429,12 @@ dbp.utils.export_to_parquet(
     "output.parquet",
     ids=["seq1", "seq2", "seq3"],
     sequences=[b"ACGTACGT", b"TTGGCCAA", b"AAAACCCC"],
-    qualities=[b"IIIIIIII", b"HHHHHHHH", b"GGGGGGGG"]
+    qualities=[b"IIIIIIII", b"HHHHHHHH", b"GGGGGGGG"],
 )
 
 # Read back with pandas/polars/duckdb
 import pandas as pd
+
 df = pd.read_parquet("output.parquet")
 print(df.head())
 # Output: id, sequence, length, quality, gc_content columns
@@ -437,6 +450,7 @@ dbp.utils.export_to_numpy_onehot("sequences_onehot.npy", sequences)
 
 # Load in ML framework
 import numpy as np
+
 encoded = np.load("sequences_int.npy")  # Shape: (2, 8)
 ```
 
@@ -559,6 +573,7 @@ sim = dbp.QualitySimulator(quality_model, seed=42)
 quality_scores = sim.generate(150)
 print(f"Generated {len(quality_scores)} quality scores")
 
+
 # Complete augmentation pipeline
 def augment_dataset(sequences, n_augmented=5):
     """Generate augmented training data."""
@@ -576,6 +591,7 @@ def augment_dataset(sequences, n_augmented=5):
             augmented.append(mutator.apply(seq))
 
     return augmented
+
 
 # Expand 5 sequences to 35 augmented versions
 original = [b"ACGTACGT" * 4] * 5

@@ -33,9 +33,9 @@ loader = DataLoader(dataset, batch_size=32, num_workers=4)
 for batch in loader:
     # Each batch is a list of dicts
     for record in batch:
-        seq = record['sequence']   # numpy array of sequence bytes
-        qual = record['quality']    # numpy array of quality scores
-        id = record['id']           # sequence identifier
+        seq = record["sequence"]  # numpy array of sequence bytes
+        qual = record["quality"]  # numpy array of quality scores
+        id = record["id"]  # sequence identifier
         print(f"Sequence {id}: {len(seq)} bases")
 ```
 
@@ -60,17 +60,13 @@ print(f"Sequence length: {len(first_seq['sequence'])}")
 bam_dataset = BamDataset("data/alignments.bam", threads=4)
 
 # Use with DataLoader (use default_collate for variable-length sequences)
-fasta_loader = DataLoader(
-    fasta_dataset,
-    batch_size=16,
-    collate_fn=default_collate
-)
+fasta_loader = DataLoader(fasta_dataset, batch_size=16, collate_fn=default_collate)
 
 # Each batch is a list of record dicts
 for batch in fasta_loader:
     # batch is a list of dicts, not a batched tensor
     for record in batch:
-        seq = record['sequence']
+        seq = record["sequence"]
         print(f"Processing {record['id']}: {len(seq)} bases")
 ```
 
@@ -93,10 +89,12 @@ bam_stream = BamStreamDataset("data/alignments.bam", threads=4)
 from deepbiop import fq, Compose, FilterCompose
 
 # Create filter pipeline
-filters = FilterCompose([
-    fq.QualityFilter(min_mean_quality=30.0),     # Filter by quality
-    fq.LengthFilter(min_length=50, max_length=500)  # Filter by length
-])
+filters = FilterCompose(
+    [
+        fq.QualityFilter(min_mean_quality=30.0),  # Filter by quality
+        fq.LengthFilter(min_length=50, max_length=500),  # Filter by length
+    ]
+)
 
 # Apply during iteration
 for record in dataset:
@@ -111,10 +109,12 @@ for record in dataset:
 from deepbiop import fq, Compose
 
 # Create augmentation pipeline
-augmentations = Compose([
-    fq.ReverseComplement(),              # Randomly reverse complement
-    fq.Mutator(mutation_rate=0.1)        # Add random mutations
-])
+augmentations = Compose(
+    [
+        fq.ReverseComplement(),  # Randomly reverse complement
+        fq.Mutator(mutation_rate=0.1),  # Add random mutations
+    ]
+)
 
 # Apply transformations
 for record in dataset:
@@ -150,14 +150,10 @@ dataset = fq.FastqStreamDataset("data/reads.fastq.gz")
 # Wrap with filters and transforms
 processed = TransformDataset(
     dataset,
-    transform=Compose([
-        fq.ReverseComplement(),
-        fq.Mutator(mutation_rate=0.05)
-    ]),
-    filter_fn=FilterCompose([
-        fq.QualityFilter(min_mean_quality=25.0),
-        fq.LengthFilter(min_length=100)
-    ])
+    transform=Compose([fq.ReverseComplement(), fq.Mutator(mutation_rate=0.05)]),
+    filter_fn=FilterCompose(
+        [fq.QualityFilter(min_mean_quality=25.0), fq.LengthFilter(min_length=100)]
+    ),
 )
 
 # Only high-quality, long sequences with augmentations
@@ -173,29 +169,26 @@ for record in processed:
 import torch
 from torch.utils.data import DataLoader
 
+
 def bio_collate_fn(batch):
     """Collate function with padding for variable-length sequences."""
-    sequences = [torch.from_numpy(item['sequence']).long() for item in batch]
+    sequences = [torch.from_numpy(item["sequence"]).long() for item in batch]
 
     # Pad to max length in batch
     max_len = max(seq.shape[0] for seq in sequences)
     padded = torch.zeros(len(sequences), max_len, dtype=torch.long)
 
     for i, seq in enumerate(sequences):
-        padded[i, :seq.shape[0]] = seq
+        padded[i, : seq.shape[0]] = seq
 
     return {
-        'sequences': padded,
-        'lengths': torch.tensor([seq.shape[0] for seq in sequences])
+        "sequences": padded,
+        "lengths": torch.tensor([seq.shape[0] for seq in sequences]),
     }
 
+
 # Use custom collate
-loader = DataLoader(
-    dataset,
-    batch_size=32,
-    collate_fn=bio_collate_fn,
-    num_workers=4
-)
+loader = DataLoader(dataset, batch_size=32, collate_fn=bio_collate_fn, num_workers=4)
 ```
 
 ### Training Loop Example
@@ -206,9 +199,7 @@ import torch.optim as optim
 
 # Simple model
 model = nn.Sequential(
-    nn.Embedding(256, 64),
-    nn.LSTM(64, 128, batch_first=True),
-    nn.Linear(128, 2)
+    nn.Embedding(256, 64), nn.LSTM(64, 128, batch_first=True), nn.Linear(128, 2)
 )
 
 optimizer = optim.Adam(model.parameters())
@@ -217,7 +208,7 @@ criterion = nn.CrossEntropyLoss()
 # Training
 model.train()
 for batch in loader:
-    sequences = batch['sequences']
+    sequences = batch["sequences"]
 
     # Forward pass
     outputs = model(sequences)
@@ -243,11 +234,11 @@ dm = BiologicalDataModule(
     val_path="data/val.fastq.gz",
     test_path="data/test.fastq.gz",
     batch_size=64,
-    num_workers=8
+    num_workers=8,
 )
 
 # Setup datasets
-dm.setup(stage='fit')
+dm.setup(stage="fit")
 
 # Get dataloaders
 train_loader = dm.train_dataloader()
@@ -256,8 +247,8 @@ val_loader = dm.val_dataloader()
 # Use with Lightning Trainer
 trainer = pl.Trainer(
     max_epochs=10,
-    accelerator='auto',  # Automatically use GPU if available
-    devices=1
+    accelerator="auto",  # Automatically use GPU if available
+    devices=1,
 )
 
 trainer.fit(model, dm)
@@ -268,10 +259,10 @@ trainer.fit(model, dm)
 ```python
 # BiologicalDataModule auto-detects file types
 dm = BiologicalDataModule(
-    train_path="train.fastq",     # FASTQ detected
-    val_path="val.fasta.gz",      # FASTA detected
-    test_path="test.bam",         # BAM detected
-    batch_size=32
+    train_path="train.fastq",  # FASTQ detected
+    val_path="val.fasta.gz",  # FASTA detected
+    test_path="test.bam",  # BAM detected
+    batch_size=32,
 )
 ```
 
@@ -284,9 +275,9 @@ dm = BiologicalDataModule(
 loader = DataLoader(
     dataset,
     batch_size=64,
-    num_workers=8,           # Parallel data loading
-    pin_memory=True,         # Faster GPU transfer
-    prefetch_factor=2        # Pre-load batches
+    num_workers=8,  # Parallel data loading
+    pin_memory=True,  # Faster GPU transfer
+    prefetch_factor=2,  # Pre-load batches
 )
 ```
 
@@ -341,11 +332,13 @@ dataset = fq.FastqStreamDataset("dna_reads.fastq.gz")
 
 processed = TransformDataset(
     dataset,
-    transform=Compose([
-        fq.OneHotEncoder(encoding_type="dna"),
-        fq.Mutator(mutation_rate=0.05)  # Data augmentation
-    ]),
-    filter_fn=fq.QualityFilter(min_mean_quality=30.0)
+    transform=Compose(
+        [
+            fq.OneHotEncoder(encoding_type="dna"),
+            fq.Mutator(mutation_rate=0.05),  # Data augmentation
+        ]
+    ),
+    filter_fn=fq.QualityFilter(min_mean_quality=30.0),
 )
 
 # Train model
@@ -359,15 +352,17 @@ for batch in loader:
 
 ```python
 # Filter and sample high-quality reads
-filters = FilterCompose([
-    fq.QualityFilter(min_mean_quality=35.0),
-    fq.LengthFilter(min_length=150, max_length=300),
-])
+filters = FilterCompose(
+    [
+        fq.QualityFilter(min_mean_quality=35.0),
+        fq.LengthFilter(min_length=150, max_length=300),
+    ]
+)
 
 sampler = fq.Sampler.random_fraction(0.1)  # Sample 10%
 
 for record in dataset:
-    if filters.filter(record) and sampler.passes(record['sequence']):
+    if filters.filter(record) and sampler.passes(record["sequence"]):
         # High-quality, properly-sized, sampled record
         write_output(record)
 ```

@@ -74,7 +74,7 @@ loader = torch.utils.data.DataLoader(
     dataset,
     batch_size=32,
     num_workers=optimal_workers,
-    pin_memory=True  # For GPU training
+    pin_memory=True,  # For GPU training
 )
 ```
 
@@ -83,11 +83,14 @@ loader = torch.utils.data.DataLoader(
 import time
 
 for num_workers in [0, 2, 4, 8]:
-    loader = torch.utils.data.DataLoader(dataset, num_workers=num_workers, batch_size=32)
+    loader = torch.utils.data.DataLoader(
+        dataset, num_workers=num_workers, batch_size=32
+    )
 
     start = time.time()
     for i, batch in enumerate(loader):
-        if i >= 100: break
+        if i >= 100:
+            break
 
     elapsed = time.time() - start
     throughput = (100 * 32) / elapsed
@@ -130,7 +133,7 @@ loader = DataLoader(
     batch_size=32,
     num_workers=4,
     prefetch_factor=2,  # Pre-load 2 batches per worker
-    persistent_workers=True  # Keep workers alive between epochs
+    persistent_workers=True,  # Keep workers alive between epochs
 )
 ```
 
@@ -147,13 +150,13 @@ loader = DataLoader(
     dataset,
     batch_size=32,
     pin_memory=True,  # Faster CPU → GPU transfer
-    num_workers=4
+    num_workers=4,
 )
 
 # Use in training loop
 for batch in loader:
     # Transfer to GPU (faster with pin_memory=True)
-    data = batch['sequences'].cuda(non_blocking=True)
+    data = batch["sequences"].cuda(non_blocking=True)
 ```
 
 **Speedup**: 10-30% faster GPU transfer.
@@ -184,22 +187,26 @@ for record in dataset:
 import time
 from contextlib import contextmanager
 
+
 @contextmanager
 def timer(name):
     start = time.perf_counter()
     yield
     print(f"{name}: {time.perf_counter() - start:.3f}s")
 
+
 # Profile data loading
 with timer("Data loading"):
     for i, batch in enumerate(loader):
-        if i >= 100: break
+        if i >= 100:
+            break
 
 # Profile transforms
 with timer("Transforms"):
     for i, record in enumerate(dataset):
         transformed = transform(record)
-        if i >= 1000: break
+        if i >= 1000:
+            break
 ```
 
 ---
@@ -218,12 +225,13 @@ snapshot_before = tracemalloc.take_snapshot()
 # Run code to profile
 for i, record in enumerate(dataset):
     process(record)
-    if i >= 1000: break
+    if i >= 1000:
+        break
 
 # Check memory usage
 gc.collect()
 snapshot_after = tracemalloc.take_snapshot()
-stats = snapshot_after.compare_to(snapshot_before, 'lineno')
+stats = snapshot_after.compare_to(snapshot_before, "lineno")
 
 print("Top memory allocations:")
 for stat in stats[:5]:
@@ -239,12 +247,14 @@ import torch
 
 # Profile GPU utilization
 with torch.profiler.profile(
-    activities=[torch.profiler.ProfilerActivity.CPU,
-                torch.profiler.ProfilerActivity.CUDA],
-    record_shapes=True
+    activities=[
+        torch.profiler.ProfilerActivity.CPU,
+        torch.profiler.ProfilerActivity.CUDA,
+    ],
+    record_shapes=True,
 ) as prof:
     for batch in loader:
-        data = batch['sequences'].cuda()
+        data = batch["sequences"].cuda()
         output = model(data)
         loss = criterion(output, labels)
         loss.backward()
@@ -327,7 +337,7 @@ print(prof.key_averages().table(sort_by="cuda_time_total"))
 loader = DataLoader(
     dataset,
     num_workers=4,
-    persistent_workers=True  # Workers stay alive between epochs
+    persistent_workers=True,  # Workers stay alive between epochs
 )
 ```
 
@@ -340,11 +350,13 @@ loader = DataLoader(
 ```python
 # Fix multiprocessing issues on macOS
 import os
-os.environ['OBJC_DISABLE_INITIALIZE_FORK_SAFETY'] = 'YES'
+
+os.environ["OBJC_DISABLE_INITIALIZE_FORK_SAFETY"] = "YES"
 
 # Use spawn instead of fork (safer but slower startup)
 import multiprocessing
-multiprocessing.set_start_method('spawn', force=True)
+
+multiprocessing.set_start_method("spawn", force=True)
 ```
 
 ### Linux
@@ -357,7 +369,7 @@ loader = DataLoader(
     num_workers=multiprocessing.cpu_count(),
     pin_memory=True,
     persistent_workers=True,
-    prefetch_factor=4
+    prefetch_factor=4,
 )
 ```
 
@@ -365,7 +377,7 @@ loader = DataLoader(
 
 ```python
 # Use main guard for multiprocessing
-if __name__ == '__main__':
+if __name__ == "__main__":
     loader = DataLoader(dataset, num_workers=4)
     for batch in loader:
         process(batch)
@@ -383,18 +395,13 @@ from torch.nn.parallel import DistributedDataParallel as DDP
 from torch.utils.data.distributed import DistributedSampler
 
 # Initialize process group
-dist.init_process_group(backend='nccl')
+dist.init_process_group(backend="nccl")
 
 # Create sampler
 sampler = DistributedSampler(dataset, num_replicas=4, rank=rank)
 
 # Create loader
-loader = DataLoader(
-    dataset,
-    batch_size=32,
-    sampler=sampler,
-    num_workers=4
-)
+loader = DataLoader(dataset, batch_size=32, sampler=sampler, num_workers=4)
 
 # Wrap model
 model = DDP(model, device_ids=[local_rank])
@@ -447,9 +454,11 @@ If you encounter performance issues:
 1. **Measure baseline**:
    ```python
    import time
+
    start = time.time()
    for i, batch in enumerate(loader):
-       if i >= 100: break
+       if i >= 100:
+           break
    throughput = (100 * batch_size) / (time.time() - start)
    print(f"Throughput: {throughput:.0f} records/sec")
    ```

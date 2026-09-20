@@ -145,22 +145,22 @@ from torch.utils.data import DataLoader
 dataset = FastaDataset("genome.fasta.gz")
 
 # Access records
-print(f"Total: {len(dataset)}")      # Supports len()
-first = dataset[0]                    # Supports indexing
-for record in dataset:                # Supports iteration
+print(f"Total: {len(dataset)}")  # Supports len()
+first = dataset[0]  # Supports indexing
+for record in dataset:  # Supports iteration
     process(record)
 
 # Use with DataLoader
 loader = DataLoader(
     dataset,
     batch_size=16,
-    collate_fn=default_collate  # For variable-length sequences
+    collate_fn=default_collate,  # For variable-length sequences
 )
 
 for batch in loader:
     # batch is a list of dicts
     for record in batch:
-        print(record['id'], len(record['sequence']))
+        print(record["id"], len(record["sequence"]))
 ```
 
 **Memory Usage:** Loads all records into memory on initialization
@@ -205,7 +205,7 @@ Iterator yielding dict records with keys:
 ```python
 dataset = BamStreamDataset("alignments.bam", threads=4)
 for record in dataset:
-    if record['mapping_quality'] >= 30:
+    if record["mapping_quality"] >= 30:
         process_alignment(record)
 ```
 
@@ -251,22 +251,22 @@ from torch.utils.data import DataLoader
 dataset = BamDataset("alignments.bam", threads=4)
 
 # Access records
-print(f"Total: {len(dataset)}")      # Supports len()
-first = dataset[0]                    # Supports indexing
-for record in dataset:                # Supports iteration
+print(f"Total: {len(dataset)}")  # Supports len()
+first = dataset[0]  # Supports indexing
+for record in dataset:  # Supports iteration
     process(record)
 
 # Use with DataLoader
 loader = DataLoader(
     dataset,
     batch_size=32,
-    collate_fn=default_collate  # For variable-length sequences
+    collate_fn=default_collate,  # For variable-length sequences
 )
 
 for batch in loader:
     # batch is a list of dicts
     for record in batch:
-        print(record['id'], len(record['sequence']))
+        print(record["id"], len(record["sequence"]))
 ```
 
 **Performance Tips:**
@@ -311,7 +311,7 @@ filter = QualityFilter(
 quality_filter = QualityFilter(min_mean_quality=30.0)
 
 for record in dataset:
-    if quality_filter.passes(record['sequence'], record['quality']):
+    if quality_filter.passes(record["sequence"], record["quality"]):
         # High-quality sequence
         process(record)
 ```
@@ -343,7 +343,7 @@ filter = LengthFilter(
 length_filter = LengthFilter(min_length=50, max_length=500)
 
 for record in dataset:
-    if length_filter.passes(record['sequence']):
+    if length_filter.passes(record["sequence"]):
         # Sequence length between 50-500
         process(record)
 ```
@@ -531,11 +531,13 @@ pipeline = Compose(transforms: list)
 ```python
 from deepbiop import Compose, fq
 
-pipeline = Compose([
-    fq.ReverseComplement(),
-    fq.Mutator(mutation_rate=0.05),
-    fq.OneHotEncoder(encoding_type="dna")
-])
+pipeline = Compose(
+    [
+        fq.ReverseComplement(),
+        fq.Mutator(mutation_rate=0.05),
+        fq.OneHotEncoder(encoding_type="dna"),
+    ]
+)
 
 for record in dataset:
     transformed = pipeline(record)
@@ -565,10 +567,12 @@ filters = FilterCompose(filters: list)
 ```python
 from deepbiop import FilterCompose, fq
 
-filters = FilterCompose([
-    fq.QualityFilter(min_mean_quality=30.0),
-    fq.LengthFilter(min_length=100, max_length=300)
-])
+filters = FilterCompose(
+    [
+        fq.QualityFilter(min_mean_quality=30.0),
+        fq.LengthFilter(min_length=100, max_length=300),
+    ]
+)
 
 for record in dataset:
     if filters.filter(record):
@@ -585,11 +589,7 @@ Wrapper to apply transforms and filters during iteration.
 ```python
 from deepbiop.transforms import TransformDataset
 
-dataset = TransformDataset(
-    dataset,
-    transform=None,
-    filter_fn=None
-)
+dataset = TransformDataset(dataset, transform=None, filter_fn=None)
 ```
 
 **Parameters:**
@@ -608,14 +608,10 @@ base_dataset = fq.FastqStreamDataset("reads.fastq.gz")
 
 processed_dataset = TransformDataset(
     base_dataset,
-    transform=Compose([
-        fq.Mutator(mutation_rate=0.1),
-        fq.OneHotEncoder()
-    ]),
-    filter_fn=FilterCompose([
-        fq.QualityFilter(min_mean_quality=25.0),
-        fq.LengthFilter(min_length=50)
-    ])
+    transform=Compose([fq.Mutator(mutation_rate=0.1), fq.OneHotEncoder()]),
+    filter_fn=FilterCompose(
+        [fq.QualityFilter(min_mean_quality=25.0), fq.LengthFilter(min_length=50)]
+    ),
 )
 
 for record in processed_dataset:
@@ -665,14 +661,11 @@ import pytorch_lightning as pl
 
 # Create data module
 dm = BiologicalDataModule(
-    train_path="train.fastq.gz",
-    val_path="val.fastq.gz",
-    batch_size=64,
-    num_workers=4
+    train_path="train.fastq.gz", val_path="val.fastq.gz", batch_size=64, num_workers=4
 )
 
 # Use with Lightning Trainer
-trainer = pl.Trainer(max_epochs=10, accelerator='gpu')
+trainer = pl.Trainer(max_epochs=10, accelerator="gpu")
 trainer.fit(model, dm)
 ```
 

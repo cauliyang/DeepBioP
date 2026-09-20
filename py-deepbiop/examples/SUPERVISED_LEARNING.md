@@ -48,21 +48,14 @@ extractor = TargetExtractor.from_quality(stat="median")
 
 ```python
 # Headers like: @read_123 label=positive score=0.95
-extractor = TargetExtractor.from_header(
-    pattern=r"label=(\w+)",
-    converter=str
-)
+extractor = TargetExtractor.from_header(pattern=r"label=(\w+)", converter=str)
 ```
 
 #### Using Key-Value Pairs
 
 ```python
 # Headers like: @read_123|class:1|score:0.95
-extractor = TargetExtractor.from_header(
-    key="class",
-    separator="|",
-    converter=int
-)
+extractor = TargetExtractor.from_header(key="class", separator="|", converter=int)
 ```
 
 ### 3. From Sequence Features
@@ -91,10 +84,7 @@ read_3,0,0.92
 
 ```python
 extractor = TargetExtractor.from_file(
-    filepath="labels.csv",
-    id_column="read_id",
-    label_column="class",
-    converter=int
+    filepath="labels.csv", id_column="read_id", label_column="class", converter=int
 )
 ```
 
@@ -109,10 +99,7 @@ extractor = TargetExtractor.from_file(
 
 ```python
 extractor = TargetExtractor.from_file(
-    filepath="labels.json",
-    id_column="id",
-    label_column="label",
-    converter=int
+    filepath="labels.json", id_column="id", label_column="label", converter=int
 )
 ```
 
@@ -126,10 +113,11 @@ def custom_extractor(record):
     quality = record.get("quality", [])
 
     # Your custom logic here
-    gc_content = sequence.count(b'G') + sequence.count(b'C')
+    gc_content = sequence.count(b"G") + sequence.count(b"C")
     gc_ratio = gc_content / len(sequence)
 
     return gc_ratio
+
 
 extractor = TargetExtractor(custom_extractor)
 ```
@@ -143,8 +131,7 @@ from deepbiop.targets import create_classification_extractor
 
 # Automatically maps class names to indices
 extractor = create_classification_extractor(
-    classes=["negative", "positive"],
-    pattern=r"class=(\w+)"
+    classes=["negative", "positive"], pattern=r"class=(\w+)"
 )
 
 # negative -> 0, positive -> 1
@@ -155,7 +142,7 @@ extractor = create_classification_extractor(
 ```python
 extractor = create_classification_extractor(
     classes=["type_a", "type_b", "type_c", "type_d"],
-    key="type"  # Extract from key:value pairs
+    key="type",  # Extract from key:value pairs
 )
 ```
 
@@ -181,6 +168,7 @@ data_module = BiologicalDataModule(
     batch_size=32,
 )
 
+
 # Model
 class QualityPredictor(pl.LightningModule):
     def __init__(self):
@@ -192,7 +180,7 @@ class QualityPredictor(pl.LightningModule):
             nn.ReLU(),
             nn.AdaptiveMaxPool1d(1),
             nn.Flatten(),
-            nn.Linear(128, 1)
+            nn.Linear(128, 1),
         )
         self.loss = nn.MSELoss()
 
@@ -209,6 +197,7 @@ class QualityPredictor(pl.LightningModule):
 
     def configure_optimizers(self):
         return torch.optim.Adam(self.parameters())
+
 
 # Train
 model = QualityPredictor()
@@ -231,6 +220,7 @@ data_module = BiologicalDataModule(
     batch_size=64,
 )
 
+
 # Model
 class ReadClassifier(pl.LightningModule):
     def __init__(self, input_dim=4096, num_classes=2):
@@ -242,7 +232,7 @@ class ReadClassifier(pl.LightningModule):
             nn.Linear(512, 256),
             nn.ReLU(),
             nn.Dropout(0.3),
-            nn.Linear(256, num_classes)
+            nn.Linear(256, num_classes),
         )
         self.loss = nn.CrossEntropyLoss()
 
@@ -265,6 +255,7 @@ class ReadClassifier(pl.LightningModule):
     def configure_optimizers(self):
         return torch.optim.Adam(self.parameters(), lr=0.001)
 
+
 # Train
 model = ReadClassifier()
 trainer = pl.Trainer(max_epochs=20)
@@ -284,8 +275,9 @@ def multi_target_extractor(record):
 
     return {
         "quality": mean_quality,  # Regression
-        "type": read_type,        # Classification
+        "type": read_type,  # Classification
     }
+
 
 data_module = BiologicalDataModule(
     train_path="train.fastq",
@@ -295,6 +287,7 @@ data_module = BiologicalDataModule(
     collate_mode="tensor",
     batch_size=32,
 )
+
 
 class MultiTaskModel(pl.LightningModule):
     def __init__(self):
@@ -317,7 +310,7 @@ class MultiTaskModel(pl.LightningModule):
         features = self.encoder(x.transpose(1, 2))
         return {
             "quality": self.quality_head(features).squeeze(),
-            "type": self.type_head(features)
+            "type": self.type_head(features),
         }
 
     def training_step(self, batch, batch_idx):
@@ -432,18 +425,18 @@ loader = DataLoader(dataset, batch_size=32, collate_fn=tensor_collate)
 ### Quality Extractors (FASTQ only)
 
 ```python
-TargetExtractor.from_quality(stat="mean")    # Mean quality
+TargetExtractor.from_quality(stat="mean")  # Mean quality
 TargetExtractor.from_quality(stat="median")  # Median quality
-TargetExtractor.from_quality(stat="min")     # Minimum quality
-TargetExtractor.from_quality(stat="max")     # Maximum quality
-TargetExtractor.from_quality(stat="std")     # Standard deviation
+TargetExtractor.from_quality(stat="min")  # Minimum quality
+TargetExtractor.from_quality(stat="max")  # Maximum quality
+TargetExtractor.from_quality(stat="std")  # Standard deviation
 ```
 
 ### Sequence Extractors
 
 ```python
 TargetExtractor.from_sequence(feature="gc_content")  # GC content (0-1)
-TargetExtractor.from_sequence(feature="length")      # Sequence length
+TargetExtractor.from_sequence(feature="length")  # Sequence length
 TargetExtractor.from_sequence(feature="complexity")  # Shannon entropy
 ```
 
@@ -491,6 +484,7 @@ Verify your regex pattern matches your header format. Test with:
 
 ```python
 import re
+
 header = "@read_1 label=positive"
 pattern = r"label=(\w+)"
 match = re.search(pattern, header)
