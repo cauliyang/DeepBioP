@@ -31,6 +31,10 @@ classifiers = [
 dependencies = ["numpy>=1.24.0", "einops>=0.8.0", "jaxtyping>=0.2.34"]
 
 [project.optional-dependencies]
+torch = ["torch>=2.0.0"]
+lightning = ["torch>=2.0.0", "pytorch-lightning>=2.0.0"]
+transformers = ["torch>=2.0.0", "transformers>=4.30.0", "accelerate>=1.11.0"]
+all = ["deepbiop[lightning,transformers]"]
 dev-extra = [
   "typeguard>=4.0.0",
   "pytest-benchmark>=4.0.0",
@@ -39,6 +43,8 @@ dev-extra = [
 ]
 
 [dependency-groups]
+# Core dev loop: no ML frameworks. Tests that need torch/lightning/transformers
+# `pytest.importorskip` them; install `--group ml` (CPU wheels) to run them.
 dev = [
   "numpy>=2.2.6",
   "sphinx>=7.4.7",
@@ -49,13 +55,10 @@ dev = [
   "pytest>=8.3.2",
   "pytest-sugar>=1.0.0",
   "pytest-benchmark>=4.0.0",
-  "torch>=2.0.0",
-  "pytorch-lightning>=2.0.0",
-  "transformers>=4.30.0",
-  "accelerate>=1.11.0",
   "pytest-cov>=7.0.0",
   "patchelf",
 ]
+ml = ["deepbiop[all]"]
 
 [project.urls]
 Homepage = "https://github.com/cauliyang/DeepBioP"
@@ -248,10 +251,21 @@ exclude_lines = [
 cache-keys = [
   { file = "pyproject.toml" },
   { file = "Cargo.toml" },
+  { file = "src/**/*.rs" },
   { file = "../crates/**/*.rs" },
 ]
 # Uncomment to build rust code in development mode
 # config-settings = { build-args = '--profile=dev' }
+
+# CPU-only torch for the dev/ml group: the default PyPI wheel drags in ~3 GB of CUDA libs.
+[tool.uv.sources]
+torch = [{ index = "pytorch-cpu", marker = "sys_platform == 'linux'" }]
+
+[[tool.uv.index]]
+name = "pytorch-cpu"
+url = "https://download.pytorch.org/whl/cpu"
+explicit = true
+
 [tool.maturin]
 python-source = "."
 features = ["extension-module"]

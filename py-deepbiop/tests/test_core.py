@@ -1,33 +1,12 @@
-"""Tests for core module functionality.
-
-Note: The original tests for reverse_complement and seq_to_kmers have been removed
-because these functions do not exist in the current API. These were likely removed or
-never implemented in the Python bindings.
-
-Current core module only exports: Record (dataclass)
-
-For sequence operations, use:
-- ReverseComplement transform for reverse complement
-- KmerEncoder for k-mer operations
-"""
-
-import pytest
+"""Tests for the Rust `deepbiop.core` module."""
 
 from deepbiop import core
 
 
-def test_core_record_exists():
-    """Test that Record dataclass is available."""
-    assert hasattr(core, "Record")
-    # Record is a dataclass for type hints, basic check
-    assert core.Record is not None
-
-
-@pytest.mark.skip(reason="reverse_complement function does not exist in core module")
 def test_reverse_complement():
-    """Skipped: Use ReverseComplement transform instead."""
+    assert core.reverse_complement("ACTGAACCGAGATCGAGTG") == "CACTCGATCTCGGTTCAGT"
 
 
-@pytest.mark.skip(reason="seq_to_kmers function does not exist in core module")
-def test_fq():
-    """Skipped: Use KmerEncoder transform instead."""
+def test_seq_to_kmers():
+    assert core.seq_to_kmers("ATCGA", 3, overlap=True) == ["ATC", "TCG", "CGA"]
+    assert core.seq_to_kmers("ATCGAT", 3, overlap=False) == ["ATC", "GAT"]

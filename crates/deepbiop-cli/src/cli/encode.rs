@@ -10,6 +10,34 @@ use needletail::parse_fastx_file;
 
 use super::set_up_threads;
 
+/// Read every sequence of a FASTA/FASTQ file into memory.
+///
+/// Batch encoders produce one dense array for all sequences, so the whole input
+/// has to be resident anyway.
+fn read_sequences(path: &PathBuf) -> Result<Vec<Vec<u8>>> {
+    let mut reader = parse_fastx_file(path)?;
+    let mut sequences = Vec::new();
+    while let Some(record) = reader.next() {
+        sequences.push(record?.seq().to_vec());
+    }
+    Ok(sequences)
+}
+
+fn write_npy<D: ndarray::Dimension>(
+    output: &PathBuf,
+    n_sequences: usize,
+    encoded: &ndarray::Array<f32, D>,
+) -> Result<()> {
+    log::info!(
+        "Encoded {} sequences with shape {:?}",
+        n_sequences,
+        encoded.shape()
+    );
+    ndarray_npy::write_npy(output, encoded)?;
+    log::info!("Saved to {}", output.display());
+    Ok(())
+}
+
 #[derive(Debug, Parser)]
 pub struct Encode {
     #[command(subcommand)]
@@ -102,33 +130,10 @@ impl OnehotCommand {
             OneHotEncoder::new(encoding_type, ambiguous_strategy)
         };
 
-        // Read sequences from input file
-        let mut reader = parse_fastx_file(&self.input)?;
-        let mut sequences = Vec::new();
-
-        while let Some(record) = reader.next() {
-            let record = record?;
-            sequences.push(record.seq().to_vec());
-        }
-
-        // Encode sequences
+        let sequences = read_sequences(&self.input)?;
         let seq_refs: Vec<&[u8]> = sequences.iter().map(|s| s.as_slice()).collect();
         let encoded = encoder.encode_batch(&seq_refs)?;
-
-        // Save to NumPy file
-        log::info!(
-            "Encoded {} sequences with shape {:?}",
-            sequences.len(),
-            encoded.shape()
-        );
-        log::info!("Saving to {:?}", self.output);
-
-        // TODO: Implement NumPy .npy file writing
-        // For now, just print the shape
-        println!("Encoded shape: {:?}", encoded.shape());
-        println!("Output would be saved to: {:?}", self.output);
-
-        Ok(())
+        write_npy(&self.output, sequences.len(), &encoded)
     }
 }
 
@@ -147,7 +152,7 @@ pub struct KmerCommand {
     k: usize,
 
     /// Use canonical k-mers (treat forward and reverse complement as same)
-    #[arg(short, long, default_value = "true")]
+    #[arg(short, long, default_value_t = true, action = clap::ArgAction::Set)]
     canonical: bool,
 
     /// Encoding type
@@ -166,33 +171,10 @@ impl KmerCommand {
         let encoding_type: EncodingType = self.encoding_type.clone().into();
         let encoder = KmerEncoder::new(self.k, self.canonical, encoding_type);
 
-        // Read sequences from input file
-        let mut reader = parse_fastx_file(&self.input)?;
-        let mut sequences = Vec::new();
-
-        while let Some(record) = reader.next() {
-            let record = record?;
-            sequences.push(record.seq().to_vec());
-        }
-
-        // Encode sequences
+        let sequences = read_sequences(&self.input)?;
         let seq_refs: Vec<&[u8]> = sequences.iter().map(|s| s.as_slice()).collect();
         let encoded = encoder.encode_batch(&seq_refs)?;
-
-        // Save to NumPy file
-        log::info!(
-            "Encoded {} sequences with shape {:?}",
-            sequences.len(),
-            encoded.shape()
-        );
-        log::info!("Saving to {:?}", self.output);
-
-        // TODO: Implement NumPy .npy file writing
-        // For now, just print the shape
-        println!("Encoded shape: {:?}", encoded.shape());
-        println!("Output would be saved to: {:?}", self.output);
-
-        Ok(())
+        write_npy(&self.output, sequences.len(), &encoded)
     }
 }
 
@@ -222,33 +204,10 @@ impl IntegerCommand {
         let encoding_type: EncodingType = self.encoding_type.clone().into();
         let encoder = IntegerEncoder::new(encoding_type);
 
-        // Read sequences from input file
-        let mut reader = parse_fastx_file(&self.input)?;
-        let mut sequences = Vec::new();
-
-        while let Some(record) = reader.next() {
-            let record = record?;
-            sequences.push(record.seq().to_vec());
-        }
-
-        // Encode sequences
+        let sequences = read_sequences(&self.input)?;
         let seq_refs: Vec<&[u8]> = sequences.iter().map(|s| s.as_slice()).collect();
         let encoded = encoder.encode_batch(&seq_refs)?;
-
-        // Save to NumPy file
-        log::info!(
-            "Encoded {} sequences with shape {:?}",
-            sequences.len(),
-            encoded.shape()
-        );
-        log::info!("Saving to {:?}", self.output);
-
-        // TODO: Implement NumPy .npy file writing
-        // For now, just print the shape
-        println!("Encoded shape: {:?}", encoded.shape());
-        println!("Output would be saved to: {:?}", self.output);
-
-        Ok(())
+        write_npy(&self.output, sequences.len(), &encoded)
     }
 }
 

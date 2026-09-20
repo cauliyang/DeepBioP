@@ -19,6 +19,8 @@ noodles = { workspace = true }
 deepbiop-fq = { workspace = true }
 deepbiop-bam = { workspace = true }
 deepbiop-utils = { workspace = true }
+ndarray = { workspace = true }
+ndarray-npy = { workspace = true }
 deepbiop-fa = { workspace = true }
 deepbiop-core = { workspace = true }
 

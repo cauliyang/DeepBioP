@@ -8,7 +8,7 @@ from typing import TYPE_CHECKING
 if TYPE_CHECKING:
     from collections.abc import Iterator
 
-    from deepbiop.core import Record
+    from deepbiop.record import Record
 
 
 class Dataset(ABC):

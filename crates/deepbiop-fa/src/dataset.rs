@@ -106,7 +106,7 @@ impl deepbiop_core::dataset::IterableDataset for FastaDataset {
 ///
 /// This provides true streaming access without loading the entire file.
 struct FastaStreamIterator {
-    reader: fasta::io::Reader<BufReader<Box<dyn Read>>>,
+    reader: fasta::io::Reader<BufReader<Box<dyn Read + Send>>>,
 }
 
 impl FastaStreamIterator {

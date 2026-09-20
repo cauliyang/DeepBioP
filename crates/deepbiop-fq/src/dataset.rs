@@ -388,7 +388,7 @@ impl deepbiop_core::dataset::IterableDataset for FastqDataset {
 ///
 /// This provides true streaming access without batching.
 struct FastqStreamIterator {
-    reader: fastq::io::Reader<BufReader<Box<dyn Read>>>,
+    reader: fastq::io::Reader<BufReader<Box<dyn Read + Send>>>,
 }
 
 impl FastqStreamIterator {

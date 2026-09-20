@@ -1,5 +1,6 @@
 """Pytest configuration and shared fixtures for DeepBioP tests."""
 
+import random
 from pathlib import Path
 from typing import TYPE_CHECKING
 
@@ -34,9 +35,17 @@ def labels_csv(test_data_dir: Path) -> Path:
 
 
 @pytest.fixture(scope="session")
-def medium_fastq(test_data_dir: Path) -> Path:
-    """Return path to medium-sized test FASTQ file."""
-    return test_data_dir / "10000_records.fastq"
+def medium_fastq(tmp_path_factory: pytest.TempPathFactory) -> Path:
+    """Generate a 10,000-record FASTQ file (generated once per session, not committed)."""
+    path = tmp_path_factory.mktemp("data") / "10000_records.fastq"
+    rng = random.Random(0)
+    with path.open("w") as f:
+        for i in range(10_000):
+            length = rng.randint(50, 150)
+            seq = "".join(rng.choices("ACGT", k=length))
+            qual = "".join(chr(33 + rng.randint(2, 40)) for _ in range(length))
+            f.write(f"@read_{i}\n{seq}\n+\n{qual}\n")
+    return path
 
 
 @pytest.fixture(scope="session")

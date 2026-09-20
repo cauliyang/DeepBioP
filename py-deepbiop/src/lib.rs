@@ -45,7 +45,9 @@ fn deepbiop(m: &Bound<'_, PyModule>) -> PyResult<()> {
     // Make `import deepbiop.<sub>` resolve to the Rust submodules instead of the
     // stub-only directories shipped alongside the extension.
     let sys_modules = m.py().import("sys")?.getattr("modules")?;
-    for name in ["default", "fq", "bam", "utils", "fa", "core"] {
+    for name in [
+        "default", "fq", "bam", "utils", "fa", "core", "vcf", "gtf", "pytorch",
+    ] {
         sys_modules.set_item(format!("deepbiop.{name}"), m.getattr(name)?)?;
     }
 

@@ -22,12 +22,12 @@ import pytest
 class TestBatchGenerationPerformance:
     """Test batch generation throughput benchmarks."""
 
-    def test_batch_generation_throughput(self):
+    def test_batch_generation_throughput(self, medium_fastq):
         """Test that batch generation achieves >=10k sequences/second (SC-002)."""
         from deepbiop import pytorch
 
         # Load dataset
-        test_file = Path(__file__).parent / "data" / "10000_records.fastq"
+        test_file = medium_fastq
         dataset = pytorch.Dataset(str(test_file))
 
         # Create encoder
@@ -81,12 +81,12 @@ class TestBatchGenerationPerformance:
         # But we report the results for monitoring
         assert throughput > 0, "Throughput should be positive"
 
-    def test_encoding_performance(self):
+    def test_encoding_performance(self, medium_fastq):
         """Test encoding performance for different encoder types."""
         from deepbiop import pytorch
 
         # Load dataset
-        test_file = Path(__file__).parent / "data" / "10000_records.fastq"
+        test_file = medium_fastq
         dataset = pytorch.Dataset(str(test_file))
 
         # Test different encoders
@@ -135,12 +135,12 @@ class TestBatchGenerationPerformance:
 class TestMemoryFootprint:
     """Test memory footprint benchmarks."""
 
-    def test_dataset_summary_performance(self):
+    def test_dataset_summary_performance(self, medium_fastq):
         """Test that Dataset.summary() completes quickly (SC-007)."""
         from deepbiop import pytorch
 
         # Load dataset
-        test_file = Path(__file__).parent / "data" / "10000_records.fastq"
+        test_file = medium_fastq
         dataset = pytorch.Dataset(str(test_file))
 
         # Measure summary generation time (use perf_counter for better resolution)
@@ -177,12 +177,12 @@ class TestMemoryFootprint:
             f"Summary took too long: {elapsed_time}s (max: {max_time}s)"
         )
 
-    def test_validation_performance(self):
+    def test_validation_performance(self, medium_fastq):
         """Test that Dataset.validate() completes quickly."""
         from deepbiop import pytorch
 
         # Load dataset
-        test_file = Path(__file__).parent / "data" / "10000_records.fastq"
+        test_file = medium_fastq
         dataset = pytorch.Dataset(str(test_file))
 
         # Measure validation time (use perf_counter for better resolution)
@@ -208,14 +208,14 @@ class TestMemoryFootprint:
 class TestGILRelease:
     """Test GIL release for parallel operations."""
 
-    def test_gil_release_verification(self):
+    def test_gil_release_verification(self, medium_fastq):
         """Verify that batch operations release GIL for parallel processing (SC-007)."""
         import threading
 
         from deepbiop import pytorch
 
         # Load dataset
-        test_file = Path(__file__).parent / "data" / "10000_records.fastq"
+        test_file = medium_fastq
         dataset = pytorch.Dataset(str(test_file))
 
         encoder = pytorch.OneHotEncoder(encoding_type="dna")

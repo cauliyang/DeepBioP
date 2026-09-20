@@ -12,7 +12,7 @@ from typing import TYPE_CHECKING, Any
 if TYPE_CHECKING:
     import numpy as np
 
-    from deepbiop.core import Record
+    from deepbiop.record import Record
 
 
 class Transform(ABC):
