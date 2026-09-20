@@ -1,7 +1,7 @@
 use ahash::HashSet;
 use anyhow::{Ok, Result};
 use bstr::BString;
-use rand::{rng, Rng};
+use rand::{rng, RngExt};
 use rayon::prelude::*;
 use std::fs::File;
 use std::io::{self, BufReader};

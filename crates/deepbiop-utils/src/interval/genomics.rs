@@ -10,9 +10,10 @@ use std::str::FromStr;
 use pyo3_stub_gen::derive::*;
 
 /// A segment is a genomic interval defined by a chromosome, a start position and an end position.
+///
 /// The start position is inclusive and the end position is exclusive.
 #[gen_stub_pyclass]
-#[pyclass(module = "deepbiop.utils")]
+#[pyclass(module = "deepbiop.utils", skip_from_py_object)]
 #[derive(Debug, Builder, Clone, PartialEq)]
 #[builder(build_fn(validate = "Self::validate"))]
 pub struct GenomicInterval {

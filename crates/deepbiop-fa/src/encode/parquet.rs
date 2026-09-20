@@ -42,7 +42,7 @@ use pyo3_stub_gen::derive::*;
 /// let encoder = ParquetEncoder::new(options);
 /// ```
 #[gen_stub_pyclass]
-#[pyclass(module = "deepbiop.fa")]
+#[pyclass(module = "deepbiop.fa", skip_from_py_object)]
 #[derive(Debug, Builder, Default, Clone, Serialize, Deserialize)]
 pub struct ParquetEncoder {
     pub option: EncoderOption,

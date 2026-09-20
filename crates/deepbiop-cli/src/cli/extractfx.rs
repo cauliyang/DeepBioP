@@ -80,7 +80,7 @@ fn fa_worker(options: &ExtractFx) -> Result<()> {
         } else {
             options.fx.with_extension("selected.fa.gz")
         };
-        info!("write to {}", &file_path.display());
+        info!("write to {}", file_path.display());
         fa::io::write_bzip_fa_parallel_for_noodle_record(&records, file_path, options.threads)?;
     } else {
         let file_path = if let Some(path) = &options.output {
@@ -92,7 +92,7 @@ fn fa_worker(options: &ExtractFx) -> Result<()> {
         } else {
             options.fx.with_extension("selected.fa")
         };
-        info!("write to {}", &file_path.display());
+        info!("write to {}", file_path.display());
         fa::io::write_fa_for_noodle_record(&records, file_path)?;
     }
     Ok(())
@@ -127,7 +127,7 @@ fn fq_worker(options: &ExtractFx) -> Result<()> {
         } else {
             options.fx.with_extension("selected.fq.gz")
         };
-        info!("write to {}", &file_path.display());
+        info!("write to {}", file_path.display());
         fq::io::write_bgzip_fq_parallel_for_noodle_record(&records, file_path, options.threads)?;
     } else {
         let file_path = if let Some(path) = &options.output {
@@ -139,7 +139,7 @@ fn fq_worker(options: &ExtractFx) -> Result<()> {
         } else {
             options.fx.with_extension("selected.fq")
         };
-        info!("write to {}", &file_path.display());
+        info!("write to {}", file_path.display());
         fq::io::write_fq_for_noodle_record(&records, file_path)?;
     }
     Ok(())

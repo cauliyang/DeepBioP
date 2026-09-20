@@ -20,6 +20,13 @@ fn deepbiop(m: &Bound<'_, PyModule>) -> PyResult<()> {
     register_fa_module(m)?;
     register_core_module(m)?;
 
+    // Make `import deepbiop.<sub>` resolve to the Rust submodules instead of the
+    // stub-only directories shipped alongside the extension.
+    let sys_modules = m.py().import("sys")?.getattr("modules")?;
+    for name in ["default", "fq", "bam", "utils", "fa", "core"] {
+        sys_modules.set_item(format!("deepbiop.{name}"), m.getattr(name)?)?;
+    }
+
     Ok(())
 }
 

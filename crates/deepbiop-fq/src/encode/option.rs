@@ -7,7 +7,7 @@ use pyo3::prelude::*;
 use pyo3_stub_gen::derive::*;
 
 #[gen_stub_pyclass]
-#[pyclass(module = "deepbiop.fq")]
+#[pyclass(module = "deepbiop.fq", from_py_object)]
 #[derive(Debug, Builder, Default, Clone, Serialize, Deserialize)]
 pub struct EncoderOption {
     #[pyo3(get, set)]

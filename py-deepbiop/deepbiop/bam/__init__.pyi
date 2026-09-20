@@ -5,6 +5,12 @@ import os
 import pathlib
 import typing
 
+__all__ = [
+    "count_chimeric_reads_for_path",
+    "count_chimeric_reads_for_paths",
+    "left_right_soft_clip",
+]
+
 def count_chimeric_reads_for_path(
     bam: builtins.str | os.PathLike | pathlib.Path, threads: builtins.int | None = None
 ) -> builtins.int:

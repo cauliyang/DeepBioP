@@ -5,6 +5,20 @@ import os
 import pathlib
 import typing
 
+__all__ = [
+    "EncoderOption",
+    "ParquetEncoder",
+    "RecordData",
+    "convert_multiple_fas_to_one_fa",
+    "encode_fa_path_to_parquet",
+    "encode_fa_path_to_parquet_chunk",
+    "encode_fa_paths_to_parquet",
+    "select_record_from_fa",
+    "select_record_from_fa_by_random",
+    "write_fa",
+    "write_fa_parallel",
+]
+
 @typing.final
 class EncoderOption:
     r"""
@@ -29,7 +43,7 @@ class EncoderOption:
     @property
     def bases(self) -> builtins.list[builtins.int]: ...
     @bases.setter
-    def bases(self, value: builtins.list[builtins.int]) -> None: ...
+    def bases(self, value: typing.Sequence[builtins.int]) -> None: ...
     def __new__(cls, bases: builtins.str) -> EncoderOption: ...
 
 @typing.final

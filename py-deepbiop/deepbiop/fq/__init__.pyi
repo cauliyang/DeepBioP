@@ -5,6 +5,30 @@ import os
 import pathlib
 import typing
 
+__all__ = [
+    "EncoderOption",
+    "FastqDataset",
+    "FastqIterator",
+    "FastqRecord",
+    "ParquetEncoder",
+    "Predict",
+    "RecordData",
+    "convert_multiple_fqs_to_one_fq",
+    "encode_fq_path_to_parquet",
+    "encode_fq_path_to_parquet_chunk",
+    "encode_fq_paths_to_parquet",
+    "encode_qual",
+    "fastq_to_fasta",
+    "get_label_region",
+    "load_predicts_from_batch_pt",
+    "load_predicts_from_batch_pts",
+    "select_record_from_fq",
+    "select_record_from_fq_by_random",
+    "test_predicts",
+    "write_fq",
+    "write_fq_parallel",
+]
+
 @typing.final
 class EncoderOption:
     @property
@@ -14,7 +38,7 @@ class EncoderOption:
     @property
     def bases(self) -> builtins.list[builtins.int]: ...
     @bases.setter
-    def bases(self, value: builtins.list[builtins.int]) -> None: ...
+    def bases(self, value: typing.Sequence[builtins.int]) -> None: ...
     @property
     def threads(self) -> builtins.int: ...
     @threads.setter
@@ -78,7 +102,7 @@ class Predict:
     @property
     def prediction(self) -> builtins.list[builtins.int]: ...
     @prediction.setter
-    def prediction(self, value: builtins.list[builtins.int]) -> None: ...
+    def prediction(self, value: typing.Sequence[builtins.int]) -> None: ...
     @property
     def seq(self) -> builtins.str: ...
     @seq.setter

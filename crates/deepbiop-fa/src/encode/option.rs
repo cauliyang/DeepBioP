@@ -24,7 +24,7 @@ pub const BASES: &[u8] = b"ATCGN";
 /// let options = EncoderOption::default();
 /// ```
 #[gen_stub_pyclass]
-#[pyclass(module = "deepbiop.fa")]
+#[pyclass(module = "deepbiop.fa", from_py_object)]
 #[derive(Debug, Builder, Default, Clone, Serialize, Deserialize)]
 pub struct EncoderOption {
     #[pyo3(get, set)]

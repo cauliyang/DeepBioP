@@ -30,7 +30,7 @@ pub struct ParquetData {
 }
 
 #[gen_stub_pyclass]
-#[pyclass(module = "deepbiop.fq")]
+#[pyclass(module = "deepbiop.fq", skip_from_py_object)]
 #[derive(Debug, Builder, Default, Clone, Serialize, Deserialize)]
 pub struct ParquetEncoder {
     pub option: EncoderOption,

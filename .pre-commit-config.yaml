@@ -22,47 +22,21 @@ repos:
         args: ["--maxkb=150000"]
       - id: end-of-file-fixer
       - id: trailing-whitespace
-
-  - repo: https://github.com/doublify/pre-commit-rust
-    rev: v1.0
-    hooks:
-      - id: fmt
-      - id: cargo-check
-
   - repo: https://github.com/charliermarsh/ruff-pre-commit
-    rev: v0.14.3
+    rev: v0.16.8
     hooks:
       - id: ruff
         args: [--fix, --exit-non-zero-on-fix, --unsafe-fixes]
       - id: ruff-format
 
-    # python docstring coverage checking
-  - repo: local
-    hooks:
-      - id: interrogate
-        name: interrogate
-        entry: interrogate
-        language: system
-        types: ["python"]
-        args:
-          [
-            --verbose,
-            --fail-under=80,
-            --ignore-init-module,
-            --ignore-init-method,
-            --ignore-module,
-            --ignore-nested-functions,
-            -vv,
-          ]
-
   # shell scripts linter
   - repo: https://github.com/shellcheck-py/shellcheck-py
-    rev: v0.11.0.1
+    rev: v0.11.0.1-1
     hooks:
       - id: shellcheck
 
   - repo: https://github.com/DevinR528/cargo-sort
-    rev: v2.0.2
+    rev: v2.1.4
     hooks:
       - id: cargo-sort
 

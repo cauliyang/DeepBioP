@@ -6,10 +6,24 @@ import os
 import pathlib
 import typing
 
+__all__ = [
+    "CompressedType",
+    "GenomicInterval",
+    "PslAlignment",
+    "SequenceFileType",
+    "check_compressed_type",
+    "generate_unmaped_intervals",
+    "highlight_targets",
+    "majority_voting",
+    "parse_psl_by_qname",
+    "remove_intervals_and_keep_left",
+]
+
 @typing.final
 class GenomicInterval:
     r"""
     A segment is a genomic interval defined by a chromosome, a start position and an end position.
+
     The start position is inclusive and the end position is exclusive.
     """
 

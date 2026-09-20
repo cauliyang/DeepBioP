@@ -31,7 +31,7 @@ use std::io::Read;
 /// * `Zstd` - Zstandard compression format
 /// * `Unknown` - Unknown or unrecognized compression format
 #[gen_stub_pyclass_enum]
-#[pyclass(eq, eq_int, module = "deepbiop.utils")]
+#[pyclass(eq, eq_int, module = "deepbiop.utils", skip_from_py_object)]
 #[derive(Debug, PartialEq, Clone, Eq, Hash)]
 pub enum CompressedType {
     Uncompress,
@@ -177,7 +177,7 @@ pub fn create_reader_for_compressed_file<P: AsRef<Path>>(
 
 /// Represents different types of sequence file formats
 #[gen_stub_pyclass_enum]
-#[pyclass(eq, eq_int, module = "deepbiop.utils")]
+#[pyclass(eq, eq_int, module = "deepbiop.utils", skip_from_py_object)]
 #[derive(Debug, PartialEq, Eq, Clone, Hash)]
 pub enum SequenceFileType {
     Fasta,

@@ -15,7 +15,7 @@ use noodles::fasta;
 use noodles::fastq::record::Record as FastqRecord;
 use rayon::prelude::*;
 
-use rand::{rng, Rng};
+use rand::{rng, RngExt};
 
 use crate::encode::RecordData;
 use deepbiop_utils as utils;

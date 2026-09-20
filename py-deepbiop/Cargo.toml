@@ -26,4 +26,4 @@ numpy = { workspace = true }
 parquet = { workspace = true }
 
 [build-dependencies]
-pyo3-build-config = "0.23"
+pyo3-build-config = "0.29"

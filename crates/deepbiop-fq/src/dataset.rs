@@ -44,7 +44,7 @@ impl FastqRecord {
 }
 
 #[gen_stub_pyclass]
-#[pyclass(name = "FastqDataset", module = "deepbiop.fq")]
+#[pyclass(name = "FastqDataset", module = "deepbiop.fq", skip_from_py_object)]
 #[derive(Clone)]
 pub struct FastqDataset {
     file_path: String,

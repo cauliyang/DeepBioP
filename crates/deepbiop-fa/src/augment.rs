@@ -1,7 +1,7 @@
 use anyhow::Result;
 use noodles::fasta::record::Definition;
 use noodles::fasta::Record as FastaRecord;
-use rand::Rng;
+use rand::RngExt;
 
 /// Randomly cuts FASTA sequences to create augmented sequences
 ///

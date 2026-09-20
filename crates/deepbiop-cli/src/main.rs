@@ -1,7 +1,6 @@
 use clap::{Command, CommandFactory, Parser, Subcommand};
 use env_logger::Builder;
 use human_panic::setup_panic;
-use log::debug;
 use log::info;
 use log::LevelFilter;
 use std::fmt::Display;
@@ -102,7 +101,6 @@ fn main() -> Result<()> {
         print_completions(generator, &mut cmd);
         return Ok(());
     }
-
 
     if cli.markdown_help {
         clap_markdown::print_help_markdown::<Cli>();
