@@ -323,7 +323,7 @@ mod tests {
         let decoder = bgzf::io::Reader::new(file.reopen().unwrap());
         let mut reader = fastq::io::Reader::new(decoder);
 
-        let actual_result: Vec<RecordData> = reader
+        let mut actual_result: Vec<RecordData> = reader
             .records()
             .par_bridge()
             .map(|record| {
@@ -339,7 +339,34 @@ mod tests {
             })
             .collect();
 
-        actual_result.iter().zip(records.iter()).for_each(|(a, b)| {
+        // A sequential read must reproduce the input order exactly.
+        let mut sequential_reader =
+            fastq::io::Reader::new(bgzf::io::Reader::new(file.reopen().unwrap()));
+        let sequential: Vec<RecordData> = sequential_reader
+            .records()
+            .map(|record| {
+                let record = record.unwrap();
+                RecordData {
+                    id: record.definition().name().into(),
+                    seq: record.sequence().into(),
+                    qual: record.quality_scores().into(),
+                }
+            })
+            .collect();
+        assert_eq!(sequential.len(), records.len());
+        sequential.iter().zip(records.iter()).for_each(|(a, b)| {
+            assert_eq!(a.id, b.id);
+            assert_eq!(a.seq, b.seq);
+            assert_eq!(a.qual, b.qual);
+        });
+
+        // par_bridge does not preserve the input order, so compare as multisets.
+        actual_result.sort_by(|a, b| a.id.cmp(&b.id));
+        let mut expected: Vec<&RecordData> = records.iter().collect();
+        expected.sort_by(|a, b| a.id.cmp(&b.id));
+
+        assert_eq!(actual_result.len(), expected.len());
+        actual_result.iter().zip(expected).for_each(|(a, b)| {
             assert_eq!(a.id, b.id);
             assert_eq!(a.seq, b.seq);
             assert_eq!(a.qual, b.qual);

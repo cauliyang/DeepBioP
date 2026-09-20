@@ -1,4 +1,4 @@
-use anyhow::Result;
+use anyhow::{Context, Result};
 use noodles::{bam, bgzf};
 use rayon::prelude::*;
 use std::{fs::File, path::Path};
@@ -15,17 +15,22 @@ pub fn bam2fq(bam: &Path, threads: Option<usize>) -> Result<Vec<fastq::Record>> 
     let mut reader = bam::io::Reader::from(decoder);
     let _header = reader.read_header()?;
 
-    reader
+    let records = reader
         .records()
-        .par_bridge()
-        .map(|result| {
-            let record = result.unwrap();
+        .collect::<std::io::Result<Vec<_>>>()
+        .context("Failed to read BAM records")?;
 
+    // Conversion is parallel but index-preserving, so the FASTQ output keeps the
+    // BAM record order.
+    records
+        .into_par_iter()
+        .map(|record| {
             let seq = record.sequence().as_ref().to_vec();
             let qual = record.quality_scores().as_ref().to_vec();
 
             if seq.len() != qual.len() {
-                let name = String::from_utf8_lossy(record.name().unwrap().as_ref()).to_string();
+                let name =
+                    String::from_utf8_lossy(record.name().unwrap_or_default().as_ref()).to_string();
                 return Err(anyhow::anyhow!(
                     "{} seq and qual length are not equal",
                     name
@@ -33,7 +38,7 @@ pub fn bam2fq(bam: &Path, threads: Option<usize>) -> Result<Vec<fastq::Record>> 
             }
 
             let fq_record = fastq::Record::new(
-                fastq::record::Definition::new(record.name().unwrap().to_vec(), ""),
+                fastq::record::Definition::new(record.name().unwrap_or_default().to_vec(), ""),
                 seq,
                 qual,
             );

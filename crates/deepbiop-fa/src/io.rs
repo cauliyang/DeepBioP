@@ -1,5 +1,5 @@
 use ahash::HashSet;
-use anyhow::{Ok, Result};
+use anyhow::{Context, Ok, Result};
 use bstr::BString;
 use rayon::prelude::*;
 use std::fs::File;
@@ -274,19 +274,18 @@ pub fn select_record_from_fa_by_stream<P: AsRef<Path>>(
         .map(BufReader::new)
         .map(fasta::io::Reader::new)?;
 
-    reader
+    let records = reader
         .records()
-        .par_bridge()
-        .filter_map(|record| {
-            let record = record.unwrap();
+        .collect::<std::io::Result<Vec<_>>>()
+        .context("Failed to read FASTA records")?;
+
+    Ok(records
+        .into_iter()
+        .filter(|record| {
             let id: BString = record.name().to_vec().into();
-            if selected_records.contains(&id) {
-                Some(Ok(record))
-            } else {
-                None
-            }
+            selected_records.contains(&id)
         })
-        .collect()
+        .collect())
 }
 
 #[cfg(test)]

@@ -3,7 +3,7 @@ use noodles::sam::record::Cigar;
 use std::fs::File;
 use std::path::Path;
 
-use anyhow::Result;
+use anyhow::{Context, Result};
 use bstr::BString;
 use deepbiop_utils as utils;
 use noodles::{bam, bgzf, sam};
@@ -193,27 +193,22 @@ where
     let header = reader.read_header()?;
     let references = header.reference_sequences();
 
-    reader
+    let records = reader
         .records()
-        .par_bridge()
-        .filter_map(|result| {
-            let record = result.unwrap();
-            if is_retain_record(&record) && is_chimeric_record(&record) {
-                if let Some(predict_function) = &predict {
-                    if predict_function(&record) {
-                        Some(record)
-                    } else {
-                        None
-                    }
-                } else {
-                    Some(record)
-                }
-            } else {
-                None
-            }
+        .collect::<std::io::Result<Vec<_>>>()
+        .context("Failed to read BAM records")?;
+
+    // Index-preserving parallel map, so events keep the BAM record order.
+    let events = records
+        .into_par_iter()
+        .filter(|record| {
+            is_retain_record(record)
+                && is_chimeric_record(record)
+                && predict.as_ref().is_none_or(|f| f(record))
         })
         .map(|record| ChimericEvent::parse_noodle_bam_record(&record, references))
-        .collect()
+        .collect::<Result<Vec<_>>>()?;
+    Ok(events)
 }
 
 #[cfg(test)]

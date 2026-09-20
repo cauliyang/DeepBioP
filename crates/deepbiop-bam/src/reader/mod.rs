@@ -70,11 +70,12 @@ impl BamReader {
     /// println!("Found {} alignments", records.len());
     /// ```
     pub fn read_all(&mut self) -> Result<Vec<bam::Record>> {
+        // Decoding is inherently serial, so read in file order first; only the
+        // per-record work below is parallel (which keeps the output ordered).
         self.reader
             .records()
-            .par_bridge()
-            .map(|result| result.context("Failed to read BAM record"))
-            .collect::<Result<Vec<_>>>()
+            .collect::<std::io::Result<Vec<_>>>()
+            .context("Failed to read BAM records")
     }
 
     /// Filter alignments by mapping quality
@@ -93,22 +94,20 @@ impl BamReader {
     /// println!("Found {} high-quality alignments", high_quality.len());
     /// ```
     pub fn filter_by_mapping_quality(&mut self, min_quality: u8) -> Result<Vec<bam::Record>> {
-        self.reader
+        let records = self
+            .reader
             .records()
-            .par_bridge()
-            .map(|result| result.context("Failed to read BAM record"))
-            .filter_map(|result| match result {
-                Ok(record) => {
-                    if let Some(mq) = record.mapping_quality() {
-                        if u8::from(mq) >= min_quality {
-                            return Some(Ok(record));
-                        }
-                    }
-                    None
-                }
-                Err(e) => Some(Err(e)),
+            .collect::<std::io::Result<Vec<_>>>()
+            .context("Failed to read BAM records")?;
+
+        Ok(records
+            .into_par_iter()
+            .filter(|record| {
+                record
+                    .mapping_quality()
+                    .is_some_and(|mq| u8::from(mq) >= min_quality)
             })
-            .collect::<Result<Vec<_>>>()
+            .collect())
     }
 
     /// Extract read pairs (for paired-end sequencing)
@@ -125,22 +124,20 @@ impl BamReader {
     /// println!("Found {} read pairs", pairs.len());
     /// ```
     pub fn extract_read_pairs(&mut self) -> Result<Vec<bam::Record>> {
-        self.reader
+        let records = self
+            .reader
             .records()
-            .par_bridge()
-            .map(|result| result.context("Failed to read BAM record"))
-            .filter_map(|result| match result {
-                Ok(record) => {
-                    // Check if paired, both mapped, and properly paired
-                    let flags = record.flags();
-                    if flags.is_segmented() && !flags.is_unmapped() && !flags.is_mate_unmapped() {
-                        return Some(Ok(record));
-                    }
-                    None
-                }
-                Err(e) => Some(Err(e)),
+            .collect::<std::io::Result<Vec<_>>>()
+            .context("Failed to read BAM records")?;
+
+        // Paired, both mates mapped
+        Ok(records
+            .into_par_iter()
+            .filter(|record| {
+                let flags = record.flags();
+                flags.is_segmented() && !flags.is_unmapped() && !flags.is_mate_unmapped()
             })
-            .collect::<Result<Vec<_>>>()
+            .collect())
     }
 
     /// Query alignments in a specific genomic region (requires a BAM index).
@@ -217,13 +214,15 @@ impl BamReader {
     /// println!("Extracted features from {} alignments", features.len());
     /// ```
     pub fn extract_features(&mut self) -> Result<Vec<AlignmentFeatures>> {
-        self.reader
+        let records = self
+            .reader
             .records()
-            .par_bridge()
-            .map(|result| {
-                let record = result.context("Failed to read BAM record")?;
-                AlignmentFeatures::from_record(&record)
-            })
+            .collect::<std::io::Result<Vec<_>>>()
+            .context("Failed to read BAM records")?;
+
+        records
+            .into_par_iter()
+            .map(|record| AlignmentFeatures::from_record(&record))
             .collect::<Result<Vec<_>>>()
     }
 
@@ -239,24 +238,16 @@ impl BamReader {
     /// println!("Found {} chimeric reads", chimeric_count);
     /// ```
     pub fn count_chimeric(&mut self) -> Result<usize> {
-        self.reader
+        let records = self
+            .reader
             .records()
-            .par_bridge()
-            .try_fold(
-                || 0usize,
-                |acc, result| {
-                    let record = result.context("Failed to read BAM record")?;
-                    Ok::<usize, anyhow::Error>(if record.flags().is_supplementary() {
-                        acc + 1
-                    } else {
-                        acc
-                    })
-                },
-            )
-            .try_reduce(
-                || 0usize,
-                |a: usize, b: usize| Ok::<usize, anyhow::Error>(a + b),
-            )
+            .collect::<std::io::Result<Vec<_>>>()
+            .context("Failed to read BAM records")?;
+
+        Ok(records
+            .into_par_iter()
+            .filter(|record| record.flags().is_supplementary())
+            .count())
     }
 }
 

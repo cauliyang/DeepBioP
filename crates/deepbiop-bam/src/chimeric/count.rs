@@ -1,5 +1,5 @@
 use ahash::HashMap;
-use anyhow::Result;
+use anyhow::{Context, Result};
 use deepbiop_utils as utils;
 use noodles::bam;
 use noodles::bgzf;
@@ -57,19 +57,15 @@ pub fn chimeric_reads_for_bam<P: AsRef<Path>>(
     let mut reader = bam::io::Reader::from(decoder);
     let _header = reader.read_header()?;
 
-    let res = reader
+    let records = reader
         .records()
-        .par_bridge()
-        .filter_map(|result| {
-            let record = result.unwrap();
-            if is_retain_record(&record) && is_chimeric_record(&record) {
-                Some(record)
-            } else {
-                None
-            }
-        })
-        .collect::<Vec<bam::Record>>();
-    Ok(res)
+        .collect::<std::io::Result<Vec<_>>>()
+        .context("Failed to read BAM records")?;
+
+    Ok(records
+        .into_par_iter()
+        .filter(|record| is_retain_record(record) && is_chimeric_record(record))
+        .collect::<Vec<bam::Record>>())
 }
 
 /// Count the number of chimeric reads in a BAM file.
