@@ -5,6 +5,7 @@
 //! `__getitem__`, `__iter__`) for FASTQ files.
 
 use pyo3::prelude::*;
+use pyo3_stub_gen::derive::*;
 use pyo3::types::PyDict;
 use std::fs::File;
 use std::io::{BufReader, Seek, SeekFrom};
@@ -102,6 +103,7 @@ impl Storage {
 /// - `__len__()`: number of records
 /// - `__getitem__(i)`: `{"sequence": bytes, "quality": bytes}` (after `transform`, if any)
 /// - `__iter__()`: sequential iteration
+#[gen_stub_pyclass]
 #[pyclass(name = "Dataset", module = "deepbiop.pytorch", sequence)]
 pub struct Dataset {
     storage: Storage,
@@ -110,6 +112,7 @@ pub struct Dataset {
     transform: Option<Py<PyAny>>,
 }
 
+#[gen_stub_pymethods]
 #[pymethods]
 impl Dataset {
     /// Create a new Dataset from a FASTQ file (plain, gzip or bgzip).
@@ -321,12 +324,14 @@ impl Dataset {
 }
 
 /// Iterator for Dataset.
+#[gen_stub_pyclass]
 #[pyclass(name = "DatasetIterator", module = "deepbiop.pytorch")]
 pub struct DatasetIterator {
     dataset: Py<Dataset>,
     current_idx: usize,
 }
 
+#[gen_stub_pymethods]
 #[pymethods]
 impl DatasetIterator {
     fn __iter__(slf: PyRef<'_, Self>) -> PyRef<'_, Self> {

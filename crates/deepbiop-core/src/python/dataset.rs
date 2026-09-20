@@ -143,7 +143,7 @@ impl PyBatch {
 /// # Fixed-length padding
 /// batch = collate_batch(records, padding="fixed", max_length=10)
 /// ```
-#[gen_stub_pyfunction()]
+#[gen_stub_pyfunction(module = "deepbiop.core")]
 #[pyfunction]
 #[pyo3(signature = (records, padding="longest", max_length=None, pad_value=0, truncate=false))]
 fn collate_batch(

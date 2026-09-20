@@ -7,12 +7,15 @@ import typing
 
 __all__ = [
     "EncoderOption",
+    "FastaStreamDataset",
+    "FastaStreamIterator",
     "ParquetEncoder",
     "RecordData",
     "convert_multiple_fas_to_one_fa",
     "encode_fa_path_to_parquet",
     "encode_fa_path_to_parquet_chunk",
     "encode_fa_paths_to_parquet",
+    "fasta_to_fastq",
     "select_record_from_fa",
     "select_record_from_fa_by_random",
     "write_fa",
@@ -38,12 +41,85 @@ class EncoderOption:
     let options = EncoderOption::default();
     ```
     """
-
     @property
     def bases(self) -> builtins.list[builtins.int]: ...
     @bases.setter
     def bases(self, value: typing.Sequence[builtins.int]) -> None: ...
     def __new__(cls, bases: builtins.str) -> EncoderOption: ...
+
+@typing.final
+class FastaStreamDataset:
+    r"""Streaming FASTA dataset for efficient iteration over large files.
+
+    This dataset provides memory-efficient streaming iteration over FASTA files,
+    reading records one at a time without loading the entire file into memory.
+    Yields records as dictionaries with NumPy arrays for zero-copy efficiency.
+
+    Note: FASTA files do not contain quality scores.
+
+    # Examples
+
+    ```python
+    from deepbiop.fa import FastaStreamDataset
+
+    dataset = FastaStreamDataset("genome.fasta.gz")
+    for record in dataset:
+        seq = record["sequence"]  # NumPy array
+        print(f"ID: {record['id']}, Length: {len(seq)}")
+    ```
+    """
+    def __new__(cls, file_path: builtins.str) -> FastaStreamDataset:
+        r"""Create a new streaming FASTA dataset.
+
+        # Arguments
+
+        * `file_path` - Path to FASTA file (supports .fasta, .fa, .fasta.gz, .fa.gz)
+
+        # Returns
+
+        FastaStreamDataset instance
+
+        # Raises
+
+        * `FileNotFoundError` - If file doesn't exist
+        * `IOError` - If file cannot be opened
+        """
+    def __iter__(self) -> FastaStreamIterator:
+        r"""Return iterator over dataset records.
+
+        Each record is a dictionary with:
+        - 'id': str - Sequence identifier
+        - 'sequence': np.ndarray (uint8) - Nucleotide sequence bytes
+        - 'description': Optional[str] - Sequence description
+        """
+    def __len__(self) -> builtins.int:
+        r"""Get estimated number of records in dataset.
+
+        # Returns
+
+        int - Estimated record count (0 if unavailable)
+        """
+    def __repr__(self) -> builtins.str:
+        r"""Human-readable representation."""
+    def __getnewargs__(self) -> tuple[builtins.str]:
+        r"""Provide arguments for __new__ during unpickling.
+
+        This is called by pickle to get arguments to pass to __new__().
+
+        # Returns
+
+        Tuple of (file_path,) to pass to __new__
+        """
+    def __getstate__(self) -> dict:
+        r"""Pickling support for multiprocessing (DataLoader with num_workers > 0)."""
+    def __setstate__(self, state: dict) -> None:
+        r"""Unpickling support for multiprocessing."""
+
+@typing.final
+class FastaStreamIterator:
+    r"""Iterator for streaming FASTA dataset."""
+    def __iter__(self) -> FastaStreamIterator: ...
+    def __next__(self) -> dict | None: ...
 
 @typing.final
 class ParquetEncoder:
@@ -65,7 +141,6 @@ class ParquetEncoder:
     let encoder = ParquetEncoder::new(options);
     ```
     """
-
     def __new__(cls, option: EncoderOption) -> ParquetEncoder: ...
 
 @typing.final
@@ -100,6 +175,16 @@ def encode_fa_paths_to_parquet(
     fa_path: typing.Sequence[builtins.str | os.PathLike | pathlib.Path],
     bases: builtins.str,
 ) -> None: ...
+def fasta_to_fastq(
+    fasta_path: builtins.str | os.PathLike | pathlib.Path,
+    fastq_path: builtins.str | os.PathLike | pathlib.Path,
+) -> None:
+    r"""Convert FASTA file to FASTQ file with default quality scores.
+
+    Since FASTA files don't contain quality information, assigns
+    default quality score (Phred+33 Q40 = '~') to all bases.
+    """
+
 def select_record_from_fa(
     selected_reads: typing.Sequence[builtins.str],
     fq: builtins.str | os.PathLike | pathlib.Path,
@@ -119,17 +204,3 @@ def write_fa_parallel(
     file_path: builtins.str | os.PathLike | pathlib.Path,
     threads: builtins.int,
 ) -> None: ...
-def fasta_to_fastq(
-    fasta_path: builtins.str | os.PathLike | pathlib.Path,
-    fastq_path: builtins.str | os.PathLike | pathlib.Path,
-) -> None:
-    """Convert FASTA file to FASTQ file with default quality scores.
-
-    Since FASTA files don't contain quality information, assigns
-    default quality score (Phred+33 Q40 = '~') to all bases.
-    Q40 represents 99.99% base call accuracy.
-
-    Args:
-        fasta_path: Path to input FASTA file
-        fastq_path: Path to output FASTQ file
-    """

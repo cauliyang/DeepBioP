@@ -113,17 +113,19 @@ class TestKmerEncoder:
             k=3, canonical=False, encoding_type="dna"
         )
 
-        record = {"sequence": b"ACGT"}
+        # 64 3-mers fold into 32 canonical ones
+        assert encoder_non_canonical({"sequence": b"ACGT"})["sequence"].shape == (64,)
+        assert encoder_canonical({"sequence": b"ACGT"})["sequence"].shape == (32,)
 
-        result_canonical = encoder_canonical(record)
-        encoded_canonical = result_canonical["sequence"]
-
-        result_non_canonical = encoder_non_canonical(record)
-        encoded_non_canonical = result_non_canonical["sequence"]
-
-        # Both should have 64 features for k=3
-        assert encoded_canonical.shape == (64,)
-        assert encoded_non_canonical.shape == (64,)
+        # A k-mer and its reverse complement land on the same index only when canonical
+        fwd, rc = {"sequence": b"ACG"}, {"sequence": b"CGT"}
+        np.testing.assert_array_equal(
+            encoder_canonical(fwd)["sequence"], encoder_canonical(rc)["sequence"]
+        )
+        assert not np.array_equal(
+            encoder_non_canonical(fwd)["sequence"],
+            encoder_non_canonical(rc)["sequence"],
+        )
 
     def test_kmer_batch_encoding(self):
         """Test encoding multiple sequences."""
@@ -158,12 +160,9 @@ class TestKmerEncoder:
         encoder = dbp.KmerEncoder(k=5, canonical=False, encoding_type="dna")
         record = {"sequence": b"ACG"}  # Only 3 bases, but k=5
 
-        result = encoder(record)
-        encoded = result["sequence"]
-
-        # Should return zeros for sequence shorter than k
-        assert encoded.shape == (4**5,)
-        assert encoded.sum() == 0
+        # A too-short sequence has no k-mers; that is an error, not a zero vector.
+        with pytest.raises(ValueError, match="shorter than k"):
+            encoder(record)
 
 
 class TestIntegerEncoder:

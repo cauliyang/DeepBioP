@@ -5,6 +5,7 @@
 
 use numpy::{PyArray2, PyArrayMethods, PyUntypedArrayMethods};
 use pyo3::prelude::*;
+use pyo3_stub_gen::derive::*;
 use pyo3::types::{PyDict, PyList};
 
 /// Default collate function for batching variable-length sequences.
@@ -31,6 +32,7 @@ use pyo3::types::{PyDict, PyList};
 ///     >>> batch = default_collate([sample1, sample2, sample3])
 ///     >>> batch['sequences'].shape
 ///     (3, 150, 4)  # 3 samples, padded to 150bp, 4 features (one-hot DNA)
+#[gen_stub_pyfunction(module = "deepbiop.pytorch")]
 #[pyfunction]
 pub fn default_collate(py: Python, samples: &Bound<'_, PyList>) -> PyResult<Py<PyDict>> {
     if samples.is_empty() {

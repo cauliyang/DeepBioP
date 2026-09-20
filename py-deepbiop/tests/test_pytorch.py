@@ -11,6 +11,8 @@ from pathlib import Path
 
 import pytest
 
+pytest.importorskip("torch")
+
 from deepbiop.bam import BamStreamDataset
 from deepbiop.fa import FastaStreamDataset
 from deepbiop.fq import FastqStreamDataset

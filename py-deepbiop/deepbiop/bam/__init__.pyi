@@ -6,10 +6,165 @@ import pathlib
 import typing
 
 __all__ = [
+    "AlignmentFeatures",
+    "BamReader",
+    "BamStreamDataset",
+    "BamStreamIterator",
     "count_chimeric_reads_for_path",
     "count_chimeric_reads_for_paths",
     "left_right_soft_clip",
 ]
+
+@typing.final
+class AlignmentFeatures:
+    r"""Python wrapper for AlignmentFeatures."""
+    @property
+    def mapping_quality(self) -> builtins.int: ...
+    @property
+    def is_mapped(self) -> builtins.bool: ...
+    @property
+    def is_paired(self) -> builtins.bool: ...
+    @property
+    def is_supplementary(self) -> builtins.bool: ...
+    @property
+    def is_secondary(self) -> builtins.bool: ...
+    @property
+    def is_mate_mapped(self) -> builtins.bool | None: ...
+    @property
+    def template_length(self) -> builtins.int: ...
+    @property
+    def aligned_length(self) -> builtins.int: ...
+    @property
+    def num_matches(self) -> builtins.int: ...
+    @property
+    def num_insertions(self) -> builtins.int: ...
+    @property
+    def num_deletions(self) -> builtins.int: ...
+    @property
+    def num_soft_clips(self) -> builtins.int: ...
+    @property
+    def num_hard_clips(self) -> builtins.int: ...
+    @property
+    def edit_distance(self) -> builtins.int | None: ...
+    @property
+    def tags(self) -> builtins.dict[builtins.str, builtins.str]: ...
+    def identity(self) -> builtins.float: ...
+    def indel_rate(self) -> builtins.float: ...
+    def is_high_quality(self, min_quality: builtins.int) -> builtins.bool: ...
+    def is_proper_pair(self, max_insert_size: builtins.int) -> builtins.bool: ...
+    def __repr__(self) -> builtins.str: ...
+
+@typing.final
+class BamReader:
+    r"""Python wrapper for BamReader."""
+    def __new__(
+        cls,
+        path: builtins.str | os.PathLike | pathlib.Path,
+        threads: builtins.int | None = None,
+    ) -> BamReader: ...
+    def filter_by_mapping_quality(self, min_quality: builtins.int) -> builtins.int: ...
+    def extract_read_pairs(self) -> builtins.int: ...
+    def extract_features(self) -> builtins.list[AlignmentFeatures]: ...
+    def count_chimeric(self) -> builtins.int: ...
+    def __repr__(self) -> builtins.str: ...
+
+@typing.final
+class BamStreamDataset:
+    r"""Streaming BAM dataset for efficient iteration over large files.
+
+    This dataset provides memory-efficient streaming iteration over BAM files,
+    reading alignment records one at a time without loading the entire file into memory.
+    Yields records as dictionaries with NumPy arrays for zero-copy efficiency.
+    Supports multithreaded bgzf decompression for improved performance.
+
+    # Examples
+
+    ```python
+    from deepbiop.bam import BamStreamDataset
+
+    dataset = BamStreamDataset("alignments.bam", threads=4)
+    for record in dataset:
+        seq = record["sequence"]  # NumPy array
+        qual = record["quality"]  # NumPy array
+        print(f"ID: {record['id']}, Length: {len(seq)}")
+    ```
+    """
+    def __new__(
+        cls, file_path: builtins.str, threads: builtins.int | None = None
+    ) -> BamStreamDataset:
+        r"""Create a new streaming BAM dataset.
+
+        # Arguments
+
+        * `file_path` - Path to BAM file
+        * `threads` - Optional number of threads for bgzf decompression (None = use all available)
+
+        # Returns
+
+        BamStreamDataset instance
+
+        # Raises
+
+        * `FileNotFoundError` - If file doesn't exist
+        * `IOError` - If file cannot be opened
+        """
+    def __iter__(self) -> BamStreamIterator:
+        r"""Return iterator over dataset records.
+
+        Each record is a dictionary with:
+        - 'id': str - Read name/identifier
+        - 'sequence': np.ndarray (uint8) - Nucleotide sequence bytes
+        - 'quality': np.ndarray (uint8) - Quality score bytes
+        - 'description': Optional[str] - Additional description (usually None for BAM)
+        """
+    def __len__(self) -> builtins.int:
+        r"""Return the number of records in the dataset.
+
+        This is computed once at dataset creation by reading through the file.
+        Required for PyTorch DataLoader compatibility.
+        """
+    def __getitem__(self, index: builtins.int) -> dict:
+        r"""Get record by index (map-style dataset access).
+
+        # Arguments
+
+        * `index` - Index of record to retrieve
+
+        # Returns
+
+        Dict with 'id', 'sequence', 'quality', 'description'
+
+        # Performance Warning
+
+        **This implementation has O(n) complexity per call**, where `n` is `index`: it opens
+        the file and reads through `index` records before returning the target record. Each
+        call reopens the file and starts from the beginning; there is no caching or state
+        preservation between calls.
+
+        This is acceptable for PyTorch DataLoader with `num_workers=0` and sequential iteration,
+        but will be inefficient for random access or repeated calls. For better performance,
+        consider loading all records into memory first or using the iterator interface.
+
+        **Recommended**: Use iterator-based access via `__iter__()` for true O(n) streaming.
+        """
+    def __repr__(self) -> builtins.str:
+        r"""Human-readable representation."""
+    def __getnewargs__(self) -> tuple[builtins.str, builtins.int | None]:
+        r"""Arguments passed to `__new__` when unpickling (pickle protocol 2+).
+
+        Extension types have no default `__new__`, so `__reduce_ex__` needs these to
+        reconstruct the instance before `__setstate__` restores the rest of the state.
+        """
+    def __getstate__(self) -> dict:
+        r"""Pickling support for multiprocessing (DataLoader with num_workers > 0)."""
+    def __setstate__(self, state: dict) -> None:
+        r"""Unpickling support for multiprocessing."""
+
+@typing.final
+class BamStreamIterator:
+    r"""Iterator for streaming BAM dataset."""
+    def __iter__(self) -> BamStreamIterator: ...
+    def __next__(self) -> dict | None: ...
 
 def count_chimeric_reads_for_path(
     bam: builtins.str | os.PathLike | pathlib.Path, threads: builtins.int | None = None

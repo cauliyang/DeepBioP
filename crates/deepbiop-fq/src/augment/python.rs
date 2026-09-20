@@ -8,7 +8,7 @@ use super::{
 use pyo3::prelude::*;
 
 /// Python wrapper for ReverseComplement.
-#[cfg_attr(feature = "python", pyclass(name = "ReverseComplement"))]
+#[cfg_attr(feature = "python", pyclass(name = "ReverseComplement", module = "deepbiop.fq"))]
 pub struct PyReverseComplement {
     inner: ReverseComplement,
 }
@@ -49,7 +49,7 @@ impl PyReverseComplement {
 }
 
 /// Python wrapper for Mutator.
-#[cfg_attr(feature = "python", pyclass(name = "Mutator"))]
+#[cfg_attr(feature = "python", pyclass(name = "Mutator", module = "deepbiop.fq"))]
 pub struct PyMutator {
     inner: Mutator,
 }
@@ -95,7 +95,7 @@ impl PyMutator {
 }
 
 /// Python wrapper for Sampler.
-#[cfg_attr(feature = "python", pyclass(name = "Sampler"))]
+#[cfg_attr(feature = "python", pyclass(name = "Sampler", module = "deepbiop.fq"))]
 pub struct PySampler {
     inner: Sampler,
 }
@@ -145,7 +145,7 @@ impl PySampler {
 }
 
 /// Python wrapper for QualityModel.
-#[cfg_attr(feature = "python", pyclass(name = "QualityModel", from_py_object))]
+#[cfg_attr(feature = "python", pyclass(name = "QualityModel", from_py_object, module = "deepbiop.fq"))]
 #[derive(Clone)]
 pub struct PyQualityModel {
     inner: QualityModel,
@@ -229,7 +229,7 @@ impl PyQualityModel {
 }
 
 /// Python wrapper for QualitySimulator.
-#[cfg_attr(feature = "python", pyclass(name = "QualitySimulator"))]
+#[cfg_attr(feature = "python", pyclass(name = "QualitySimulator", module = "deepbiop.fq"))]
 pub struct PyQualitySimulator {
     inner: QualitySimulator,
 }

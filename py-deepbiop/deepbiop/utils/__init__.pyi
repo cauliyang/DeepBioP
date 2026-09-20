@@ -2,9 +2,15 @@
 
 import builtins
 import enum
-import os
-import pathlib
 import typing
+
+__all__ = [
+    "CompressedType",
+    "GenomicInterval",
+    "PslAlignment",
+    "SequenceFileType",
+    "highlight_targets",
+]
 
 @typing.final
 class GenomicInterval:
@@ -12,24 +18,6 @@ class GenomicInterval:
 
     The start position is inclusive and the end position is exclusive.
     """
-
-    @property
-    def start(self) -> builtins.int: ...
-    @start.setter
-    def start(self, value: builtins.int) -> None: ...
-    @property
-    def end(self) -> builtins.int: ...
-    @end.setter
-    def end(self, value: builtins.int) -> None: ...
-    @property
-    def chr(self) -> builtins.str: ...
-    @chr.setter
-    def chr(self, value: builtins.str) -> None: ...
-    def __new__(
-        cls, chr: builtins.str, start: builtins.int, end: builtins.int
-    ) -> GenomicInterval: ...
-    def overlap(self, other: GenomicInterval) -> builtins.bool: ...
-    def __repr__(self) -> builtins.str: ...
 
 @typing.final
 class PslAlignment:
@@ -73,7 +61,6 @@ class PslAlignment:
     def identity(self) -> builtins.float: ...
     @identity.setter
     def identity(self, value: builtins.float) -> None: ...
-    def __repr__(self) -> builtins.str: ...
 
 @typing.final
 class CompressedType(enum.Enum):
@@ -111,129 +98,8 @@ class SequenceFileType(enum.Enum):
     Fastq = ...
     Unknown = ...
 
-def check_compressed_type(
-    path: builtins.str | os.PathLike | pathlib.Path,
-) -> CompressedType:
-    r"""Check the compression type of a file.
-
-    Args:
-        path: Path to the file to check
-
-    Returns:
-    -------
-        The compression type of the file (None, Gzip, Bzip2, Xz)
-
-    Raises:
-    ------
-        IOError: If the file cannot be opened or read
-    """
-
-def generate_unmaped_intervals(
-    input: typing.Sequence[tuple[builtins.int, builtins.int]],
-    total_length: builtins.int,
-) -> builtins.list[tuple[builtins.int, builtins.int]]: ...
 def highlight_targets(
     sequence: builtins.str,
     targets: typing.Sequence[tuple[builtins.int, builtins.int]],
     text_width: builtins.int | None = None,
 ) -> builtins.str: ...
-def majority_voting(
-    labels: typing.Sequence[builtins.int], window_size: builtins.int
-) -> builtins.list[builtins.int]: ...
-def parse_psl_by_qname(
-    file_path: builtins.str | os.PathLike | pathlib.Path,
-) -> builtins.dict[builtins.str, builtins.list[PslAlignment]]:
-    r"""Parse PSL file by query name."""
-
-def remove_intervals_and_keep_left(
-    seq: builtins.str, intervals: typing.Sequence[tuple[builtins.int, builtins.int]]
-) -> tuple[
-    builtins.list[builtins.str], builtins.list[tuple[builtins.int, builtins.int]]
-]: ...
-def export_to_parquet(
-    path: builtins.str | os.PathLike | pathlib.Path,
-    ids: typing.Sequence[builtins.str],
-    sequences: typing.Sequence[builtins.bytes],
-    qualities: typing.Sequence[builtins.bytes] | None = None,
-) -> None:
-    r"""Export sequences to Parquet format.
-
-    Args:
-        path: Output Parquet file path
-        ids: Sequence identifiers
-        sequences: Sequence data (as bytes)
-        qualities: Optional quality scores (as bytes)
-
-    Example:
-        >>> export_to_parquet("output.parquet", ["seq1"], [b"ACGT"], [b"IIII"])
-    """
-
-def export_to_numpy_int(
-    path: builtins.str | os.PathLike | pathlib.Path,
-    sequences: typing.Sequence[builtins.bytes],
-    alphabet: builtins.bytes | None = None,
-) -> None:
-    r"""Export sequences to NumPy format (integer encoded).
-
-    Args:
-        path: Output .npy file path
-        sequences: Sequence data (as bytes)
-        alphabet: Encoding alphabet (default: b"ACGT")
-
-    Example:
-        >>> export_to_numpy_int("output.npy", [b"ACGT", b"GGCC"], b"ACGT")
-    """
-
-def export_to_numpy_onehot(
-    path: builtins.str | os.PathLike | pathlib.Path,
-    sequences: typing.Sequence[builtins.bytes],
-    alphabet: builtins.bytes | None = None,
-) -> None:
-    r"""Export sequences to NumPy format (one-hot encoded).
-
-    Args:
-        path: Output .npy file path
-        sequences: Sequence data (as bytes)
-        alphabet: Encoding alphabet (default: b"ACGT")
-
-    Example:
-        >>> export_to_numpy_onehot("output.npy", [b"ACGT"], b"ACGT")
-    """
-
-def export_quality_to_numpy(
-    path: builtins.str | os.PathLike | pathlib.Path,
-    qualities: typing.Sequence[builtins.bytes],
-    offset: builtins.int = 33,
-) -> None:
-    r"""Export quality scores to NumPy format.
-
-    Args:
-        path: Output .npy file path
-        qualities: Quality score strings (as bytes)
-        offset: Phred quality offset (33 for Phred+33, 64 for Phred+64)
-
-    Example:
-        >>> export_quality_to_numpy("qual.npy", [b"IIII"], 33)
-    """
-
-def export_fastq_to_numpy(
-    seq_path: builtins.str | os.PathLike | pathlib.Path,
-    qual_path: builtins.str | os.PathLike | pathlib.Path,
-    sequences: typing.Sequence[builtins.bytes],
-    qualities: typing.Sequence[builtins.bytes],
-    alphabet: builtins.bytes | None = None,
-    offset: builtins.int = 33,
-) -> None:
-    r"""Export FASTQ data to paired NumPy files (sequences + qualities).
-
-    Args:
-        seq_path: Output .npy file for sequences
-        qual_path: Output .npy file for qualities
-        sequences: Sequence data (as bytes)
-        qualities: Quality scores (as bytes)
-        alphabet: Encoding alphabet (default: b"ACGT")
-        offset: Phred quality offset (default: 33)
-
-    Example:
-        >>> export_fastq_to_numpy("seq.npy", "qual.npy", [b"ACGT"], [b"IIII"])
-    """

@@ -190,7 +190,7 @@ impl PyBamReader {
 }
 
 /// Calculate the number of chimeric reads in a BAM file.
-#[gen_stub_pyfunction()]
+#[gen_stub_pyfunction(module = "deepbiop.bam")]
 #[pyfunction]
 #[pyo3(signature = (bam, threads=None))]
 fn count_chimeric_reads_for_path(bam: PathBuf, threads: Option<usize>) -> Result<usize> {
@@ -198,7 +198,7 @@ fn count_chimeric_reads_for_path(bam: PathBuf, threads: Option<usize>) -> Result
 }
 
 /// Calculate the number of chimeric reads in multiple BAM files.
-#[gen_stub_pyfunction()]
+#[gen_stub_pyfunction(module = "deepbiop.bam")]
 #[pyfunction]
 #[pyo3(signature = (bams, threads=None))]
 fn count_chimeric_reads_for_paths(
@@ -209,7 +209,7 @@ fn count_chimeric_reads_for_paths(
 }
 
 /// Calculate left and right soft clips from a cigar string.
-#[gen_stub_pyfunction()]
+#[gen_stub_pyfunction(module = "deepbiop.bam")]
 #[pyfunction]
 fn left_right_soft_clip(cigar_string: &str) -> Result<(usize, usize)> {
     let cigar = Cigar::new(cigar_string.as_bytes());

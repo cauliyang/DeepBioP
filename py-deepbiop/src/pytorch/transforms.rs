@@ -4,6 +4,7 @@
 //! augmentations, exposing them with a PyTorch-compatible Transform interface.
 
 use pyo3::prelude::*;
+use pyo3_stub_gen::derive::*;
 use pyo3::types::PyDict;
 
 // Import existing encoders from deepbiop-fq and deepbiop-core
@@ -32,12 +33,14 @@ use deepbiop_fq::augment::{
 /// Wraps deepbiop.fq.OneHotEncoder to provide Transform protocol:
 /// - __call__(sample) -> sample with encoded sequence
 /// - __repr__() for debugging
+#[gen_stub_pyclass]
 #[pyclass(name = "OneHotEncoder", module = "deepbiop.pytorch")]
 pub struct OneHotEncoder {
     /// Inner encoder from deepbiop-fq
     inner: Py<InnerOneHotEncoder>,
 }
 
+#[gen_stub_pymethods]
 #[pymethods]
 impl OneHotEncoder {
     /// Create a new OneHotEncoder.
@@ -129,12 +132,14 @@ impl OneHotEncoder {
 /// Wraps deepbiop.fq.IntegerEncoder to provide Transform protocol:
 /// - __call__(sample) -> sample with encoded sequence
 /// - __repr__() for debugging
+#[gen_stub_pyclass]
 #[pyclass(name = "IntegerEncoder", module = "deepbiop.pytorch")]
 pub struct IntegerEncoder {
     /// Inner encoder from deepbiop-fq
     inner: Py<InnerIntegerEncoder>,
 }
 
+#[gen_stub_pymethods]
 #[pymethods]
 impl IntegerEncoder {
     /// Create a new IntegerEncoder.
@@ -207,12 +212,14 @@ impl IntegerEncoder {
 /// Wraps deepbiop.core.KmerEncoder to provide Transform protocol:
 /// - __call__(sample) -> sample with encoded sequence
 /// - __repr__() for debugging
+#[gen_stub_pyclass]
 #[pyclass(name = "KmerEncoder", module = "deepbiop.pytorch")]
 pub struct KmerEncoder {
     /// Inner encoder from deepbiop-core
     inner: Py<InnerKmerEncoder>,
 }
 
+#[gen_stub_pymethods]
 #[pymethods]
 impl KmerEncoder {
     /// Create a new KmerEncoder.
@@ -291,12 +298,14 @@ impl KmerEncoder {
 ///
 /// Chains transforms by calling them in order on the sample.
 /// Similar to torchvision.transforms.Compose.
+#[gen_stub_pyclass]
 #[pyclass(name = "Compose", module = "deepbiop.pytorch")]
 pub struct Compose {
     /// List of transforms to apply sequentially
     transforms: Vec<Py<pyo3::PyAny>>,
 }
 
+#[gen_stub_pymethods]
 #[pymethods]
 impl Compose {
     /// Create a new Compose transform.
@@ -334,12 +343,14 @@ impl Compose {
 /// PyTorch-compatible ReverseComplement transform.
 ///
 /// Wraps deepbiop.fq.ReverseComplement to provide Transform protocol.
+#[gen_stub_pyclass]
 #[pyclass(name = "ReverseComplement", module = "deepbiop.pytorch")]
 pub struct ReverseComplement {
     /// Inner augmentation from deepbiop-fq
     inner: InnerReverseComplement,
 }
 
+#[gen_stub_pymethods]
 #[pymethods]
 impl ReverseComplement {
     /// Create a new ReverseComplement transform.
@@ -402,6 +413,7 @@ impl ReverseComplement {
 /// PyTorch-compatible Mutator transform.
 ///
 /// Wraps deepbiop.fq.Mutator to provide Transform protocol.
+#[gen_stub_pyclass]
 #[pyclass(name = "Mutator", module = "deepbiop.pytorch")]
 pub struct Mutator {
     /// Inner augmentation from deepbiop-fq
@@ -409,6 +421,7 @@ pub struct Mutator {
     mutation_rate: f64,
 }
 
+#[gen_stub_pymethods]
 #[pymethods]
 impl Mutator {
     /// Create a new Mutator transform.
@@ -472,6 +485,7 @@ impl Mutator {
 /// PyTorch-compatible Sampler transform.
 ///
 /// Wraps deepbiop.fq.Sampler to provide Transform protocol.
+#[gen_stub_pyclass]
 #[pyclass(name = "Sampler", module = "deepbiop.pytorch")]
 pub struct Sampler {
     /// Inner augmentation from deepbiop-fq
@@ -480,6 +494,7 @@ pub struct Sampler {
     strategy: String,
 }
 
+#[gen_stub_pymethods]
 #[pymethods]
 impl Sampler {
     /// Create a new Sampler transform.

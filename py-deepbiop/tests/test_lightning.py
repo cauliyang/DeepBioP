@@ -8,6 +8,9 @@ from pathlib import Path
 
 import pytest
 
+pytest.importorskip("torch")
+pytest.importorskip("pytorch_lightning")
+
 
 class TestLightningDataModule:
     """Test LightningDataModule integration (T037-T038)."""

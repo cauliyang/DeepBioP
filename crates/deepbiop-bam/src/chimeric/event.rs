@@ -24,7 +24,7 @@ use std::str::FromStr;
 use super::{is_chimeric_record, is_retain_record};
 
 /// A chimeric event.
-#[cfg_attr(feature = "python", pyclass)]
+#[cfg_attr(feature = "python", pyclass(module = "deepbiop.bam"))]
 #[derive(Debug, Builder)]
 pub struct ChimericEvent {
     /// The name of the chimeric event.

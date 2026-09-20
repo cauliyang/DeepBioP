@@ -4,6 +4,7 @@
 //! and provides batching, shuffling, and parallel loading capabilities.
 
 use pyo3::prelude::*;
+use pyo3_stub_gen::derive::*;
 use pyo3::types::PyList;
 use rand::rngs::SmallRng;
 use rand::seq::SliceRandom;
@@ -18,6 +19,7 @@ use super::dataset::Dataset;
 /// - __iter__(): Returns iterator over batches
 /// - Batching with configurable batch_size
 /// - Optional shuffling with seed control
+#[gen_stub_pyclass]
 #[pyclass(name = "DataLoader", module = "deepbiop.pytorch")]
 pub struct DataLoader {
     /// Reference to the dataset
@@ -34,6 +36,7 @@ pub struct DataLoader {
     seed: Option<u64>,
 }
 
+#[gen_stub_pymethods]
 #[pymethods]
 impl DataLoader {
     /// Create a new DataLoader.
@@ -152,6 +155,7 @@ impl DataLoader {
 /// Iterator for DataLoader.
 ///
 /// Maintains iteration state and yields batches as lists of samples.
+#[gen_stub_pyclass]
 #[pyclass(name = "DataLoaderIterator", module = "deepbiop.pytorch")]
 pub struct DataLoaderIterator {
     dataloader: Py<DataLoader>,
@@ -159,6 +163,7 @@ pub struct DataLoaderIterator {
     current_batch: usize,
 }
 
+#[gen_stub_pymethods]
 #[pymethods]
 impl DataLoaderIterator {
     fn __iter__(slf: PyRef<'_, Self>) -> PyRef<'_, Self> {

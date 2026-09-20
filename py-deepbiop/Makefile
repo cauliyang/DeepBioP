@@ -1,10 +1,11 @@
-.PHONY: clean build stubs
+.PHONY: all clean build test stubs lint
 
-# add build target to the default target
 all: build
 
 clean:
 	rm -rf build dist
+
+lint:
 	uvx ruff format
 	uvx ruff check --fix --unsafe-fixes
 
@@ -15,19 +16,11 @@ build:
 	uv sync
 	uv tool run maturin develop -r
 
-# Generate Python type stubs (.pyi files)
+# Regenerate type stubs for the Rust extension: deepbiop/<module>/__init__.pyi.
+# The top-level deepbiop/__init__.pyi is dropped because deepbiop/__init__.py is
+# pure Python and is what type checkers should read.
 stubs:
-	@echo "Generating Python type stubs..."
-	uv run --with maturin --with pyo3-stub-gen maturin develop -r
-	uv run python -c "import pyo3_stub_gen; import deepbiop; pyo3_stub_gen.generate_stub_file('deepbiop', deepbiop, 'deepbiop')"
-	@echo "✓ Stubs generated successfully"
-	@echo ""
-	@echo "Generated stubs:"
-	@echo "  - deepbiop/__init__.pyi"
-	@echo "  - deepbiop/fq.pyi"
-	@echo "  - deepbiop/bam.pyi"
-	@echo "  - deepbiop/fa.pyi"
-	@echo "  - deepbiop/core.pyi"
-	@echo "  - deepbiop/utils.pyi"
-	@echo "  - deepbiop/vcf.pyi"
-	@echo "  - deepbiop/gtf.pyi"
+	cargo run --bin stub_gen
+	rm -f deepbiop/__init__.pyi
+	uvx ruff check --fix --unsafe-fixes deepbiop/*/__init__.pyi
+	uvx ruff format deepbiop/*/__init__.pyi

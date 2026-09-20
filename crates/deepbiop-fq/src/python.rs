@@ -100,7 +100,7 @@ impl PyRecordData {
     }
 }
 
-#[gen_stub_pyfunction()]
+#[gen_stub_pyfunction(module = "deepbiop.fq")]
 #[pyfunction]
 #[pyo3(signature = (records_data, file_path=None))]
 fn write_fq(records_data: Vec<PyRecordData>, file_path: Option<PathBuf>) -> Result<()> {
@@ -111,7 +111,7 @@ fn write_fq(records_data: Vec<PyRecordData>, file_path: Option<PathBuf>) -> Resu
     io::write_fq(&records, file_path)
 }
 
-#[gen_stub_pyfunction()]
+#[gen_stub_pyfunction(module = "deepbiop.fq")]
 #[pyfunction]
 fn write_fq_parallel(
     records_data: Vec<PyRecordData>,
@@ -127,7 +127,7 @@ fn write_fq_parallel(
 }
 
 #[cfg(feature = "cache")]
-#[gen_stub_pyfunction()]
+#[gen_stub_pyfunction(module = "deepbiop.fq")]
 #[pyfunction]
 fn encode_fq_path_to_parquet_chunk(
     fq_path: PathBuf,
@@ -148,7 +148,7 @@ fn encode_fq_path_to_parquet_chunk(
     Ok(())
 }
 
-#[gen_stub_pyfunction()]
+#[gen_stub_pyfunction(module = "deepbiop.fq")]
 #[pyfunction]
 #[pyo3(signature = (fq_path, bases, qual_offset, result_path=None))]
 fn encode_fq_path_to_parquet(
@@ -190,7 +190,7 @@ fn encode_fq_path_to_parquet(
     }
 }
 
-#[gen_stub_pyfunction()]
+#[gen_stub_pyfunction(module = "deepbiop.fq")]
 #[pyfunction]
 fn encode_fq_paths_to_parquet(
     fq_path: Vec<PathBuf>,
@@ -203,7 +203,7 @@ fn encode_fq_paths_to_parquet(
     Ok(())
 }
 
-#[gen_stub_pyfunction()]
+#[gen_stub_pyfunction(module = "deepbiop.fq")]
 #[pyfunction]
 fn get_label_region(labels: Vec<i8>) -> Vec<(usize, usize)> {
     utils::get_label_region(&labels)
@@ -212,7 +212,7 @@ fn get_label_region(labels: Vec<i8>) -> Vec<(usize, usize)> {
         .collect()
 }
 
-#[gen_stub_pyfunction()]
+#[gen_stub_pyfunction(module = "deepbiop.fq")]
 #[pyfunction]
 fn convert_multiple_fqs_to_one_fq(
     paths: Vec<PathBuf>,
@@ -227,7 +227,7 @@ fn convert_multiple_fqs_to_one_fq(
 }
 
 /// Convert ASCII quality to Phred score for Phred+33 encoding
-#[gen_stub_pyfunction()]
+#[gen_stub_pyfunction(module = "deepbiop.fq")]
 #[pyfunction]
 pub fn encode_qual(qual: String, qual_offset: u8) -> Vec<u8> {
     let quals = qual.as_bytes();
@@ -240,7 +240,7 @@ pub fn encode_qual(qual: String, qual_offset: u8) -> Vec<u8> {
         .collect()
 }
 
-#[gen_stub_pyfunction()]
+#[gen_stub_pyfunction(module = "deepbiop.fq")]
 #[pyfunction]
 pub fn test_predicts(predicts: Vec<PyRef<predicts::Predict>>) {
     predicts.iter().for_each(|predict| {
@@ -251,7 +251,7 @@ pub fn test_predicts(predicts: Vec<PyRef<predicts::Predict>>) {
     });
 }
 
-#[gen_stub_pyfunction()]
+#[gen_stub_pyfunction(module = "deepbiop.fq")]
 #[pyfunction]
 pub fn load_predicts_from_batch_pt(
     pt_path: PathBuf,
@@ -261,7 +261,7 @@ pub fn load_predicts_from_batch_pt(
     predicts::load_predicts_from_batch_pt(pt_path, ignore_label, &id_table)
 }
 
-#[gen_stub_pyfunction()]
+#[gen_stub_pyfunction(module = "deepbiop.fq")]
 #[pyfunction]
 #[pyo3(signature = (pt_path, ignore_label, id_table, max_predicts=None))]
 pub fn load_predicts_from_batch_pts(
@@ -273,7 +273,7 @@ pub fn load_predicts_from_batch_pts(
     predicts::load_predicts_from_batch_pts(pt_path, ignore_label, &id_table, max_predicts)
 }
 
-#[gen_stub_pyfunction()]
+#[gen_stub_pyfunction(module = "deepbiop.fq")]
 #[pyfunction]
 pub fn fastq_to_fasta(fastq_path: PathBuf, fasta_path: PathBuf) -> Result<()> {
     let fa_records = io::fastq_to_fasta(&fastq_path)?;
@@ -285,7 +285,7 @@ pub fn fastq_to_fasta(fastq_path: PathBuf, fasta_path: PathBuf) -> Result<()> {
     Ok(())
 }
 
-#[gen_stub_pyfunction()]
+#[gen_stub_pyfunction(module = "deepbiop.fq")]
 #[pyfunction(name = "select_record_from_fq")]
 pub fn py_select_record_from_fq(
     selected_reads: Vec<String>,
@@ -300,7 +300,7 @@ pub fn py_select_record_from_fq(
     Ok(())
 }
 
-#[gen_stub_pyfunction()]
+#[gen_stub_pyfunction(module = "deepbiop.fq")]
 #[pyfunction(name = "select_record_from_fq_by_random")]
 pub fn py_select_record_from_fq_by_random(
     fq: PathBuf,

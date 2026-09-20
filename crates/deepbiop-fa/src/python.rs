@@ -86,7 +86,7 @@ impl PyRecordData {
     }
 }
 
-#[gen_stub_pyfunction()]
+#[gen_stub_pyfunction(module = "deepbiop.fa")]
 #[pyfunction]
 #[pyo3(signature = (records_data, file_path=None))]
 fn write_fa(records_data: Vec<PyRecordData>, file_path: Option<PathBuf>) -> Result<()> {
@@ -97,7 +97,7 @@ fn write_fa(records_data: Vec<PyRecordData>, file_path: Option<PathBuf>) -> Resu
     io::write_fa(&records, file_path)
 }
 
-#[gen_stub_pyfunction()]
+#[gen_stub_pyfunction(module = "deepbiop.fa")]
 #[pyfunction]
 fn write_fa_parallel(
     records_data: Vec<PyRecordData>,
@@ -112,7 +112,7 @@ fn write_fa_parallel(
 }
 
 #[cfg(feature = "cache")]
-#[gen_stub_pyfunction()]
+#[gen_stub_pyfunction(module = "deepbiop.fa")]
 #[pyfunction]
 fn encode_fa_path_to_parquet_chunk(
     fa_path: PathBuf,
@@ -131,7 +131,7 @@ fn encode_fa_path_to_parquet_chunk(
     Ok(())
 }
 
-#[gen_stub_pyfunction()]
+#[gen_stub_pyfunction(module = "deepbiop.fa")]
 #[pyfunction]
 #[pyo3(signature = (fa_path, bases, result_path=None))]
 fn encode_fa_path_to_parquet(
@@ -171,7 +171,7 @@ fn encode_fa_path_to_parquet(
     }
 }
 
-#[gen_stub_pyfunction()]
+#[gen_stub_pyfunction(module = "deepbiop.fa")]
 #[pyfunction]
 fn encode_fa_paths_to_parquet(fa_path: Vec<PathBuf>, bases: String) -> Result<()> {
     for path in &fa_path {
@@ -180,7 +180,7 @@ fn encode_fa_paths_to_parquet(fa_path: Vec<PathBuf>, bases: String) -> Result<()
     Ok(())
 }
 
-#[gen_stub_pyfunction()]
+#[gen_stub_pyfunction(module = "deepbiop.fa")]
 #[pyfunction]
 fn convert_multiple_fas_to_one_fa(
     paths: Vec<PathBuf>,
@@ -194,7 +194,7 @@ fn convert_multiple_fas_to_one_fa(
     Ok(())
 }
 
-#[gen_stub_pyfunction()]
+#[gen_stub_pyfunction(module = "deepbiop.fa")]
 #[pyfunction(name = "select_record_from_fa")]
 pub fn py_select_record_from_fq(
     selected_reads: Vec<String>,
@@ -208,7 +208,7 @@ pub fn py_select_record_from_fq(
     Ok(())
 }
 
-#[gen_stub_pyfunction()]
+#[gen_stub_pyfunction(module = "deepbiop.fa")]
 #[pyfunction(name = "select_record_from_fa_by_random")]
 pub fn py_select_record_from_fq_by_random(
     fq: PathBuf,
@@ -224,7 +224,7 @@ pub fn py_select_record_from_fq_by_random(
 ///
 /// Since FASTA files don't contain quality information, assigns
 /// default quality score (Phred+33 Q40 = '~') to all bases.
-#[gen_stub_pyfunction()]
+#[gen_stub_pyfunction(module = "deepbiop.fa")]
 #[pyfunction]
 pub fn fasta_to_fastq(fasta_path: PathBuf, fastq_path: PathBuf) -> Result<()> {
     let fq_records = io::fasta_to_fastq(&fasta_path)?;

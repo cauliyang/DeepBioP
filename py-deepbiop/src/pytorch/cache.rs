@@ -5,6 +5,7 @@
 //! source file's size/mtime for staleness checks.
 
 use pyo3::prelude::*;
+use pyo3_stub_gen::derive::*;
 use pyo3::types::{PyBytes, PyDict, PyList};
 use std::fs;
 use std::io::Write;
@@ -51,6 +52,7 @@ fn source_signature(path: &Path) -> Option<(u64, u64)> {
 ///
 /// Examples:
 ///     >>> save_cache(processed_samples, "cache.npz", source_file="data.fastq")
+#[gen_stub_pyfunction(module = "deepbiop.pytorch")]
 #[pyfunction]
 #[pyo3(signature = (samples, cache_path, source_file=None))]
 pub fn save_cache(
@@ -143,6 +145,7 @@ pub fn save_cache(
 ///     >>> samples = load_cache("cache.npz")
 ///     >>> len(samples)
 ///     1000
+#[gen_stub_pyfunction(module = "deepbiop.pytorch")]
 #[pyfunction]
 pub fn load_cache(py: Python, cache_path: String) -> PyResult<Py<PyList>> {
     let np = py.import("numpy")?;
@@ -205,6 +208,7 @@ pub fn load_cache(py: Python, cache_path: String) -> PyResult<Py<PyList>> {
 /// Examples:
 ///     >>> is_cache_valid("cache.npz", source_file="data.fastq")
 ///     True
+#[gen_stub_pyfunction(module = "deepbiop.pytorch")]
 #[pyfunction]
 #[pyo3(signature = (cache_path, source_file=None))]
 pub fn is_cache_valid(
