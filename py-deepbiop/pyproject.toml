@@ -205,6 +205,9 @@ addopts = [
   "-m not slow and not write_disk and not release and not docs and not hypothesis and not benchmark and not ci_only",
 ]
 markers = [
+  # Registered by the pytest-benchmark plugin when present; declared here so the
+  # suite collects with --strict-markers in wheel smoke tests that only have pytest.
+  "benchmark: Benchmark tests (pytest-benchmark).",
   "ci_only: Tests that should only run on CI by default.",
   "debug: Tests that should be run on a Polars debug build.",
   "docs: Documentation code snippets",
