@@ -113,6 +113,11 @@ impl PySampler {
     #[new]
     #[pyo3(signature = (length, strategy, seed=None))]
     fn new(length: usize, strategy: &str, seed: Option<u64>) -> PyResult<Self> {
+        if length == 0 {
+            return Err(pyo3::exceptions::PyValueError::new_err(
+                "Subsequence length must be greater than 0",
+            ));
+        }
         let inner = match strategy {
             "start" => Sampler::from_start(length),
             "center" => Sampler::from_center(length),
@@ -146,25 +151,30 @@ pub struct PyQualityModel {
     inner: QualityModel,
 }
 
+impl PyQualityModel {
+    fn checked(model: QualityModel) -> PyResult<Self> {
+        model
+            .validate()
+            .map_err(pyo3::exceptions::PyValueError::new_err)?;
+        Ok(Self { inner: model })
+    }
+}
+
 #[cfg(feature = "python")]
 #[pymethods]
 impl PyQualityModel {
     /// Create a uniform quality distribution.
     #[staticmethod]
     #[pyo3(signature = (min, max))]
-    fn uniform(min: u8, max: u8) -> Self {
-        Self {
-            inner: QualityModel::Uniform { min, max },
-        }
+    fn uniform(min: u8, max: u8) -> PyResult<Self> {
+        Self::checked(QualityModel::Uniform { min, max })
     }
 
     /// Create a normal quality distribution.
     #[staticmethod]
     #[pyo3(signature = (mean, std_dev))]
-    fn normal(mean: f64, std_dev: f64) -> Self {
-        Self {
-            inner: QualityModel::Normal { mean, std_dev },
-        }
+    fn normal(mean: f64, std_dev: f64) -> PyResult<Self> {
+        Self::checked(QualityModel::Normal { mean, std_dev })
     }
 
     /// High quality preset (modern Illumina, mean ~37, std ~2).
@@ -186,14 +196,12 @@ impl PyQualityModel {
     /// Degrading quality model (quality decreases along read).
     #[staticmethod]
     #[pyo3(signature = (start_mean, end_mean, std_dev))]
-    fn degrading(start_mean: f64, end_mean: f64, std_dev: f64) -> Self {
-        Self {
-            inner: QualityModel::Degrading {
-                start_mean,
-                end_mean,
-                std_dev,
-            },
-        }
+    fn degrading(start_mean: f64, end_mean: f64, std_dev: f64) -> PyResult<Self> {
+        Self::checked(QualityModel::Degrading {
+            start_mean,
+            end_mean,
+            std_dev,
+        })
     }
 
     fn __repr__(&self) -> String {

@@ -27,6 +27,46 @@ pub enum QualityModel {
     },
 }
 
+impl QualityModel {
+    /// Check that the model's parameters can be sampled from.
+    pub fn validate(&self) -> Result<(), String> {
+        match self {
+            QualityModel::Uniform { min, max } => {
+                if min > max {
+                    return Err(format!("uniform quality: min ({min}) > max ({max})"));
+                }
+                if *max > 93 {
+                    return Err(format!("uniform quality: max ({max}) exceeds Phred 93"));
+                }
+            }
+            QualityModel::Normal { mean, std_dev } => {
+                if !mean.is_finite() || !std_dev.is_finite() || *std_dev < 0.0 {
+                    return Err(format!(
+                        "normal quality: mean ({mean}) and std_dev ({std_dev}) must be finite, std_dev >= 0"
+                    ));
+                }
+            }
+            QualityModel::Degrading {
+                start_mean,
+                end_mean,
+                std_dev,
+            } => {
+                if !start_mean.is_finite()
+                    || !end_mean.is_finite()
+                    || !std_dev.is_finite()
+                    || *std_dev < 0.0
+                {
+                    return Err(format!(
+                        "degrading quality: start_mean ({start_mean}), end_mean ({end_mean}), std_dev ({std_dev}) must be finite, std_dev >= 0"
+                    ));
+                }
+            }
+            QualityModel::HighQuality | QualityModel::MediumQuality => {}
+        }
+        Ok(())
+    }
+}
+
 /// Quality score simulator for FASTQ records.
 ///
 /// Simulates realistic Phred quality scores for sequences, useful for:
@@ -70,8 +110,17 @@ impl QualitySimulator {
     ///
     /// * `model` - Quality score distribution model
     /// * `seed` - Optional RNG seed for reproducibility
+    ///
+    /// # Panics
+    ///
+    /// Panics if `model` fails [`QualityModel::validate`]; validate first when
+    /// the parameters come from user input.
     pub fn new(model: QualityModel, seed: Option<u64>) -> Self {
         use rand::SeedableRng;
+
+        if let Err(e) = model.validate() {
+            panic!("invalid quality model: {e}");
+        }
 
         let rng = match seed {
             Some(seed) => rand::rngs::SmallRng::seed_from_u64(seed),
@@ -110,7 +159,8 @@ impl QualitySimulator {
             }
 
             QualityModel::Normal { mean, std_dev } => {
-                let normal = Normal::new(*mean, *std_dev).unwrap();
+                let normal =
+                    Normal::new(*mean, *std_dev).expect("validated in QualitySimulator::new");
                 for _ in 0..length {
                     let q: f64 = normal.sample(&mut self.rng);
                     let q_clipped = q.clamp(0.0, 93.0) as u8;
@@ -147,7 +197,7 @@ impl QualitySimulator {
                 let start = *start_mean;
                 let end = *end_mean;
                 let std = *std_dev;
-                let normal = Normal::new(0.0, std).unwrap();
+                let normal = Normal::new(0.0, std).expect("validated in QualitySimulator::new");
 
                 for i in 0..length {
                     // Linear interpolation

@@ -14,7 +14,7 @@ use std::thread;
 ///
 /// # Arguments
 ///
-/// * `threads` - Optional number of threads to use. If `None` or 0, defaults to 1.
+/// * `threads` - Optional number of threads to use. `None` uses all available cores; 0 is treated as 1.
 ///
 /// # Returns
 ///
@@ -32,19 +32,22 @@ use std::thread;
 /// assert!(worker_count.get() <= 4);
 /// assert!(worker_count.get() >= 1);
 ///
-/// // Use default (1 thread)
+/// // `None` uses every available core
 /// let worker_count = calculate_worker_count(None);
-/// assert_eq!(worker_count.get(), 1);
+/// assert!(worker_count.get() >= 1);
 ///
 /// // Zero threads defaults to 1
 /// let worker_count = calculate_worker_count(Some(0));
 /// assert_eq!(worker_count.get(), 1);
 /// ```
 pub fn calculate_worker_count(threads: Option<usize>) -> NonZeroUsize {
-    let requested = threads.unwrap_or(1).max(1); // Ensure at least 1
-    NonZeroUsize::new(requested)
-        .map(|count| count.min(thread::available_parallelism().unwrap()))
-        .unwrap()
+    let available = thread::available_parallelism().unwrap_or(NonZeroUsize::MIN);
+    match threads {
+        None => available,
+        Some(n) => NonZeroUsize::new(n)
+            .unwrap_or(NonZeroUsize::MIN)
+            .min(available),
+    }
 }
 
 #[cfg(test)]
@@ -52,9 +55,12 @@ mod tests {
     use super::*;
 
     #[test]
-    fn test_calculate_worker_count_default() {
+    fn test_calculate_worker_count_default_uses_all_cores() {
         let worker_count = calculate_worker_count(None);
-        assert_eq!(worker_count.get(), 1);
+        assert_eq!(
+            worker_count,
+            thread::available_parallelism().unwrap_or(NonZeroUsize::MIN)
+        );
     }
 
     #[test]

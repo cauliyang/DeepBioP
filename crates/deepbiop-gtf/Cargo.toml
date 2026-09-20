@@ -11,7 +11,7 @@ readme = "../../README.md"
 description = "GTF annotation file processing for deep learning preprocessing"
 
 [dependencies]
-noodles = { workspace = true }
+deepbiop-utils = { workspace = true }
 ahash = { workspace = true }
 anyhow = { workspace = true }
 rayon = { workspace = true }

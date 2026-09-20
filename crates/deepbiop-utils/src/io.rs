@@ -171,7 +171,7 @@ pub fn is_compressed<P: AsRef<Path>>(file_path: P) -> Result<bool> {
 /// * `Err` - If the file cannot be opened or has an unsupported compression type
 pub fn create_reader_for_compressed_file<P: AsRef<Path>>(
     file_path: P,
-) -> Result<Box<dyn io::Read + Send>> {
+) -> Result<Box<dyn io::Read + Send + Sync>> {
     let compressed_type = check_compressed_type(file_path.as_ref())?;
     let file = File::open(file_path)?;
 

@@ -1,7 +1,9 @@
-"""PyTorch-compatible dataset wrappers for biological sequence data.
+"""PyTorch-compatible map-style dataset wrappers for biological sequence data.
 
-This module provides simple wrappers to read FASTQ/FASTA files with a
-standard PyTorch Dataset interface (returning individual samples).
+Every class here reads the whole file into memory once at construction so that
+``len()`` and ``dataset[i]`` are O(1). Memory is proportional to file size; for
+inputs that do not fit, iterate ``deepbiop.fq.FastqStreamDataset`` /
+``deepbiop.fa.FastaStreamDataset`` / ``deepbiop.bam.BamStreamDataset`` instead.
 """
 
 from collections.abc import Iterator
@@ -11,8 +13,7 @@ from typing import Any
 class FastqDataset:
     """Simple PyTorch-compatible FASTQ dataset that returns individual records.
 
-    This implementation uses a simple streaming approach with optional caching
-    for better performance with PyTorch DataLoader.
+    Loads every record into memory at construction (map-style dataset).
 
     Parameters
     ----------
@@ -27,8 +28,8 @@ class FastqDataset:
         ...     pass
 
     Note:
-        For best performance with multi-worker DataLoader, the underlying
-        Rust implementation handles file reading efficiently.
+        Records are returned as fresh dict copies, so transforms may mutate them
+        without corrupting the cache.
     """
 
     def __init__(self, file_path: str):
@@ -67,7 +68,7 @@ class FastqDataset:
             msg = f"Index {idx} out of range [0, {self._total_records})"
             raise IndexError(msg)
 
-        return self._records_cache[idx]
+        return dict(self._records_cache[idx])
 
     def __iter__(self) -> Iterator[dict[str, Any]]:
         """Iterate over all records.
@@ -75,7 +76,7 @@ class FastqDataset:
         Yields:
             Record dict with keys: "id", "sequence", "quality"
         """
-        return iter(self._records_cache)
+        return (dict(record) for record in self._records_cache)
 
     def __repr__(self) -> str:
         """String representation."""
@@ -85,8 +86,7 @@ class FastqDataset:
 class FastaDataset:
     """Simple PyTorch-compatible FASTA dataset that returns individual records.
 
-    This implementation uses a simple streaming approach with optional caching
-    for better performance with PyTorch DataLoader.
+    Loads every record into memory at construction (map-style dataset).
 
     Parameters
     ----------
@@ -101,8 +101,8 @@ class FastaDataset:
         ...     pass
 
     Note:
-        For best performance with multi-worker DataLoader, the underlying
-        Rust implementation handles file reading efficiently.
+        Records are returned as fresh dict copies, so transforms may mutate them
+        without corrupting the cache.
     """
 
     def __init__(self, file_path: str):
@@ -141,7 +141,7 @@ class FastaDataset:
             msg = f"Index {idx} out of range [0, {self._total_records})"
             raise IndexError(msg)
 
-        return self._records_cache[idx]
+        return dict(self._records_cache[idx])
 
     def __iter__(self) -> Iterator[dict[str, Any]]:
         """Iterate over all records.
@@ -149,7 +149,7 @@ class FastaDataset:
         Yields:
             Record dict with keys: "id", "sequence", "description" (optional)
         """
-        return iter(self._records_cache)
+        return (dict(record) for record in self._records_cache)
 
     def __repr__(self) -> str:
         """String representation."""
@@ -159,8 +159,7 @@ class FastaDataset:
 class BamDataset:
     """Simple PyTorch-compatible BAM dataset that returns individual alignment records.
 
-    This implementation uses a simple streaming approach with optional caching
-    for better performance with PyTorch DataLoader.
+    Loads every record into memory at construction (map-style dataset).
 
     Parameters
     ----------
@@ -176,8 +175,8 @@ class BamDataset:
         ...     pass
 
     Note:
-        For best performance with multi-worker DataLoader, the underlying
-        Rust implementation handles file reading efficiently with parallel decompression.
+        Records are returned as fresh dict copies, so transforms may mutate them
+        without corrupting the cache.
     """
 
     def __init__(self, file_path: str, threads: int | None = None):
@@ -217,7 +216,7 @@ class BamDataset:
             msg = f"Index {idx} out of range [0, {self._total_records})"
             raise IndexError(msg)
 
-        return self._records_cache[idx]
+        return dict(self._records_cache[idx])
 
     def __iter__(self) -> Iterator[dict[str, Any]]:
         """Iterate over all records.
@@ -225,7 +224,7 @@ class BamDataset:
         Yields:
             Record dict with keys: "id", "sequence", "quality"
         """
-        return iter(self._records_cache)
+        return (dict(record) for record in self._records_cache)
 
     def __repr__(self) -> str:
         """String representation."""

@@ -2,6 +2,7 @@ use std::path::PathBuf;
 
 use crate::encode::Encoder;
 use crate::{
+    dataset::FastaStreamIterator,
     encode::{self},
     io,
 };
@@ -18,7 +19,6 @@ use pyo3::prelude::*;
 use pyo3::types::PyDict;
 use rayon::prelude::*;
 
-use deepbiop_core::dataset::IterableDataset;
 use pyo3_stub_gen::derive::*;
 
 #[gen_stub_pymethods]
@@ -174,9 +174,9 @@ fn encode_fa_path_to_parquet(
 #[gen_stub_pyfunction()]
 #[pyfunction]
 fn encode_fa_paths_to_parquet(fa_path: Vec<PathBuf>, bases: String) -> Result<()> {
-    fa_path.iter().for_each(|path| {
-        encode_fa_path_to_parquet(path.clone(), bases.clone(), None).unwrap();
-    });
+    for path in &fa_path {
+        encode_fa_path_to_parquet(path.clone(), bases.clone(), None)?;
+    }
     Ok(())
 }
 
@@ -299,11 +299,14 @@ impl PyFastaStreamDataset {
     /// - 'sequence': np.ndarray (uint8) - Nucleotide sequence bytes
     /// - 'description': Optional[str] - Sequence description
     fn __iter__(slf: PyRef<'_, Self>) -> PyResult<Py<PyFastaStreamIterator>> {
-        let iter = PyFastaStreamIterator {
-            file_path: slf.file_path.clone(),
-            current_idx: 0,
-        };
-        Py::new(slf.py(), iter)
+        let iter = FastaStreamIterator::open(&slf.file_path)
+            .map_err(|e| pyo3::exceptions::PyIOError::new_err(e.to_string()))?;
+        Py::new(
+            slf.py(),
+            PyFastaStreamIterator {
+                iter: std::sync::Mutex::new(iter),
+            },
+        )
     }
 
     /// Get estimated number of records in dataset.
@@ -323,6 +326,17 @@ impl PyFastaStreamDataset {
             self.size_hint
                 .map_or("unknown".to_string(), |n| n.to_string())
         ))
+    }
+
+    /// Provide arguments for __new__ during unpickling.
+    ///
+    /// This is called by pickle to get arguments to pass to __new__().
+    ///
+    /// # Returns
+    ///
+    /// Tuple of (file_path,) to pass to __new__
+    fn __getnewargs__(&self) -> PyResult<(String,)> {
+        Ok((self.file_path.clone(),))
     }
 
     /// Pickling support for multiprocessing (DataLoader with num_workers > 0).
@@ -345,8 +359,7 @@ impl PyFastaStreamDataset {
 #[gen_stub_pyclass]
 #[pyclass(name = "FastaStreamIterator", module = "deepbiop.fa")]
 pub struct PyFastaStreamIterator {
-    file_path: String,
-    current_idx: usize,
+    iter: std::sync::Mutex<FastaStreamIterator>,
 }
 
 #[gen_stub_pymethods]
@@ -357,23 +370,13 @@ impl PyFastaStreamIterator {
     }
 
     fn __next__(&mut self, py: Python) -> PyResult<Option<Py<PyDict>>> {
-        // Create a new dataset and iterator for each record
-        let dataset = crate::dataset::FastaDataset::new(self.file_path.clone())
-            .map_err(|e| pyo3::exceptions::PyIOError::new_err(e.to_string()))?;
-
-        // Skip to current index and get next record
-        let mut iter = dataset.iter();
-        for _ in 0..self.current_idx {
-            if iter.next().is_none() {
-                return Ok(None);
-            }
-        }
-
+        let iter = self
+            .iter
+            .get_mut()
+            .unwrap_or_else(std::sync::PoisonError::into_inner);
         match iter.next() {
             None => Ok(None),
             Some(Ok(record)) => {
-                self.current_idx += 1;
-
                 // Create dict with NumPy arrays for zero-copy
                 let dict = PyDict::new(py);
                 dict.set_item("id", record.id)?;
@@ -389,7 +392,7 @@ impl PyFastaStreamIterator {
 
                 Ok(Some(dict.into()))
             }
-            Some(Err(e)) => Err(pyo3::exceptions::PyIOError::new_err(format!(
+            Some(Err(e)) => Err(pyo3::exceptions::PyValueError::new_err(format!(
                 "Failed to read FASTA record: {}",
                 e
             ))),

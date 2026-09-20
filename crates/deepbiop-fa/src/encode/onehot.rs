@@ -5,6 +5,8 @@
 use anyhow::Result;
 use log::warn;
 use ndarray::{Array2, Array3};
+use rand::rngs::SmallRng;
+use rand::{RngExt, SeedableRng};
 use rayon::prelude::*;
 
 use deepbiop_core::error::DPError;
@@ -42,7 +44,6 @@ pub struct OneHotEncoder {
     /// Strategy for handling ambiguous bases
     ambiguous_strategy: AmbiguousStrategy,
     /// Random number generator seed (for Random strategy)
-    #[allow(dead_code)]
     seed: Option<u64>,
 }
 
@@ -105,6 +106,18 @@ impl OneHotEncoder {
 
         let mut encoded = Array2::<f32>::zeros((seq_len, alphabet_size));
 
+        // Initialize RNG for random strategy (only created if needed)
+        let mut rng_state: Option<SmallRng> =
+            if matches!(self.ambiguous_strategy, AmbiguousStrategy::Random) {
+                Some(if let Some(seed) = self.seed {
+                    SmallRng::seed_from_u64(seed)
+                } else {
+                    SmallRng::from_rng(&mut rand::rng())
+                })
+            } else {
+                None
+            };
+
         for (i, &base) in sequence.iter().enumerate() {
             let base_upper = base.to_ascii_uppercase();
 
@@ -126,8 +139,12 @@ impl OneHotEncoder {
                         continue;
                     }
                     AmbiguousStrategy::Random => {
-                        // TODO: Implement random replacement
-                        // For now, mask with zeros
+                        // Replace with a random valid base from the alphabet
+                        let alphabet = self.encoding_type.alphabet();
+                        if let Some(rng_ref) = &mut rng_state {
+                            let random_idx = rng_ref.random_range(0..alphabet.len());
+                            encoded[[i, random_idx]] = 1.0;
+                        }
                         continue;
                     }
                 }
@@ -284,5 +301,30 @@ mod tests {
         assert_eq!(batch[[1, 0, 0]], 1.0); // A
         assert_eq!(batch[[1, 1, 1]], 1.0); // C
         assert_eq!(batch[[1, 2, 0]], 0.0); // Padding
+    }
+
+    #[test]
+    fn test_onehot_encode_ambiguous_random() {
+        let encoder = OneHotEncoder::with_seed(EncodingType::DNA, AmbiguousStrategy::Random, 42);
+        let encoded = encoder.encode(b"ACGTN").unwrap();
+
+        assert_eq!(encoded.shape(), &[5, 4]);
+
+        // First 4 bases should be encoded correctly
+        assert_eq!(encoded[[0, 0]], 1.0); // A
+        assert_eq!(encoded[[1, 1]], 1.0); // C
+        assert_eq!(encoded[[2, 2]], 1.0); // G
+        assert_eq!(encoded[[3, 3]], 1.0); // T
+
+        // N should be replaced with a random valid base: exactly one 1.0 in that row
+        let n_encoding: Vec<f32> = (0..4).map(|i| encoded[[4, i]]).collect();
+        let sum: f32 = n_encoding.iter().sum();
+        assert_eq!(sum, 1.0);
+        assert!(n_encoding.contains(&1.0));
+
+        // Deterministic: same seed produces the same encoding across two calls
+        let encoder2 = OneHotEncoder::with_seed(EncodingType::DNA, AmbiguousStrategy::Random, 42);
+        let encoded2 = encoder2.encode(b"ACGTN").unwrap();
+        assert_eq!(encoded, encoded2);
     }
 }

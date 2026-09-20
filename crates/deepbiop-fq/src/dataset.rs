@@ -372,7 +372,15 @@ impl deepbiop_core::dataset::IterableDataset for FastqDataset {
                 Item = deepbiop_core::dataset::DatasetResult<deepbiop_core::seq::SequenceRecord>,
             > + '_,
     > {
-        Box::new(FastqStreamIterator::new(&self.file_path))
+        match FastqStreamIterator::open(&self.file_path) {
+            Ok(iter) => Box::new(iter),
+            Err(e) => Box::new(std::iter::once(Err(
+                deepbiop_core::error::DPError::InvalidValue(format!(
+                    "Failed to open FASTQ file '{}': {}",
+                    self.file_path, e
+                )),
+            ))),
+        }
     }
 
     fn paths(&self) -> Vec<std::path::PathBuf> {
@@ -387,20 +395,21 @@ impl deepbiop_core::dataset::IterableDataset for FastqDataset {
 /// Streaming iterator for IterableDataset trait implementation.
 ///
 /// This provides true streaming access without batching.
-struct FastqStreamIterator {
-    reader: fastq::io::Reader<BufReader<Box<dyn Read + Send>>>,
+pub struct FastqStreamIterator {
+    reader: fastq::io::Reader<BufReader<Box<dyn Read + Send + Sync>>>,
 }
 
 impl FastqStreamIterator {
-    fn new(file_path: &str) -> Self {
-        // Create reader with compression support
-        let file_reader = deepbiop_utils::io::create_reader_for_compressed_file(file_path)
-            .expect("Failed to create file reader");
-
+    /// Open a FASTQ file (plain, gzip, or bgzip) for streaming record iteration.
+    ///
+    /// Propagates the reader-creation error instead of panicking, so callers
+    /// (including Python bindings) can surface a proper error to the caller.
+    pub fn open(file_path: &str) -> Result<Self> {
+        let file_reader = deepbiop_utils::io::create_reader_for_compressed_file(file_path)?;
         let buffered = BufReader::new(file_reader);
         let reader = fastq::io::Reader::new(buffered);
 
-        Self { reader }
+        Ok(Self { reader })
     }
 }
 
@@ -445,7 +454,7 @@ impl Iterator for FastqStreamIterator {
 
 // More robust and efficient record counting
 #[allow(dead_code)]
-fn count_records_efficient(file_path: &str) -> Result<usize> {
+pub(crate) fn count_records_efficient(file_path: &str) -> Result<usize> {
     let file = File::open(file_path)?;
     let file_size = file.metadata()?.len() as usize;
 
@@ -504,4 +513,34 @@ fn count_records_exact(file_path: &str) -> Result<usize> {
 fn count_records(file_path: &str) -> PyResult<usize> {
     count_records_efficient(file_path)
         .map_err(|e| pyo3::exceptions::PyIOError::new_err(e.to_string()))
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+    use std::io::Write;
+
+    #[test]
+    fn test_fastq_stream_iterator_open_missing_file_returns_err() {
+        let result = FastqStreamIterator::open("/nonexistent/path/does-not-exist.fastq");
+        assert!(result.is_err());
+    }
+
+    #[test]
+    fn test_fastq_stream_iterator_open_reads_records() {
+        let mut file = tempfile::NamedTempFile::new().expect("create temp file");
+        write!(file, "@read1\nACGT\n+\nIIII\n@read2\nTTTT\n+\nJJJJ\n").expect("write temp fastq");
+
+        let path = file.path().to_str().expect("utf8 temp path");
+        let iter = FastqStreamIterator::open(path).expect("open temp fastq file");
+
+        let records: Vec<_> = iter
+            .collect::<std::result::Result<Vec<_>, _>>()
+            .expect("no record errors");
+        assert_eq!(records.len(), 2);
+        assert_eq!(records[0].id, "read1");
+        assert_eq!(records[0].sequence, b"ACGT");
+        assert_eq!(records[1].id, "read2");
+        assert_eq!(records[1].sequence, b"TTTT");
+    }
 }

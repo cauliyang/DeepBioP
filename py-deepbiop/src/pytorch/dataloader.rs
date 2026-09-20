@@ -4,7 +4,8 @@
 //! and provides batching, shuffling, and parallel loading capabilities.
 
 use pyo3::prelude::*;
-use rand::rngs::StdRng;
+use pyo3::types::PyList;
+use rand::rngs::SmallRng;
 use rand::seq::SliceRandom;
 use rand::SeedableRng;
 
@@ -25,8 +26,8 @@ pub struct DataLoader {
     batch_size: usize,
     /// Whether to shuffle data
     shuffle: bool,
-    /// Number of worker threads (currently unused, for future)
-    num_workers: usize,
+    /// Optional callable applied to each batch (list of samples)
+    collate_fn: Option<Py<PyAny>>,
     /// Whether to drop last incomplete batch
     drop_last: bool,
     /// Random seed for shuffling
@@ -41,21 +42,23 @@ impl DataLoader {
     ///     dataset: Dataset instance to load from
     ///     batch_size: Number of samples per batch (default: 1)
     ///     shuffle: Whether to shuffle data (default: False)
-    ///     num_workers: Number of worker threads (default: 0, currently unused)
-    ///     collate_fn: Function to collate samples into batch (default: None, currently unused)
+    ///     collate_fn: Callable receiving the list of samples of a batch and
+    ///         returning the batch object (e.g. `deepbiop.pytorch.default_collate`).
+    ///         When None, each batch is the plain list of samples.
     ///     drop_last: Drop last incomplete batch (default: False)
     ///     seed: Random seed for shuffling (default: None)
+    ///
+    /// This loader runs in-process. For multi-process loading use
+    /// `torch.utils.data.DataLoader` on top of the dataset instead.
     ///
     /// Returns:
     ///     DataLoader instance
     #[new]
-    #[pyo3(signature = (dataset, *, batch_size=1, shuffle=false, num_workers=0, collate_fn=None, drop_last=false, seed=None))]
-    #[allow(unused_variables)]
+    #[pyo3(signature = (dataset, *, batch_size=1, shuffle=false, collate_fn=None, drop_last=false, seed=None))]
     fn new(
         dataset: Py<Dataset>,
         batch_size: usize,
         shuffle: bool,
-        num_workers: usize,
         collate_fn: Option<Py<PyAny>>,
         drop_last: bool,
         seed: Option<u64>,
@@ -66,13 +69,11 @@ impl DataLoader {
             ));
         }
 
-        // TODO: Handle collate_fn in future tasks
-
         Ok(DataLoader {
             dataset,
             batch_size,
             shuffle,
-            num_workers,
+            collate_fn,
             drop_last,
             seed,
         })
@@ -99,7 +100,8 @@ impl DataLoader {
     /// Iterate over batches.
     ///
     /// Returns:
-    ///     Iterator over batches (each batch is a list of samples)
+    ///     Iterator over batches (each batch is a list of samples, or the
+    ///     result of `collate_fn` applied to that list)
     fn __iter__(slf: PyRef<'_, Self>) -> PyResult<DataLoaderIterator> {
         let py = slf.py();
 
@@ -115,7 +117,7 @@ impl DataLoader {
         // Shuffle if requested
         if slf.shuffle {
             if let Some(seed) = slf.seed {
-                let mut rng = StdRng::seed_from_u64(seed);
+                let mut rng = SmallRng::seed_from_u64(seed);
                 indices.shuffle(&mut rng);
             } else {
                 // Use rng() for non-seeded random shuffling
@@ -134,8 +136,15 @@ impl DataLoader {
     /// Human-readable representation.
     fn __repr__(&self) -> PyResult<String> {
         Ok(format!(
-            "DataLoader(batch_size={}, shuffle={}, num_workers={}, drop_last={})",
-            self.batch_size, self.shuffle, self.num_workers, self.drop_last
+            "DataLoader(batch_size={}, shuffle={}, collate_fn={}, drop_last={})",
+            self.batch_size,
+            self.shuffle,
+            if self.collate_fn.is_some() {
+                "set"
+            } else {
+                "None"
+            },
+            self.drop_last
         ))
     }
 }
@@ -156,7 +165,7 @@ impl DataLoaderIterator {
         slf
     }
 
-    fn __next__(&mut self, py: Python) -> PyResult<Option<Py<pyo3::types::PyList>>> {
+    fn __next__(&mut self, py: Python) -> PyResult<Option<Py<PyAny>>> {
         let dataloader = self.dataloader.borrow(py);
         let dataset = dataloader.dataset.borrow(py);
 
@@ -175,14 +184,15 @@ impl DataLoaderIterator {
         let end_idx = std::cmp::min(start_idx + dataloader.batch_size, self.indices.len());
 
         // Collect samples for this batch
-        let batch_list = pyo3::types::PyList::empty(py);
+        let batch_list = PyList::empty(py);
         for &idx in &self.indices[start_idx..end_idx] {
-            let sample = dataset.get_item(idx, py)?;
-            batch_list.append(sample)?;
+            batch_list.append(dataset.get_item(idx, py)?)?;
         }
-
         self.current_batch += 1;
 
-        Ok(Some(batch_list.into()))
+        match &dataloader.collate_fn {
+            Some(collate) => collate.call1(py, (batch_list,)).map(Some),
+            None => Ok(Some(batch_list.into_any().unbind())),
+        }
     }
 }

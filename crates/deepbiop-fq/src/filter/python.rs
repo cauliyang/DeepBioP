@@ -233,14 +233,6 @@ impl PyDeduplicator {
         }
     }
 
-    /// Create a deduplicator that removes all duplicates (including first occurrence).
-    #[staticmethod]
-    pub fn remove_all_duplicates() -> Self {
-        Self {
-            inner: Deduplicator::remove_all_duplicates(),
-        }
-    }
-
     /// Check if a sequence has been seen before.
     pub fn is_duplicate(&self, sequence: Vec<u8>) -> bool {
         self.inner.is_duplicate(&sequence)
@@ -268,19 +260,9 @@ impl PyDeduplicator {
         self.inner.clear()
     }
 
-    /// Get whether the filter keeps first occurrences.
-    #[getter]
-    pub fn keep_first(&self) -> bool {
-        self.inner.keep_first()
-    }
-
     /// String representation.
     pub fn __repr__(&self) -> String {
-        format!(
-            "Deduplicator(unique_count={}, keep_first={})",
-            self.inner.unique_count(),
-            self.inner.keep_first()
-        )
+        format!("Deduplicator(unique_count={})", self.inner.unique_count())
     }
 }
 

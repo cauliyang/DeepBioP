@@ -17,15 +17,15 @@ use deepbiop_fq::augment::{
     Sampler as InnerSampler,
 };
 
-// Transform implementations for T018-T022
+// Transform implementations
 // Planned classes:
-// - OneHotEncoder: Wraps existing one-hot encoder (T018)
-// - IntegerEncoder: Wraps existing integer encoder (T020)
-// - KmerEncoder: Wraps existing k-mer encoder (T022)
-// - Mutator: Wraps existing mutation augmentation (T038)
-// - Sampler: Wraps existing sampling augmentation (T042)
-// - ReverseComplement: Wraps existing RC augmentation (T036)
-// - Compose: Simple transform chaining (<20 lines) (T036)
+// - OneHotEncoder: Wraps existing one-hot encoder
+// - IntegerEncoder: Wraps existing integer encoder
+// - KmerEncoder: Wraps existing k-mer encoder
+// - Mutator: Wraps existing mutation augmentation
+// - Sampler: Wraps existing sampling augmentation
+// - ReverseComplement: Wraps existing RC augmentation
+// - Compose: Simple transform chaining
 
 /// PyTorch-compatible OneHotEncoder transform.
 ///
@@ -494,6 +494,11 @@ impl Sampler {
     #[new]
     #[pyo3(signature = (length, strategy="start", seed=None))]
     fn new(length: usize, strategy: &str, seed: Option<u64>) -> PyResult<Self> {
+        if length == 0 {
+            return Err(pyo3::exceptions::PyValueError::new_err(
+                "length must be greater than 0",
+            ));
+        }
         let inner = match strategy {
             "start" => InnerSampler::from_start(length),
             "center" => InnerSampler::from_center(length),
@@ -522,29 +527,35 @@ impl Sampler {
     /// Returns:
     ///     Sample dict with sampled sequence
     fn __call__(&mut self, sample: &Bound<'_, PyDict>, py: Python) -> PyResult<Py<PyDict>> {
-        // Get sequence from sample
         let sequence = sample.get_item("sequence")?.ok_or_else(|| {
             pyo3::exceptions::PyValueError::new_err("Sample missing 'sequence' key")
         })?;
-
-        // Convert sequence to Vec<u8>
         let seq_bytes: Vec<u8> = sequence.extract()?;
 
-        // Apply sampling using inner transform
-        let sampled_bytes = self.inner.apply(&seq_bytes);
+        // One window per record so sequence and quality stay aligned.
+        let window = self.inner.window(seq_bytes.len());
 
-        // Create new sample dict with transformed sequence
         let new_sample = PyDict::new(py);
-        new_sample.set_item("sequence", pyo3::types::PyBytes::new(py, &sampled_bytes))?;
+        new_sample.set_item(
+            "sequence",
+            pyo3::types::PyBytes::new(py, &seq_bytes[window.clone()]),
+        )?;
 
-        // Copy other keys (sample quality if present and same strategy)
         for (key, value) in sample.iter() {
             let key_str: String = key.extract()?;
             if key_str == "quality" {
-                // Sample quality scores to match sampled sequence
                 let qual_bytes: Vec<u8> = value.extract()?;
-                let sampled_qual = self.inner.apply(&qual_bytes);
-                new_sample.set_item(key, pyo3::types::PyBytes::new(py, &sampled_qual))?;
+                if qual_bytes.len() != seq_bytes.len() {
+                    return Err(pyo3::exceptions::PyValueError::new_err(format!(
+                        "quality length {} != sequence length {}",
+                        qual_bytes.len(),
+                        seq_bytes.len()
+                    )));
+                }
+                new_sample.set_item(
+                    key,
+                    pyo3::types::PyBytes::new(py, &qual_bytes[window.clone()]),
+                )?;
             } else if key_str != "sequence" {
                 new_sample.set_item(key, value)?;
             }

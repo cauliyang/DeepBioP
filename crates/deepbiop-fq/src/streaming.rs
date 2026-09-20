@@ -9,8 +9,8 @@ use noodles::fastq::Record;
 use rand::prelude::*;
 use rand::seq::SliceRandom;
 use std::collections::VecDeque;
-use std::fs::File;
 use std::io::BufReader;
+use std::io::Read;
 use std::path::Path;
 
 #[cfg(feature = "python")]
@@ -51,11 +51,12 @@ impl StreamingRecord {
 
 /// Shuffle buffer for approximate randomization of streaming data
 ///
-/// Uses reservoir sampling to provide approximate shuffling without
-/// loading entire dataset into memory. Buffer size determines the
-/// randomization window.
+/// Holds up to `capacity` records; once full, every incoming record swaps
+/// with a uniformly chosen buffered one, which is emitted. Records therefore
+/// come out in random order within a window of `capacity` positions without
+/// loading the dataset into memory.
 pub struct ShuffleBuffer {
-    buffer: VecDeque<StreamingRecord>,
+    buffer: Vec<StreamingRecord>,
     capacity: usize,
     rng: rand::rngs::ThreadRng,
 }
@@ -64,7 +65,7 @@ impl ShuffleBuffer {
     /// Create a new shuffle buffer with given capacity
     pub fn new(capacity: usize) -> Self {
         Self {
-            buffer: VecDeque::with_capacity(capacity),
+            buffer: Vec::with_capacity(capacity),
             capacity,
             rng: rand::rng(),
         }
@@ -73,37 +74,23 @@ impl ShuffleBuffer {
     /// Add a record to the buffer
     ///
     /// Returns Some(record) if buffer is full and a random record should be emitted
-    pub fn push(&mut self, record: StreamingRecord) -> Option<StreamingRecord> {
+    pub fn push(&mut self, mut record: StreamingRecord) -> Option<StreamingRecord> {
         if self.buffer.len() < self.capacity {
-            // Buffer not full yet, just add
-            self.buffer.push_back(record);
-            None
-        } else {
-            // Buffer full: randomly select position to insert new record
-            // and return the record at that position
-            let idx = (0..=self.capacity - 1)
-                .collect::<Vec<_>>()
-                .choose(&mut self.rng)
-                .copied()
-                .unwrap_or(0);
-
-            if idx < self.capacity - 1 {
-                // Replace existing record
-                let old = self.buffer.remove(idx).unwrap();
-                self.buffer.insert(idx, record);
-                Some(old)
-            } else {
-                // New record bypasses buffer (reservoir sampling)
-                Some(record)
-            }
+            self.buffer.push(record);
+            return None;
         }
+        let idx = self.rng.random_range(0..self.capacity);
+        std::mem::swap(&mut self.buffer[idx], &mut record);
+        Some(record)
     }
 
-    /// Drain remaining records from buffer in random order
-    pub fn drain(&mut self) -> Vec<StreamingRecord> {
-        let mut remaining: Vec<_> = self.buffer.drain(..).collect();
+    /// Drain remaining records from buffer in random order.
+    ///
+    /// The returned deque is consumed front to back.
+    pub fn drain(&mut self) -> VecDeque<StreamingRecord> {
+        let mut remaining = std::mem::take(&mut self.buffer);
         remaining.shuffle(&mut self.rng);
-        remaining
+        remaining.into()
     }
 
     /// Check if buffer is empty
@@ -119,9 +106,9 @@ impl ShuffleBuffer {
 
 /// Streaming FASTQ iterator with optional shuffling
 pub struct StreamingFastqIterator {
-    reader: Reader<BufReader<File>>,
+    reader: Reader<BufReader<Box<dyn Read + Send + Sync>>>,
     shuffle_buffer: Option<ShuffleBuffer>,
-    drain_buffer: Vec<StreamingRecord>,
+    drain_buffer: VecDeque<StreamingRecord>,
     done: bool,
 }
 
@@ -132,11 +119,10 @@ impl StreamingFastqIterator {
     /// * `path` - Path to FASTQ file (plain, gzip, or bgzip)
     /// * `shuffle_buffer_size` - Size of shuffle buffer (0 = no shuffling)
     pub fn new<P: AsRef<Path>>(path: P, shuffle_buffer_size: usize) -> Result<Self> {
-        let file = File::open(path.as_ref())
+        let file = deepbiop_utils::io::create_reader_for_compressed_file(path.as_ref())
             .with_context(|| format!("Failed to open FASTQ file: {:?}", path.as_ref()))?;
 
-        let reader = BufReader::new(file);
-        let fastq_reader = Reader::new(reader);
+        let fastq_reader = Reader::new(BufReader::new(file));
 
         let shuffle_buffer = if shuffle_buffer_size > 0 {
             Some(ShuffleBuffer::new(shuffle_buffer_size))
@@ -147,7 +133,7 @@ impl StreamingFastqIterator {
         Ok(Self {
             reader: fastq_reader,
             shuffle_buffer,
-            drain_buffer: Vec::new(),
+            drain_buffer: VecDeque::new(),
             done: false,
         })
     }
@@ -168,9 +154,8 @@ impl Iterator for StreamingFastqIterator {
     type Item = Result<StreamingRecord>;
 
     fn next(&mut self) -> Option<Self::Item> {
-        // First, check if we have records in drain buffer
-        if !self.drain_buffer.is_empty() {
-            return Some(Ok(self.drain_buffer.remove(0)));
+        if let Some(record) = self.drain_buffer.pop_front() {
+            return Some(Ok(record));
         }
 
         if self.done {
@@ -188,10 +173,7 @@ impl Iterator for StreamingFastqIterator {
                         self.done = true;
                         let shuffle_buffer = self.shuffle_buffer.as_mut().unwrap();
                         self.drain_buffer = shuffle_buffer.drain();
-                        if !self.drain_buffer.is_empty() {
-                            return Some(Ok(self.drain_buffer.remove(0)));
-                        }
-                        return None;
+                        return self.drain_buffer.pop_front().map(Ok);
                     }
                     Err(e) => {
                         self.done = true;

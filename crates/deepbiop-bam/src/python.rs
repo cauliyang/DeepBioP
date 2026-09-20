@@ -21,7 +21,6 @@ use crate::cigar::calc_softclips;
 use crate::features::AlignmentFeatures;
 use crate::reader::BamReader;
 
-use deepbiop_core::dataset::IterableDataset;
 use pyo3_stub_gen::derive::*;
 
 /// Python wrapper for AlignmentFeatures
@@ -243,6 +242,24 @@ pub struct PyBamStreamDataset {
     size_hint: Option<usize>,
 }
 
+/// Extracts a required key from a pickled state dict.
+///
+/// Returns a Python `KeyError` if `key` is missing (mirrors `dict.__getitem__`), or a
+/// `ValueError` if the stored value cannot be converted to `T`.
+fn get_required_item<'py, T>(state: &Bound<'py, PyDict>, key: &str) -> PyResult<T>
+where
+    T: FromPyObjectOwned<'py>,
+{
+    state
+        .as_any()
+        .get_item(key)?
+        .extract()
+        .map_err(Into::into)
+        .map_err(|err: PyErr| {
+            pyo3::exceptions::PyValueError::new_err(format!("Invalid value for '{key}': {err}"))
+        })
+}
+
 #[gen_stub_pymethods]
 #[pymethods]
 impl PyBamStreamDataset {
@@ -285,12 +302,9 @@ impl PyBamStreamDataset {
     /// - 'quality': np.ndarray (uint8) - Quality score bytes
     /// - 'description': Optional[str] - Additional description (usually None for BAM)
     fn __iter__(slf: PyRef<'_, Self>) -> PyResult<Py<PyBamStreamIterator>> {
-        let iter = PyBamStreamIterator {
-            file_path: slf.file_path.clone(),
-            threads: slf.threads,
-            current_idx: 0,
-        };
-        Py::new(slf.py(), iter)
+        let iter = crate::dataset::BamStreamIterator::open(&slf.file_path, slf.threads)
+            .map_err(|e| pyo3::exceptions::PyIOError::new_err(e.to_string()))?;
+        Py::new(slf.py(), PyBamStreamIterator { iter })
     }
 
     /// Return the number of records in the dataset.
@@ -313,48 +327,25 @@ impl PyBamStreamDataset {
     ///
     /// # Performance Warning
     ///
-    /// **This implementation has O(n) complexity per call and exhibits O(n²) behavior for batch access.**
-    ///
-    /// Single access complexity:
-    /// - Accessing index 1000 requires reading and discarding 1000 records (O(n))
-    /// - Each call reopens the file (costly I/O operation)
-    /// - No caching or state preservation between calls
-    ///
-    /// Batch access complexity (e.g., DataLoader with batch_size=32):
-    /// - Index 0: reads 1 record, Index 1: reads 2 records, ..., Index 31: reads 32 records
-    /// - **Total: 528 record reads + 32 file opens for just 32 records** (O(n²))
-    /// - For batch_size=64: 2080 reads + 64 file opens for 64 records
+    /// **This implementation has O(n) complexity per call**, where `n` is `index`: it opens
+    /// the file and reads through `index` records before returning the target record. Each
+    /// call reopens the file and starts from the beginning; there is no caching or state
+    /// preservation between calls.
     ///
     /// This is acceptable for PyTorch DataLoader with `num_workers=0` and sequential iteration,
-    /// but will be extremely inefficient for random access or parallel workers. For better
-    /// performance, consider loading all records into memory first or using the iterator interface.
+    /// but will be inefficient for random access or repeated calls. For better performance,
+    /// consider loading all records into memory first or using the iterator interface.
     ///
     /// **Recommended**: Use iterator-based access via `__iter__()` for true O(n) streaming.
     fn __getitem__(&self, index: usize, py: Python) -> PyResult<Py<PyDict>> {
-        use numpy::ToPyArray;
-
-        // Create dataset and iterate to index
-        let dataset = crate::dataset::BamDataset::new(self.file_path.clone(), self.threads)
+        let mut iter = crate::dataset::BamStreamIterator::open(&self.file_path, self.threads)
             .map_err(|e| pyo3::exceptions::PyIOError::new_err(e.to_string()))?;
 
-        let mut iter = dataset.iter();
-
-        // Skip to index
-        for _ in 0..index {
-            if iter.next().is_none() {
-                return Err(pyo3::exceptions::PyIndexError::new_err(format!(
-                    "Index {} out of range for dataset with {} records",
-                    index,
-                    self.size_hint.unwrap_or(0)
-                )));
-            }
-        }
-
-        // Get record at index
-        match iter.next() {
+        match iter.nth(index) {
             None => Err(pyo3::exceptions::PyIndexError::new_err(format!(
-                "Index {} out of range",
-                index
+                "Index {} out of range for dataset with {} records",
+                index,
+                self.size_hint.unwrap_or(0)
             ))),
             Some(Ok(record)) => {
                 let dict = PyDict::new(py);
@@ -375,7 +366,7 @@ impl PyBamStreamDataset {
 
                 Ok(dict.into())
             }
-            Some(Err(e)) => Err(pyo3::exceptions::PyIOError::new_err(format!(
+            Some(Err(e)) => Err(pyo3::exceptions::PyValueError::new_err(format!(
                 "Failed to read BAM record: {}",
                 e
             ))),
@@ -393,6 +384,14 @@ impl PyBamStreamDataset {
         ))
     }
 
+    /// Arguments passed to `__new__` when unpickling (pickle protocol 2+).
+    ///
+    /// Extension types have no default `__new__`, so `__reduce_ex__` needs these to
+    /// reconstruct the instance before `__setstate__` restores the rest of the state.
+    fn __getnewargs__(&self) -> (String, Option<usize>) {
+        (self.file_path.clone(), self.threads)
+    }
+
     /// Pickling support for multiprocessing (DataLoader with num_workers > 0).
     fn __getstate__(&self, py: Python) -> PyResult<Py<PyDict>> {
         let state = PyDict::new(py);
@@ -404,9 +403,9 @@ impl PyBamStreamDataset {
 
     /// Unpickling support for multiprocessing.
     fn __setstate__(&mut self, state: &Bound<'_, PyDict>) -> PyResult<()> {
-        self.file_path = state.get_item("file_path")?.unwrap().extract()?;
-        self.threads = state.get_item("threads")?.unwrap().extract()?;
-        self.size_hint = state.get_item("size_hint")?.unwrap().extract()?;
+        self.file_path = get_required_item(state, "file_path")?;
+        self.threads = get_required_item(state, "threads")?;
+        self.size_hint = get_required_item(state, "size_hint")?;
         Ok(())
     }
 }
@@ -415,9 +414,7 @@ impl PyBamStreamDataset {
 #[gen_stub_pyclass]
 #[pyclass(name = "BamStreamIterator", module = "deepbiop.bam")]
 pub struct PyBamStreamIterator {
-    file_path: String,
-    threads: Option<usize>,
-    current_idx: usize,
+    iter: crate::dataset::BamStreamIterator,
 }
 
 #[gen_stub_pymethods]
@@ -428,23 +425,9 @@ impl PyBamStreamIterator {
     }
 
     fn __next__(&mut self, py: Python) -> PyResult<Option<Py<PyDict>>> {
-        // Create a new dataset and iterator for each record
-        let dataset = crate::dataset::BamDataset::new(self.file_path.clone(), self.threads)
-            .map_err(|e| pyo3::exceptions::PyIOError::new_err(e.to_string()))?;
-
-        // Skip to current index and get next record
-        let mut iter = dataset.iter();
-        for _ in 0..self.current_idx {
-            if iter.next().is_none() {
-                return Ok(None);
-            }
-        }
-
-        match iter.next() {
+        match self.iter.next() {
             None => Ok(None),
             Some(Ok(record)) => {
-                self.current_idx += 1;
-
                 // Create dict with NumPy arrays for zero-copy
                 let dict = PyDict::new(py);
                 dict.set_item("id", record.id)?;
@@ -464,7 +447,7 @@ impl PyBamStreamIterator {
 
                 Ok(Some(dict.into()))
             }
-            Some(Err(e)) => Err(pyo3::exceptions::PyIOError::new_err(format!(
+            Some(Err(e)) => Err(pyo3::exceptions::PyValueError::new_err(format!(
                 "Failed to read BAM record: {}",
                 e
             ))),

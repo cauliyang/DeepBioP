@@ -2,8 +2,27 @@
 
 # The Rust extension registers its submodules (fq, fa, bam, core, utils, vcf, gtf,
 # pytorch) in sys.modules on import, so `from deepbiop.fq import ...` works.
+from deepbiop.collate import (
+    default_collate,
+    get_collate_fn,
+    multi_label_collate,
+    multi_label_tensor_collate,
+    supervised_collate,
+    tensor_collate,
+)
+from deepbiop.dataset import Dataset
+from deepbiop.datasets import BamDataset, FastaDataset, FastqDataset
 from deepbiop.deepbiop import *  # noqa: F403
 from deepbiop.deepbiop import fq, gtf, pytorch, vcf
+from deepbiop.lightning import BiologicalDataModule
+from deepbiop.record import Record
+from deepbiop.targets import (
+    MultiLabelExtractor,
+    TargetExtractor,
+    create_classification_extractor,
+    get_builtin_extractor,
+)
+from deepbiop.transforms import Compose, FilterCompose, Transform, TransformDataset
 
 # PyTorch-compatible transforms take precedence over the low-level fq/core
 # encoders re-exported by the wildcard import above: they implement __call__.
@@ -20,26 +39,6 @@ GenomicFeature = gtf.GenomicFeature
 GtfReader = gtf.GtfReader
 Variant = vcf.Variant
 VcfReader = vcf.VcfReader
-
-from deepbiop.collate import (
-    default_collate,
-    get_collate_fn,
-    multi_label_collate,
-    multi_label_tensor_collate,
-    supervised_collate,
-    tensor_collate,
-)
-from deepbiop.dataset import Dataset
-from deepbiop.datasets import BamDataset, FastaDataset, FastqDataset
-from deepbiop.lightning import BiologicalDataModule
-from deepbiop.record import Record
-from deepbiop.targets import (
-    MultiLabelExtractor,
-    TargetExtractor,
-    create_classification_extractor,
-    get_builtin_extractor,
-)
-from deepbiop.transforms import Compose, FilterCompose, Transform, TransformDataset
 
 __all__ = [
     "BamDataset",

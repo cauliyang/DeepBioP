@@ -167,10 +167,9 @@ impl FilterWithReason for Subsampler {
             Some("Filtered by random sampling".to_string())
         } else if let Some(n) = self.every_nth {
             Some(format!("Filtered by every_nth (keeping every {n} record)"))
-        } else if let Some(n) = self.first_n {
-            Some(format!("Filtered by first_n (kept first {n} records)"))
         } else {
-            None
+            self.first_n
+                .map(|n| format!("Filtered by first_n (kept first {n} records)"))
         }
     }
 }

@@ -169,7 +169,7 @@ impl KmerCommand {
         set_up_threads(self.threads)?;
 
         let encoding_type: EncodingType = self.encoding_type.clone().into();
-        let encoder = KmerEncoder::new(self.k, self.canonical, encoding_type);
+        let encoder = KmerEncoder::new(self.k, self.canonical, encoding_type)?;
 
         let sequences = read_sequences(&self.input)?;
         let seq_refs: Vec<&[u8]> = sequences.iter().map(|s| s.as_slice()).collect();

@@ -1,25 +1,52 @@
 //! Cache layer for processed datasets.
 //!
-//! This module provides caching functionality to speed up repeated
-//! data loading by storing processed datasets to disk.
+//! Processed samples are stored as a NumPy `.npz` archive (one entry per
+//! sample key) plus a `.meta.json` sidecar recording the sample keys and the
+//! source file's size/mtime for staleness checks.
 
 use pyo3::prelude::*;
-use pyo3::types::{PyDict, PyList};
+use pyo3::types::{PyBytes, PyDict, PyList};
 use std::fs;
+use std::io::Write;
 use std::path::Path;
 
-/// Save processed samples to cache file.
+/// Cache path as numpy will actually write it: `np.savez` appends `.npz` when missing.
+fn npz_path(cache_path: &str) -> String {
+    if cache_path.ends_with(".npz") {
+        cache_path.to_owned()
+    } else {
+        format!("{cache_path}.npz")
+    }
+}
+
+fn meta_path(cache_path: &str) -> String {
+    format!("{}.meta.json", npz_path(cache_path))
+}
+
+/// `(size, mtime_seconds)` of a file; `None` if it cannot be stat'ed.
+fn source_signature(path: &Path) -> Option<(u64, u64)> {
+    let meta = fs::metadata(path).ok()?;
+    let mtime = meta
+        .modified()
+        .ok()?
+        .duration_since(std::time::UNIX_EPOCH)
+        .ok()?
+        .as_secs();
+    Some((meta.len(), mtime))
+}
+
+/// Save processed samples to a cache file.
 ///
-/// Saves samples to .npz format (NumPy compressed) with accompanying .meta.json metadata file
-/// for cache invalidation based on source file modification time.
+/// Every key of every sample dict is stored (NumPy arrays, bytes, numbers,
+/// strings), so a cached sample loads back with the same keys it was saved with.
 ///
 /// Args:
-///     samples: List of processed samples (dicts with 'sequence' key as NumPy arrays)
-///     cache_path: Path to save cache file (should end with .npz)
+///     samples: List of sample dicts; all samples must share the same keys
+///     cache_path: Path to the cache file (`.npz` is appended if missing)
 ///     source_file: Optional source file path for staleness detection
 ///
 /// Raises:
-///     ValueError: If samples list is empty
+///     ValueError: If samples list is empty or samples have differing keys
 ///     IOError: If file write fails
 ///
 /// Examples:
@@ -32,103 +59,84 @@ pub fn save_cache(
     cache_path: String,
     source_file: Option<String>,
 ) -> PyResult<()> {
-    // Import numpy
     let np = py.import("numpy")?;
-    let json_module = py.import("json")?;
+    let json = py.import("json")?;
 
-    // Prepare data for saving
-    // Extract sequences and other fields from samples
     let num_samples = samples.len();
-
     if num_samples == 0 {
         return Err(pyo3::exceptions::PyValueError::new_err(
             "Cannot save empty samples list to cache",
         ));
     }
 
-    // Build dict of arrays for np.savez_compressed
+    let first = samples.get_item(0)?.cast_into::<PyDict>()?;
+    let mut keys: Vec<String> = first
+        .keys()
+        .iter()
+        .map(|k| k.extract::<String>())
+        .collect::<PyResult<_>>()?;
+    keys.sort();
+    if !keys.iter().any(|k| k == "sequence") {
+        return Err(pyo3::exceptions::PyValueError::new_err(
+            "Samples must have a 'sequence' key",
+        ));
+    }
+
     let save_dict = PyDict::new(py);
-
-    // Collect all sequences
-    let mut sequences = Vec::new();
-    let mut has_quality = false;
-
     for (idx, sample) in samples.iter().enumerate() {
-        let sample_dict = sample.cast::<PyDict>()?;
-
-        // Get sequence array
-        if let Some(seq) = sample_dict.get_item("sequence")? {
-            sequences.push(seq);
-        } else {
+        let sample = sample.cast::<PyDict>()?;
+        if sample.len() != keys.len() {
             return Err(pyo3::exceptions::PyValueError::new_err(format!(
-                "Sample {} missing 'sequence' key",
-                idx
+                "Sample {idx} has keys {:?}, expected {keys:?}",
+                sample.keys()
             )));
         }
-
-        // Check if quality exists (only need to check first sample)
-        if idx == 0 {
-            has_quality = sample_dict.contains("quality")?;
+        for key in &keys {
+            let value = sample.get_item(key)?.ok_or_else(|| {
+                pyo3::exceptions::PyValueError::new_err(format!(
+                    "Sample {idx} missing '{key}' key present in sample 0"
+                ))
+            })?;
+            save_dict.set_item(format!("{key}_{idx}"), value)?;
         }
     }
 
-    // Save each sequence individually (to handle variable lengths)
-    for (idx, seq) in sequences.iter().enumerate() {
-        save_dict.set_item(format!("seq_{}", idx), seq)?;
-    }
-
-    save_dict.set_item("num_samples", num_samples)?;
-
-    // Save metadata
     let metadata = PyDict::new(py);
     metadata.set_item("num_samples", num_samples)?;
-    metadata.set_item("has_quality", has_quality)?;
-
-    // Add source file info if provided
+    metadata.set_item("keys", &keys)?;
     if let Some(source) = &source_file {
-        let source_path = Path::new(source);
-        if source_path.exists() {
-            let mtime = fs::metadata(source_path)
-                .and_then(|m| m.modified())
-                .map(|t| t.duration_since(std::time::UNIX_EPOCH).unwrap().as_secs())
-                .unwrap_or(0);
-
+        if let Some((size, mtime)) = source_signature(Path::new(source)) {
             metadata.set_item("source_file", source)?;
+            metadata.set_item("source_size", size)?;
             metadata.set_item("source_mtime", mtime)?;
         }
     }
 
-    // Save arrays using numpy.savez_compressed
-    let savez_compressed = np.getattr("savez_compressed")?;
-    savez_compressed.call((cache_path.clone(),), Some(&save_dict))?;
+    np.getattr("savez_compressed")?
+        .call((npz_path(&cache_path),), Some(&save_dict))?;
 
-    // Save metadata JSON (append .meta.json to full cache path)
-    let meta_path = format!("{}.meta.json", cache_path);
-    let meta_file = fs::File::create(&meta_path)
+    let metadata_str: String = json.getattr("dumps")?.call1((metadata,))?.extract()?;
+    let mut meta_file = fs::File::create(meta_path(&cache_path))
         .map_err(|e| pyo3::exceptions::PyIOError::new_err(e.to_string()))?;
-
-    let metadata_json = json_module.getattr("dumps")?.call1((metadata,))?;
-    let metadata_str: String = metadata_json.extract()?;
-
-    std::io::Write::write_all(
-        &mut std::io::BufWriter::new(meta_file),
-        metadata_str.as_bytes(),
-    )
-    .map_err(|e| pyo3::exceptions::PyIOError::new_err(e.to_string()))?;
+    meta_file
+        .write_all(metadata_str.as_bytes())
+        .and_then(|_| meta_file.sync_all())
+        .map_err(|e| pyo3::exceptions::PyIOError::new_err(e.to_string()))?;
 
     Ok(())
 }
 
-/// Load processed samples from cache file.
+/// Load processed samples from a cache file written by [`save_cache`].
 ///
 /// Args:
-///     cache_path: Path to cache file (.npz)
+///     cache_path: Path to cache file (`.npz`)
 ///
 /// Returns:
-///     List of samples (dicts with 'sequence' key as NumPy arrays)
+///     List of sample dicts with the keys they were saved with; bytes values
+///     come back as `bytes`, everything else as NumPy arrays/scalars.
 ///
 /// Raises:
-///     FileNotFoundError: If cache file not found
+///     FileNotFoundError: If cache or metadata file not found
 ///     IOError: If load fails or file is corrupted
 ///
 /// Examples:
@@ -137,53 +145,62 @@ pub fn save_cache(
 ///     1000
 #[pyfunction]
 pub fn load_cache(py: Python, cache_path: String) -> PyResult<Py<PyList>> {
-    // Import numpy
     let np = py.import("numpy")?;
+    let json = py.import("json")?;
 
-    // Check cache file exists
-    if !Path::new(&cache_path).exists() {
-        return Err(pyo3::exceptions::PyFileNotFoundError::new_err(format!(
-            "Cache file not found: {}",
-            cache_path
-        )));
+    let npz = npz_path(&cache_path);
+    let meta = meta_path(&cache_path);
+    for p in [&npz, &meta] {
+        if !Path::new(p).exists() {
+            return Err(pyo3::exceptions::PyFileNotFoundError::new_err(format!(
+                "Cache file not found: {p}"
+            )));
+        }
     }
 
-    // Load arrays using numpy.load
-    let load_fn = np.getattr("load")?;
-    let loaded = load_fn.call1((cache_path,))?;
+    let meta_content = fs::read_to_string(&meta)
+        .map_err(|e| pyo3::exceptions::PyIOError::new_err(e.to_string()))?;
+    let metadata = json.getattr("loads")?.call1((meta_content,))?;
+    let metadata = metadata.cast::<PyDict>()?;
+    let num_samples: usize = metadata
+        .get_item("num_samples")?
+        .ok_or_else(|| pyo3::exceptions::PyIOError::new_err("cache metadata missing num_samples"))?
+        .extract()?;
+    let keys: Vec<String> = metadata
+        .get_item("keys")?
+        .ok_or_else(|| pyo3::exceptions::PyIOError::new_err("cache metadata missing keys"))?
+        .extract()?;
 
-    // Extract data - loaded is a NpzFile object, access with indexing
-    let num_samples_obj = loaded.get_item("num_samples")?;
-    let num_samples: usize = num_samples_obj.extract()?;
-
-    // Reconstruct samples list
+    let loaded = np.getattr("load")?.call1((npz,))?;
     let samples = PyList::empty(py);
-
     for idx in 0..num_samples {
         let sample = PyDict::new(py);
-
-        // Get sequence for this sample
-        let seq_key = format!("seq_{}", idx);
-        let seq = loaded.get_item(seq_key.as_str())?;
-        sample.set_item("sequence", seq)?;
-
+        for key in &keys {
+            let value = loaded.get_item(format!("{key}_{idx}"))?;
+            // Bytes were stored as 0-d `S` arrays; restore them as bytes.
+            let kind: String = value.getattr("dtype")?.getattr("kind")?.extract()?;
+            if kind == "S" && value.getattr("ndim")?.extract::<usize>()? == 0 {
+                let raw: Vec<u8> = value.call_method0("tobytes")?.extract()?;
+                sample.set_item(key, PyBytes::new(py, &raw))?;
+            } else {
+                sample.set_item(key, value)?;
+            }
+        }
         samples.append(sample)?;
     }
 
     Ok(samples.into())
 }
 
-/// Check if cache is valid (not stale).
+/// Check if a cache is present and not stale.
 ///
-/// Validates cache by comparing source file modification time (mtime) with cached metadata.
-/// Returns False if cache file missing, metadata missing, or source file has been modified.
+/// Returns False if the cache or its metadata is missing, or if `source_file`
+/// is given and its size or modification time differ from what was recorded
+/// when the cache was written.
 ///
 /// Args:
-///     cache_path: Path to cache file (.npz)
+///     cache_path: Path to cache file (`.npz`)
 ///     source_file: Source file path to check against (optional)
-///
-/// Returns:
-///     True if cache is valid (source file unchanged), False otherwise
 ///
 /// Examples:
 ///     >>> is_cache_valid("cache.npz", source_file="data.fastq")
@@ -195,63 +212,42 @@ pub fn is_cache_valid(
     cache_path: String,
     source_file: Option<String>,
 ) -> PyResult<bool> {
-    // Check cache file exists
-    if !Path::new(&cache_path).exists() {
+    let meta = meta_path(&cache_path);
+    if !Path::new(&npz_path(&cache_path)).exists() || !Path::new(&meta).exists() {
         return Ok(false);
     }
 
-    // Check metadata file exists (append .meta.json to full cache path)
-    let meta_path = format!("{}.meta.json", cache_path);
-    if !Path::new(&meta_path).exists() {
+    let Some(source) = source_file else {
+        return Ok(true);
+    };
+    let Some((size, mtime)) = source_signature(Path::new(&source)) else {
         return Ok(false);
-    }
-
-    // If no source file specified, cache is valid (can't check staleness)
-    let source = match source_file {
-        Some(s) => s,
-        None => return Ok(true),
     };
 
-    // Check source file exists
-    let source_path = Path::new(&source);
-    if !source_path.exists() {
+    let meta_content = fs::read_to_string(&meta)
+        .map_err(|e| pyo3::exceptions::PyIOError::new_err(e.to_string()))?;
+    let metadata = py
+        .import("json")?
+        .getattr("loads")?
+        .call1((meta_content,))?;
+    let metadata = metadata.cast::<PyDict>()?;
+
+    let Some(cached_source) = metadata.get_item("source_file")? else {
+        // Cache was written without a source file: nothing to compare against.
+        return Ok(true);
+    };
+    if cached_source.extract::<String>()? != source {
         return Ok(false);
     }
-
-    // Load metadata
-    let json_module = py.import("json")?;
-    let meta_content = fs::read_to_string(&meta_path)
-        .map_err(|e| pyo3::exceptions::PyIOError::new_err(e.to_string()))?;
-
-    let loads_fn = json_module.getattr("loads")?;
-    let metadata = loads_fn.call1((meta_content,))?;
-    let metadata_dict = metadata.cast::<PyDict>()?;
-
-    // Compare source file mtime
-    if let Ok(Some(cached_source)) = metadata_dict.get_item("source_file") {
-        let cached_source_str: String = cached_source.extract()?;
-
-        // Check paths match
-        if cached_source_str != source {
-            return Ok(false);
-        }
-
-        // Check modification time
-        if let Ok(Some(cached_mtime_obj)) = metadata_dict.get_item("source_mtime") {
-            let cached_mtime: u64 = cached_mtime_obj.extract()?;
-
-            let current_mtime = fs::metadata(source_path)
-                .and_then(|m| m.modified())
-                .map(|t| t.duration_since(std::time::UNIX_EPOCH).unwrap().as_secs())
-                .unwrap_or(0);
-
-            // Cache is valid if mtime hasn't changed
-            return Ok(cached_mtime == current_mtime);
-        }
-    }
-
-    // If no metadata about source file, assume cache is valid
-    Ok(true)
+    let cached_size: u64 = match metadata.get_item("source_size")? {
+        Some(v) => v.extract()?,
+        None => return Ok(false),
+    };
+    let cached_mtime: u64 = match metadata.get_item("source_mtime")? {
+        Some(v) => v.extract()?,
+        None => return Ok(false),
+    };
+    Ok(cached_size == size && cached_mtime == mtime)
 }
 
 /// Register cache functions with Python module.

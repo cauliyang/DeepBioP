@@ -209,6 +209,13 @@ class OneHotEncoder:
         """
         if self.validate_shapes and HAS_JAXTYPING:
             return self._encode_batch_validated(sequences, pad_value=pad_value)
+        return self._encode_batch_impl(sequences, pad_value=pad_value)
+
+    def _encode_batch_impl(
+        self, sequences: list[bytes], *, pad_value: float = 0.0
+    ) -> np.ndarray:
+        if not sequences:
+            return np.zeros((0, 0, self.alphabet_size), dtype=np.float32)
 
         # Encode all sequences
         encoded = [self._rust_encoder.encode(seq) for seq in sequences]
@@ -232,7 +239,7 @@ class OneHotEncoder:
         self, sequences: list[bytes], *, pad_value: float = 0.0
     ) -> Float[np.ndarray, "batch max_length alphabet"]:  # noqa: F722
         """Encode batch with runtime shape validation."""
-        return self.encode_batch(sequences, pad_value=pad_value)
+        return self._encode_batch_impl(sequences, pad_value=pad_value)
 
     def for_conv1d(self, batch: np.ndarray) -> np.ndarray:
         """Rearrange batch for PyTorch Conv1d (channels before length).

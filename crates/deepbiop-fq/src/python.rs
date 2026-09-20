@@ -2,7 +2,9 @@ use bstr::BString;
 use std::path::PathBuf;
 
 use crate::{
-    dataset::{FastqDataset, FastqIterator, FastqRecord},
+    dataset::{
+        count_records_efficient, FastqDataset, FastqIterator, FastqRecord, FastqStreamIterator,
+    },
     encode::{self, Encoder},
     filter, io,
     predicts::{self, Predict},
@@ -20,7 +22,6 @@ use pyo3::prelude::*;
 use pyo3::types::PyDict;
 use rayon::prelude::*;
 
-use deepbiop_core::dataset::IterableDataset;
 use pyo3_stub_gen::derive::*;
 
 #[gen_stub_pymethods]
@@ -196,9 +197,9 @@ fn encode_fq_paths_to_parquet(
     bases: String,
     qual_offset: usize,
 ) -> Result<()> {
-    fq_path.iter().for_each(|path| {
-        encode_fq_path_to_parquet(path.clone(), bases.clone(), qual_offset, None).unwrap();
-    });
+    for path in &fq_path {
+        encode_fq_path_to_parquet(path.clone(), bases.clone(), qual_offset, None)?;
+    }
     Ok(())
 }
 
@@ -354,11 +355,10 @@ impl PyFastqStreamDataset {
     /// * `IOError` - If file cannot be opened
     #[new]
     fn new(file_path: String) -> PyResult<Self> {
-        // Create temporary dataset to validate file and get size hint
-        let dataset = crate::dataset::FastqDataset::new(file_path.clone(), 1)
-            .map_err(|e| pyo3::exceptions::PyIOError::new_err(e.to_string()))?;
-
-        let size_hint = Some(dataset.records_count());
+        let size_hint = Some(
+            count_records_efficient(&file_path)
+                .map_err(|e| pyo3::exceptions::PyIOError::new_err(e.to_string()))?,
+        );
 
         Ok(Self {
             file_path,
@@ -374,11 +374,9 @@ impl PyFastqStreamDataset {
     /// - 'quality': np.ndarray (uint8) - Quality score bytes
     /// - 'description': Optional[str] - Sequence description
     fn __iter__(slf: PyRef<'_, Self>) -> PyResult<Py<PyFastqStreamIterator>> {
-        let iter = PyFastqStreamIterator {
-            file_path: slf.file_path.clone(),
-            current_idx: 0,
-        };
-        Py::new(slf.py(), iter)
+        let iter = FastqStreamIterator::open(&slf.file_path)
+            .map_err(|e| pyo3::exceptions::PyIOError::new_err(e.to_string()))?;
+        Py::new(slf.py(), PyFastqStreamIterator { iter })
     }
 
     /// Get estimated number of records in dataset.
@@ -402,33 +400,18 @@ impl PyFastqStreamDataset {
     ///
     /// # Note
     ///
-    /// This requires iterating through the file to reach the index,
-    /// so it's O(n). For sequential access, use iteration instead.
+    /// Each call opens the file fresh and reads sequentially up to `index`,
+    /// so random access is O(n) in the index. Iteration is preferred for
+    /// sequential access.
     fn __getitem__(&self, index: usize, py: Python) -> PyResult<Py<PyDict>> {
-        use numpy::ToPyArray;
-
-        // Create dataset and iterate to index
-        let dataset = crate::dataset::FastqDataset::new(self.file_path.clone(), 1)
+        let mut iter = FastqStreamIterator::open(&self.file_path)
             .map_err(|e| pyo3::exceptions::PyIOError::new_err(e.to_string()))?;
 
-        let mut iter = dataset.iter();
-
-        // Skip to index
-        for _ in 0..index {
-            if iter.next().is_none() {
-                return Err(pyo3::exceptions::PyIndexError::new_err(format!(
-                    "Index {} out of range for dataset with {} records",
-                    index,
-                    self.size_hint.unwrap_or(0)
-                )));
-            }
-        }
-
-        // Get record at index
-        match iter.next() {
+        match iter.nth(index) {
             None => Err(pyo3::exceptions::PyIndexError::new_err(format!(
-                "Index {} out of range",
-                index
+                "Index {} out of range for dataset with {} records",
+                index,
+                self.size_hint.unwrap_or(0)
             ))),
             Some(Ok(record)) => {
                 let dict = PyDict::new(py);
@@ -498,10 +481,9 @@ impl PyFastqStreamDataset {
 
 /// Iterator for streaming FASTQ dataset.
 #[gen_stub_pyclass]
-#[pyclass(name = "FastqStreamIterator", module = "deepbiop.fq")]
+#[pyclass(unsendable, name = "FastqStreamIterator", module = "deepbiop.fq")]
 pub struct PyFastqStreamIterator {
-    file_path: String,
-    current_idx: usize,
+    iter: FastqStreamIterator,
 }
 
 #[gen_stub_pymethods]
@@ -512,24 +494,9 @@ impl PyFastqStreamIterator {
     }
 
     fn __next__(&mut self, py: Python) -> PyResult<Option<Py<PyDict>>> {
-        // Create a new dataset and iterator for each record
-        // This is less efficient but simplifies ownership
-        let dataset = crate::dataset::FastqDataset::new(self.file_path.clone(), 1)
-            .map_err(|e| pyo3::exceptions::PyIOError::new_err(e.to_string()))?;
-
-        // Skip to current index and get next record
-        let mut iter = dataset.iter();
-        for _ in 0..self.current_idx {
-            if iter.next().is_none() {
-                return Ok(None);
-            }
-        }
-
-        match iter.next() {
+        match self.iter.next() {
             None => Ok(None),
             Some(Ok(record)) => {
-                self.current_idx += 1;
-
                 // Create dict with NumPy arrays for zero-copy
                 let dict = PyDict::new(py);
                 dict.set_item("id", record.id)?;
@@ -549,7 +516,7 @@ impl PyFastqStreamIterator {
 
                 Ok(Some(dict.into()))
             }
-            Some(Err(e)) => Err(pyo3::exceptions::PyIOError::new_err(format!(
+            Some(Err(e)) => Err(pyo3::exceptions::PyValueError::new_err(format!(
                 "Failed to read FASTQ record: {}",
                 e
             ))),

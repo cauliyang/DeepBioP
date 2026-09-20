@@ -25,12 +25,10 @@ use pyo3::prelude::*;
 
 // Module declarations (files created in subsequent tasks)
 pub mod cache;
-pub mod collate; // T030
-pub mod dataloader; // T025-T027
-pub mod dataset; // T012-T016
-pub mod errors;
-pub mod transforms; // T018-T022, T036-T042
-pub mod types; // T053-T056
+pub mod collate;
+pub mod dataloader;
+pub mod dataset;
+pub mod transforms;
 
 /// Register the pytorch module with Python.
 ///

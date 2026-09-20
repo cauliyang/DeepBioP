@@ -24,6 +24,7 @@ Examples:
 
 import csv
 import json
+import math
 import re
 from collections.abc import Callable
 from pathlib import Path
@@ -258,13 +259,12 @@ class TargetExtractor:
             for base in seq:
                 counts[base] = counts.get(base, 0) + 1
 
-            # Calculate Shannon entropy
+            # Shannon entropy in bits; 0.0 for an empty sequence
             length = len(seq)
             entropy = 0.0
             for count in counts.values():
-                if count > 0:
-                    p = count / length
-                    entropy -= p * (p**0.5).bit_length()  # Simple complexity measure
+                p = count / length
+                entropy -= p * math.log2(p)
 
             return entropy
 

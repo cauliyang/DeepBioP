@@ -29,7 +29,7 @@
 use std::fs::File;
 use std::path::{Path, PathBuf};
 
-use anyhow::Result;
+use anyhow::{Context, Result};
 use deepbiop_utils as utils;
 use noodles::{bam, bgzf, sam};
 
@@ -143,7 +143,15 @@ impl deepbiop_core::dataset::IterableDataset for BamDataset {
                 Item = deepbiop_core::dataset::DatasetResult<deepbiop_core::seq::SequenceRecord>,
             > + '_,
     > {
-        Box::new(BamStreamIterator::new(&self.file_path, self.threads))
+        match BamStreamIterator::open(&self.file_path, self.threads) {
+            Ok(iter) => Box::new(iter),
+            Err(e) => Box::new(std::iter::once(Err(
+                deepbiop_core::error::DPError::InvalidValue(format!(
+                    "Failed to open BAM file '{}': {}",
+                    self.file_path, e
+                )),
+            ))),
+        }
     }
 
     fn paths(&self) -> Vec<PathBuf> {
@@ -158,16 +166,26 @@ impl deepbiop_core::dataset::IterableDataset for BamDataset {
 /// Streaming iterator for IterableDataset trait implementation.
 ///
 /// This provides true streaming access without loading the entire file.
-struct BamStreamIterator {
+pub struct BamStreamIterator {
     reader: bam::io::Reader<bgzf::io::MultithreadedReader<File>>,
     #[allow(dead_code)]
     header: sam::Header,
 }
 
 impl BamStreamIterator {
-    fn new(file_path: &str, threads: Option<usize>) -> Self {
+    /// Opens a BAM file for streaming iteration.
+    ///
+    /// # Arguments
+    ///
+    /// * `path` - Path to the BAM file
+    /// * `threads` - Optional number of threads for bgzf decompression (None = use all available)
+    ///
+    /// # Errors
+    ///
+    /// Returns an error if the file cannot be opened or the BAM header cannot be read.
+    pub fn open(path: &str, threads: Option<usize>) -> Result<Self> {
         // Open file
-        let file = File::open(file_path).expect("Failed to open BAM file");
+        let file = File::open(path).with_context(|| format!("Failed to open BAM file: {path}"))?;
 
         // Calculate worker count for multithreaded decompression
         let worker_count = utils::parallel::calculate_worker_count(threads);
@@ -177,9 +195,11 @@ impl BamStreamIterator {
         let mut reader = bam::io::Reader::from(decoder);
 
         // Read header
-        let header = reader.read_header().expect("Failed to read BAM header");
+        let header = reader
+            .read_header()
+            .with_context(|| format!("Failed to read BAM header: {path}"))?;
 
-        Self { reader, header }
+        Ok(Self { reader, header })
     }
 }
 
@@ -274,5 +294,23 @@ mod tests {
     fn test_nonexistent_file() {
         let result = BamDataset::new("nonexistent.bam", None);
         assert!(result.is_err());
+    }
+
+    #[test]
+    fn test_bam_stream_iterator_open_nonexistent_file() {
+        let result = BamStreamIterator::open("nonexistent.bam", None);
+        assert!(result.is_err());
+    }
+
+    #[test]
+    fn test_bam_stream_iterator_open_and_iterate() {
+        let mut iter = BamStreamIterator::open("tests/data/test_chimric_reads.bam", None)
+            .expect("failed to open BAM fixture");
+        let record = iter
+            .next()
+            .expect("expected at least one record")
+            .expect("record should decode successfully");
+        assert!(!record.id.is_empty());
+        assert!(!record.sequence.is_empty());
     }
 }

@@ -85,7 +85,7 @@ impl GenomicFeature {
 
     /// Get feature length in base pairs
     pub fn length(&self) -> u64 {
-        self.end - self.start + 1
+        (self.end + 1).saturating_sub(self.start)
     }
 
     /// Get gene_id attribute if present

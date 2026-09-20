@@ -143,14 +143,7 @@ def tensor_collate(batch: list[dict[str, Any]]) -> dict[str, Any]:
 
     # Stack targets
     if "target" in batch[0]:
-        targets_list = [item["target"] for item in batch]
-        # Handle different target types
-        if isinstance(targets_list[0], list | tuple):
-            # Multi-dimensional targets
-            result["targets"] = torch.tensor(targets_list)
-        else:
-            # Scalar targets
-            result["targets"] = torch.tensor(targets_list)
+        result["targets"] = torch.tensor([item["target"] for item in batch])
 
     # Keep IDs as list
     if "id" in batch[0]:

@@ -141,25 +141,24 @@ impl Sampler {
             SamplingStrategy::End => max_start,
         }
     }
+
+    /// Choose the window `[start, end)` to keep for a sequence of `seq_len` bases.
+    ///
+    /// For the random strategy this advances the RNG, so call it once per
+    /// record and slice sequence and quality with the same range.
+    pub fn window(&mut self, seq_len: usize) -> std::ops::Range<usize> {
+        if seq_len <= self.length {
+            return 0..seq_len;
+        }
+        self.ensure_rng();
+        let start = self.calculate_start(seq_len);
+        start..start + self.length
+    }
 }
 
 impl Augmentation for Sampler {
     fn apply(&mut self, sequence: &[u8]) -> Vec<u8> {
-        if sequence.is_empty() {
-            return Vec::new();
-        }
-
-        // If sequence is shorter than desired length, return as-is
-        if sequence.len() <= self.length {
-            return sequence.to_vec();
-        }
-
-        self.ensure_rng();
-
-        let start = self.calculate_start(sequence.len());
-        let end = start + self.length;
-
-        sequence[start..end].to_vec()
+        sequence[self.window(sequence.len())].to_vec()
     }
 }
 

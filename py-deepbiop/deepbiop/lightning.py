@@ -9,22 +9,6 @@ from collections.abc import Callable
 from pathlib import Path
 from typing import Any
 
-
-def _identity_collate(batch):
-    """Identity collate function for variable-length biological sequences.
-
-    This function can be pickled for multiprocessing (unlike lambda).
-
-    Args:
-        batch: List of samples from the dataset
-
-    Returns:
-    -------
-        The batch as-is (list of samples)
-    """
-    return batch
-
-
 try:
     import pytorch_lightning as pl
 

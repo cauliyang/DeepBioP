@@ -1,15 +1,20 @@
 use crate::types::Variant;
 use anyhow::{Context, Result};
 use noodles::vcf;
+use noodles::vcf::variant::record::info::field::value::Array as InfoArray;
+use noodles::vcf::variant::record::info::field::Value as InfoValue;
 use noodles::vcf::variant::record::{Filters, Ids};
-use std::fs::File;
-use std::io::BufReader;
+use std::io::{BufReader, Read};
 use std::path::Path;
 
-/// VCF file reader for streaming variant records
+/// VCF file reader.
+///
+/// Records are parsed lazily on the first query and kept, so every query
+/// method can be called any number of times on one reader.
 pub struct VcfReader {
-    reader: vcf::io::Reader<BufReader<File>>,
+    reader: Option<vcf::io::Reader<BufReader<Box<dyn Read + Send + Sync>>>>,
     header: vcf::Header,
+    variants: Vec<Variant>,
 }
 
 impl VcfReader {
@@ -28,15 +33,30 @@ impl VcfReader {
     /// let reader = VcfReader::open(Path::new("variants.vcf")).unwrap();
     /// ```
     pub fn open<P: AsRef<Path>>(path: P) -> Result<Self> {
-        let file = File::open(path.as_ref())
+        let file = deepbiop_utils::io::create_reader_for_compressed_file(path.as_ref())
             .with_context(|| format!("Failed to open VCF file: {:?}", path.as_ref()))?;
 
-        let buf_reader = BufReader::new(file);
-        let mut reader = vcf::io::Reader::new(buf_reader);
-
+        let mut reader = vcf::io::Reader::new(BufReader::new(file));
         let header = reader.read_header().context("Failed to read VCF header")?;
 
-        Ok(Self { reader, header })
+        Ok(Self {
+            reader: Some(reader),
+            header,
+            variants: Vec::new(),
+        })
+    }
+
+    /// Parse the file on first use; subsequent calls reuse the parsed variants.
+    fn variants(&mut self) -> Result<&[Variant]> {
+        if let Some(mut reader) = self.reader.take() {
+            let mut variants = Vec::new();
+            for record in reader.records() {
+                let record = record.context("Failed to read VCF record")?;
+                variants.push(Self::record_to_variant(&record, &self.header)?);
+            }
+            self.variants = variants;
+        }
+        Ok(&self.variants)
     }
 
     /// Get the VCF header
@@ -56,25 +76,11 @@ impl VcfReader {
     /// println!("Found {} variants", variants.len());
     /// ```
     pub fn read_all(&mut self) -> Result<Vec<Variant>> {
-        let mut variants = Vec::new();
-
-        // Collect records to avoid borrow checker issue
-        let records: Vec<vcf::Record> = self
-            .reader
-            .records()
-            .collect::<std::io::Result<Vec<_>>>()
-            .context("Failed to read VCF records")?;
-
-        for record in records {
-            let variant = Self::record_to_variant(&record)?;
-            variants.push(variant);
-        }
-
-        Ok(variants)
+        Ok(self.variants()?.to_vec())
     }
 
     /// Convert a noodles VCF record to our Variant type
-    fn record_to_variant(record: &vcf::Record) -> Result<Variant> {
+    fn record_to_variant(record: &vcf::Record, header: &vcf::Header) -> Result<Variant> {
         let chromosome = record.reference_sequence_name().to_string();
 
         // Get position - VCF is 1-based, variant_start() returns Option<Result<Position>>
@@ -84,7 +90,7 @@ impl VcfReader {
             None => anyhow::bail!("No variant start position"),
         };
 
-        // Get ID - may be empty
+        // Get ID - may be empty; the VCF spec separates multiple IDs with ';'
         let id = if record.ids().is_empty() {
             None
         } else {
@@ -92,7 +98,7 @@ impl VcfReader {
             record
                 .ids()
                 .as_ref()
-                .split(',')
+                .split(';')
                 .next()
                 .map(|s| s.to_string())
         };
@@ -125,12 +131,14 @@ impl VcfReader {
                 .collect()
         };
 
-        // Extract INFO fields - simplified version
+        // Extract INFO fields, parsed per the header's field-type definitions
         let mut info = ahash::HashMap::default();
-
-        // For now, store the raw INFO string
-        // In a full implementation, you'd parse each field according to the header
-        info.insert("raw_info".to_string(), format!("{:?}", record.info()));
+        for result in record.info().iter(header) {
+            let (key, value) = result.with_context(|| {
+                format!("Failed to parse INFO field for variant at {chromosome}:{position}")
+            })?;
+            info.insert(key.to_string(), format_info_value(value)?);
+        }
 
         Ok(Variant {
             chromosome,
@@ -159,10 +167,11 @@ impl VcfReader {
     /// let high_quality = reader.filter_by_quality(30.0).unwrap();
     /// ```
     pub fn filter_by_quality(&mut self, min_quality: f32) -> Result<Vec<Variant>> {
-        let all_variants = self.read_all()?;
-        Ok(all_variants
-            .into_iter()
+        Ok(self
+            .variants()?
+            .iter()
             .filter(|v| v.quality.is_some_and(|q| q >= min_quality))
+            .cloned()
             .collect())
     }
 
@@ -177,12 +186,62 @@ impl VcfReader {
     /// let passing = reader.filter_passing().unwrap();
     /// ```
     pub fn filter_passing(&mut self) -> Result<Vec<Variant>> {
-        let all_variants = self.read_all()?;
-        Ok(all_variants
-            .into_iter()
+        Ok(self
+            .variants()?
+            .iter()
             .filter(|v| v.passes_filter())
+            .cloned()
             .collect())
     }
+}
+
+/// Render a single INFO field value as its VCF-style display string.
+///
+/// A missing typed value (an explicit `.` in the VCF text) is rendered as
+/// `.`; a bare flag is rendered as `true`.
+fn format_info_value(value: Option<InfoValue<'_>>) -> Result<String> {
+    match value {
+        None => Ok(".".to_string()),
+        Some(InfoValue::Integer(n)) => Ok(n.to_string()),
+        Some(InfoValue::Float(n)) => Ok(n.to_string()),
+        Some(InfoValue::Flag) => Ok("true".to_string()),
+        Some(InfoValue::Character(c)) => Ok(c.to_string()),
+        Some(InfoValue::String(s)) => Ok(s.to_string()),
+        Some(InfoValue::Array(array)) => format_info_array(array),
+    }
+}
+
+/// Render an INFO array value as a comma-joined string, with missing
+/// elements rendered as `.` per the VCF spec.
+fn format_info_array(array: InfoArray<'_>) -> Result<String> {
+    let joined = match array {
+        InfoArray::Integer(values) => values
+            .iter()
+            .map(|item| item.map(|opt| opt.map_or(".".to_string(), |n| n.to_string())))
+            .collect::<std::io::Result<Vec<_>>>()
+            .context("Failed to parse INFO integer array value")?
+            .join(","),
+        InfoArray::Float(values) => values
+            .iter()
+            .map(|item| item.map(|opt| opt.map_or(".".to_string(), |n| n.to_string())))
+            .collect::<std::io::Result<Vec<_>>>()
+            .context("Failed to parse INFO float array value")?
+            .join(","),
+        InfoArray::Character(values) => values
+            .iter()
+            .map(|item| item.map(|opt| opt.map_or(".".to_string(), |c| c.to_string())))
+            .collect::<std::io::Result<Vec<_>>>()
+            .context("Failed to parse INFO character array value")?
+            .join(","),
+        InfoArray::String(values) => values
+            .iter()
+            .map(|item| item.map(|opt| opt.map_or(".".to_string(), |s| s.to_string())))
+            .collect::<std::io::Result<Vec<_>>>()
+            .context("Failed to parse INFO string array value")?
+            .join(","),
+    };
+
+    Ok(joined)
 }
 
 #[cfg(test)]
@@ -204,5 +263,49 @@ mod tests {
 
         assert_eq!(variant.chromosome, "chr1");
         assert!(variant.passes_filter());
+    }
+
+    fn write_test_vcf() -> tempfile::NamedTempFile {
+        use std::io::Write;
+
+        let mut file = tempfile::NamedTempFile::new().expect("Failed to create temp VCF file");
+        write!(
+            file,
+            "##fileformat=VCFv4.3\n\
+             ##INFO=<ID=DP,Number=1,Type=Integer,Description=\"Depth\">\n\
+             ##INFO=<ID=AF,Number=A,Type=Float,Description=\"Allele Frequency\">\n\
+             ##INFO=<ID=DB,Number=0,Type=Flag,Description=\"dbSNP membership\">\n\
+             #CHROM\tPOS\tID\tREF\tALT\tQUAL\tFILTER\tINFO\n\
+             chr1\t100\t.\tA\tG\t30\tPASS\tDP=30;AF=0.5;DB\n\
+             chr1\t200\trs1;rs2\tA\tG,T\t30\tPASS\tDP=30;AF=0.5,0.25\n"
+        )
+        .expect("Failed to write temp VCF file");
+        file
+    }
+
+    #[test]
+    fn test_record_to_variant_parses_info_fields() {
+        let file = write_test_vcf();
+        let mut reader = VcfReader::open(file.path()).expect("Failed to open temp VCF file");
+        let variants = reader.read_all().expect("Failed to read variants");
+
+        assert_eq!(variants.len(), 2);
+
+        let first = &variants[0];
+        assert_eq!(first.info.get("DP").map(String::as_str), Some("30"));
+        assert_eq!(first.info.get("AF").map(String::as_str), Some("0.5"));
+        assert_eq!(first.info.get("DB").map(String::as_str), Some("true"));
+        assert_eq!(first.info.len(), 3);
+    }
+
+    #[test]
+    fn test_record_to_variant_parses_multiallelic_info_array() {
+        let file = write_test_vcf();
+        let mut reader = VcfReader::open(file.path()).expect("Failed to open temp VCF file");
+        let variants = reader.read_all().expect("Failed to read variants");
+
+        let second = &variants[1];
+        assert_eq!(second.info.get("AF").map(String::as_str), Some("0.5,0.25"));
+        assert_eq!(second.id, Some("rs1".to_string()));
     }
 }

@@ -240,6 +240,7 @@ def write_fq_parallel(
     file_path: builtins.str | os.PathLike | pathlib.Path,
     threads: builtins.int,
 ) -> None: ...
+
 @typing.final
 class LengthFilter:
     """Filter FASTQ records by sequence length."""

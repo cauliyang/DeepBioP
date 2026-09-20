@@ -7,26 +7,25 @@ use ahash::HashMap;
 use anyhow::Result;
 use ndarray::{Array1, Array2};
 use rayon::prelude::*;
-use std::sync::OnceLock;
 
 use crate::error::DPError;
 use crate::types::EncodingType;
 
-use super::seq_to_kmers;
-
 /// K-mer encoder for biological sequences.
 ///
-/// Encodes sequences as k-mer frequency vectors or k-mer index arrays.
-/// Supports canonical k-mers (treating a k-mer and its reverse complement as identical).
+/// Encodes sequences as dense k-mer count vectors over the full k-mer vocabulary.
+/// With `canonical = true` (DNA/RNA only) a k-mer and its reverse complement share
+/// one index, so the vocabulary shrinks to the number of canonical k-mers.
 ///
 /// # Examples
 ///
-/// ```no_run
+/// ```
 /// use deepbiop_core::kmer::encode::KmerEncoder;
 /// use deepbiop_core::types::EncodingType;
 ///
-/// let encoder = KmerEncoder::new(3, true, EncodingType::DNA);
+/// let encoder = KmerEncoder::new(3, true, EncodingType::DNA).unwrap();
 /// let encoded = encoder.encode(b"ACGTACGT").unwrap();
+/// assert_eq!(encoded.len(), encoder.vocabulary_size());
 /// ```
 pub struct KmerEncoder {
     /// K-mer length
@@ -35,28 +34,95 @@ pub struct KmerEncoder {
     canonical: bool,
     /// Encoding type (DNA, RNA, or Protein)
     encoding_type: EncodingType,
-    /// K-mer to index mapping (built lazily using OnceLock for thread-safe initialization)
-    kmer_to_idx: OnceLock<HashMap<Vec<u8>, usize>>,
+    /// Every k-mer of the alphabet mapped to its output index (canonical k-mers
+    /// and their reverse complements share an index).
+    kmer_to_idx: HashMap<Vec<u8>, usize>,
+    /// Number of distinct output indices.
+    vocabulary_size: usize,
 }
+
+/// Largest dense vocabulary the encoder will materialize (16M entries).
+pub const MAX_VOCABULARY_SIZE: usize = 1 << 24;
 
 impl KmerEncoder {
     /// Create a new k-mer encoder.
     ///
     /// # Arguments
     ///
-    /// * `k` - K-mer length
-    /// * `canonical` - Whether to use canonical k-mers
+    /// * `k` - K-mer length (`1..`)
+    /// * `canonical` - Fold each k-mer with its reverse complement (DNA/RNA only)
     /// * `encoding_type` - The type of sequence (DNA, RNA, or Protein)
     ///
-    /// # Returns
+    /// # Errors
     ///
-    /// A new `KmerEncoder` instance
-    pub fn new(k: usize, canonical: bool, encoding_type: EncodingType) -> Self {
-        Self {
-            k,
-            canonical,
-            encoding_type,
-            kmer_to_idx: OnceLock::new(),
+    /// Returns an error if `k == 0`, if `alphabet_size^k` exceeds
+    /// [`MAX_VOCABULARY_SIZE`], or if `canonical` is requested for protein.
+    pub fn new(k: usize, canonical: bool, encoding_type: EncodingType) -> Result<Self> {
+        if k == 0 {
+            return Err(DPError::InvalidValue("k-mer length must be at least 1".into()).into());
+        }
+        if canonical && encoding_type == EncodingType::Protein {
+            return Err(DPError::InvalidValue(
+                "canonical k-mers are only defined for DNA/RNA".into(),
+            )
+            .into());
+        }
+        let alphabet = encoding_type.alphabet();
+        let total = u32::try_from(k)
+            .ok()
+            .and_then(|k| alphabet.len().checked_pow(k))
+            .filter(|&n| n <= MAX_VOCABULARY_SIZE)
+            .ok_or_else(|| {
+                DPError::InvalidValue(format!(
+                    "k={k} yields more than {MAX_VOCABULARY_SIZE} {encoding_type:?} k-mers; choose a smaller k"
+                ))
+            })?;
+
+        let mut kmer_to_idx = HashMap::with_capacity_and_hasher(total, Default::default());
+        let mut next_idx = 0usize;
+        let mut current = vec![alphabet[0]; k];
+        // Iterate the vocabulary in lexicographic order via an odometer over alphabet positions.
+        let mut digits = vec![0usize; k];
+        loop {
+            for (slot, &d) in current.iter_mut().zip(&digits) {
+                *slot = alphabet[d];
+            }
+            let idx = if canonical {
+                let rc = reverse_complement(&current, encoding_type);
+                // The canonical representative is the lexicographically smaller strand; it
+                // has already been assigned an index when it precedes `current`.
+                match kmer_to_idx.get(&rc) {
+                    Some(&i) if rc < current => i,
+                    _ => {
+                        next_idx += 1;
+                        next_idx - 1
+                    }
+                }
+            } else {
+                next_idx += 1;
+                next_idx - 1
+            };
+            kmer_to_idx.insert(current.clone(), idx);
+
+            // Advance odometer.
+            let mut pos = k;
+            loop {
+                if pos == 0 {
+                    return Ok(Self {
+                        k,
+                        canonical,
+                        encoding_type,
+                        kmer_to_idx,
+                        vocabulary_size: next_idx,
+                    });
+                }
+                pos -= 1;
+                digits[pos] += 1;
+                if digits[pos] < alphabet.len() {
+                    break;
+                }
+                digits[pos] = 0;
+            }
         }
     }
 
@@ -75,75 +141,27 @@ impl KmerEncoder {
         self.encoding_type
     }
 
-    /// Build the k-mer to index mapping.
-    ///
-    /// This generates all possible k-mers for the alphabet and assigns each a unique index.
-    fn build_kmer_index(&self) -> HashMap<Vec<u8>, usize> {
-        let alphabet = self.encoding_type.alphabet();
-        let alphabet_size = alphabet.len();
-
-        // Calculate total number of possible k-mers
-        let total_kmers = alphabet_size.pow(self.k as u32);
-
-        let mut kmer_to_idx = HashMap::with_capacity_and_hasher(total_kmers, Default::default());
-        let mut idx = 0;
-
-        // Generate all k-mers using recursive approach
-        fn generate_kmers(
-            alphabet: &[u8],
-            k: usize,
-            current: &mut Vec<u8>,
-            kmer_to_idx: &mut HashMap<Vec<u8>, usize>,
-            idx: &mut usize,
-        ) {
-            if current.len() == k {
-                kmer_to_idx.insert(current.clone(), *idx);
-                *idx += 1;
-                return;
-            }
-
-            for &base in alphabet {
-                current.push(base);
-                generate_kmers(alphabet, k, current, kmer_to_idx, idx);
-                current.pop();
-            }
-        }
-
-        let mut current = Vec::with_capacity(self.k);
-        generate_kmers(alphabet, self.k, &mut current, &mut kmer_to_idx, &mut idx);
-
-        kmer_to_idx
+    /// Length of the vectors produced by [`encode`](Self::encode).
+    pub fn vocabulary_size(&self) -> usize {
+        self.vocabulary_size
     }
 
     /// Encode a sequence as a k-mer count vector.
     ///
-    /// Returns a 1D array where each element represents the count of a specific k-mer.
-    ///
-    /// # Arguments
-    ///
-    /// * `sequence` - The sequence to encode
-    ///
-    /// # Returns
-    ///
-    /// A 1D array of k-mer counts
-    ///
     /// # Errors
     ///
-    /// Returns an error if:
-    /// - The sequence is shorter than k
-    /// - The sequence contains invalid characters
+    /// Returns an error if the sequence is shorter than `k` or contains a
+    /// character outside the alphabet.
     pub fn encode(&self, sequence: &[u8]) -> Result<Array1<f32>> {
-        // Build k-mer index if not already built (needed for dimensions)
-        // OnceLock ensures this happens only once, even in concurrent scenarios
-        let kmer_to_idx = self.kmer_to_idx.get_or_init(|| self.build_kmer_index());
-        let total_kmers = kmer_to_idx.len();
-
-        // If sequence is shorter than k, return a zero vector
         if sequence.len() < self.k {
-            return Ok(Array1::<f32>::zeros(total_kmers));
+            return Err(DPError::InvalidValue(format!(
+                "sequence length {} is shorter than k={}",
+                sequence.len(),
+                self.k
+            ))
+            .into());
         }
 
-        // Validate sequence
         for (pos, &base) in sequence.iter().enumerate() {
             if !self.encoding_type.is_valid_char(base) {
                 return Err(DPError::InvalidAlphabet {
@@ -155,104 +173,54 @@ impl KmerEncoder {
             }
         }
 
-        let total_kmers = kmer_to_idx.len();
-
-        // Extract k-mers
-        let kmers = seq_to_kmers(sequence, self.k, true);
-
-        // Count k-mers
-        let mut counts = Array1::<f32>::zeros(total_kmers);
-
-        for kmer in kmers {
-            // Convert to uppercase
-            let kmer_upper: Vec<u8> = kmer.iter().map(|&b| b.to_ascii_uppercase()).collect();
-
-            if let Some(&idx) = kmer_to_idx.get(&kmer_upper) {
+        let mut counts = Array1::<f32>::zeros(self.vocabulary_size);
+        let mut kmer = vec![0u8; self.k];
+        for window in sequence.windows(self.k) {
+            for (dst, &b) in kmer.iter_mut().zip(window) {
+                *dst = b.to_ascii_uppercase();
+            }
+            if let Some(&idx) = self.kmer_to_idx.get(&kmer) {
                 counts[idx] += 1.0;
             }
         }
-
         Ok(counts)
     }
 
     /// Encode multiple sequences in parallel as k-mer count vectors.
     ///
-    /// # Arguments
-    ///
-    /// * `sequences` - Slice of sequences to encode
-    ///
-    /// # Returns
-    ///
-    /// A 2D array where each row is a k-mer count vector
-    ///
     /// # Errors
     ///
-    /// Returns an error if any sequence fails to encode
+    /// Returns the first error produced by [`encode`](Self::encode).
     pub fn encode_batch(&self, sequences: &[&[u8]]) -> Result<Array2<f32>> {
-        // Build k-mer index if not already built (lazy initialization)
-        let kmer_to_idx = self.kmer_to_idx.get_or_init(|| self.build_kmer_index());
-        let total_kmers = kmer_to_idx.len();
-
+        let mut batch = Array2::<f32>::zeros((sequences.len(), self.vocabulary_size));
         if sequences.is_empty() {
-            return Ok(Array2::zeros((0, total_kmers)));
+            return Ok(batch);
         }
-        let k = self.k;
-        let encoding_type = self.encoding_type;
 
-        // Encode all sequences in parallel
-        let encoded_seqs: Result<Vec<Array1<f32>>> = sequences
+        let rows: Vec<Array1<f32>> = sequences
             .par_iter()
-            .map(|sequence| {
-                // If sequence is shorter than k, return a zero vector
-                if sequence.len() < k {
-                    return Ok(Array1::<f32>::zeros(total_kmers));
-                }
-
-                // Validate sequence
-                for (pos, &base) in sequence.iter().enumerate() {
-                    if !encoding_type.is_valid_char(base) {
-                        return Err(DPError::InvalidAlphabet {
-                            character: base as char,
-                            position: pos,
-                            expected: String::from_utf8_lossy(encoding_type.alphabet()).to_string(),
-                        }
-                        .into());
-                    }
-                }
-
-                // Extract k-mers
-                let kmers = seq_to_kmers(sequence, k, true);
-
-                // Count k-mers
-                let mut counts = Array1::<f32>::zeros(total_kmers);
-
-                for kmer in kmers {
-                    // Convert to uppercase
-                    let kmer_upper: Vec<u8> =
-                        kmer.iter().map(|&b| b.to_ascii_uppercase()).collect();
-
-                    if let Some(&idx) = kmer_to_idx.get(&kmer_upper) {
-                        counts[idx] += 1.0;
-                    }
-                }
-
-                Ok(counts)
-            })
-            .collect();
-
-        let encoded_seqs = encoded_seqs?;
-
-        // Stack into 2D array
-        let mut batch = Array2::<f32>::zeros((sequences.len(), total_kmers));
-
-        for (i, encoded) in encoded_seqs.iter().enumerate() {
-            for j in 0..total_kmers {
-                batch[[i, j]] = encoded[j];
-            }
+            .map(|sequence| self.encode(sequence))
+            .collect::<Result<_>>()?;
+        for (mut dst, src) in batch.rows_mut().into_iter().zip(&rows) {
+            dst.assign(src);
         }
-
         Ok(batch)
     }
+}
+
+fn reverse_complement(kmer: &[u8], encoding_type: EncodingType) -> Vec<u8> {
+    kmer.iter()
+        .rev()
+        .map(|&b| match (b, encoding_type) {
+            (b'A', EncodingType::RNA) => b'U',
+            (b'U', EncodingType::RNA) => b'A',
+            (b'A', _) => b'T',
+            (b'T', _) => b'A',
+            (b'C', _) => b'G',
+            (b'G', _) => b'C',
+            (other, _) => other,
+        })
+        .collect()
 }
 
 // Implement SequenceEncoder trait for KmerEncoder
@@ -260,17 +228,12 @@ impl crate::encoder::SequenceEncoder for KmerEncoder {
     type EncodeOutput = Array1<f32>;
 
     fn encode_sequence(&self, seq: &[u8], qual: Option<&[u8]>) -> Result<Self::EncodeOutput> {
-        // Validate inputs
         self.validate_input(seq, qual)?;
-
-        // KmerEncoder ignores quality scores, only encodes sequence
         self.encode(seq)
     }
 
     fn expected_output_size(&self, _seq_len: usize) -> usize {
-        // K-mer vocabulary size
-        let alphabet_size = self.encoding_type.alphabet_size();
-        alphabet_size.pow(self.k as u32)
+        self.vocabulary_size
     }
 }
 
@@ -280,84 +243,107 @@ mod tests {
 
     #[test]
     fn test_kmer_encoder_new() {
-        let encoder = KmerEncoder::new(3, true, EncodingType::DNA);
+        let encoder = KmerEncoder::new(3, true, EncodingType::DNA).unwrap();
         assert_eq!(encoder.k(), 3);
         assert!(encoder.is_canonical());
         assert_eq!(encoder.encoding_type(), EncodingType::DNA);
+        // 64 3-mers fold to 32 canonical ones (no palindromic odd-length k-mers).
+        assert_eq!(encoder.vocabulary_size(), 32);
+    }
+
+    #[test]
+    fn test_kmer_encoder_rejects_bad_params() {
+        assert!(KmerEncoder::new(0, false, EncodingType::DNA).is_err());
+        assert!(KmerEncoder::new(40, false, EncodingType::DNA).is_err());
+        assert!(KmerEncoder::new(3, true, EncodingType::Protein).is_err());
     }
 
     #[test]
     fn test_kmer_encode_dna() {
-        let encoder = KmerEncoder::new(3, false, EncodingType::DNA);
+        let encoder = KmerEncoder::new(3, false, EncodingType::DNA).unwrap();
         let sequence = b"ACGTACGT";
 
         let encoded = encoder.encode(sequence).unwrap();
 
-        // Should have 4^3 = 64 possible 3-mers
         assert_eq!(encoded.len(), 64);
-
-        // Should have counts > 0 for some k-mers
         let total_count: f32 = encoded.iter().sum();
-        assert_eq!(total_count, (sequence.len() - 3 + 1) as f32); // 6 k-mers
+        assert_eq!(total_count, (sequence.len() - 3 + 1) as f32);
     }
 
     #[test]
-    fn test_kmer_encode_short_sequence() {
-        let encoder = KmerEncoder::new(5, false, EncodingType::DNA);
-        let sequence = b"ACG"; // Shorter than k
+    fn test_kmer_encode_canonical_folds_reverse_complement() {
+        let plain = KmerEncoder::new(2, false, EncodingType::DNA).unwrap();
+        let canonical = KmerEncoder::new(2, true, EncodingType::DNA).unwrap();
 
-        let result = encoder.encode(sequence).unwrap();
-        // Should return a zero vector of correct shape
-        assert_eq!(result.len(), 4_usize.pow(5)); // 4^5 = 1024 for k=5 DNA
-        assert_eq!(result.iter().sum::<f32>(), 0.0);
+        // AC and its reverse complement GT land on different indices without folding...
+        let ac = plain.encode(b"AC").unwrap();
+        let gt = plain.encode(b"GT").unwrap();
+        assert_ne!(ac, gt);
+        // ...and on the same index with folding. AA/TT, AC/GT, AG/CT, AT, CA/TG, CC/GG, CG, GA/TC, TA -> 10.
+        assert_eq!(canonical.vocabulary_size(), 10);
+        assert_eq!(
+            canonical.encode(b"AC").unwrap(),
+            canonical.encode(b"GT").unwrap()
+        );
+        assert_eq!(
+            canonical.encode(b"AA").unwrap(),
+            canonical.encode(b"TT").unwrap()
+        );
+        assert_ne!(
+            canonical.encode(b"AC").unwrap(),
+            canonical.encode(b"CA").unwrap()
+        );
+    }
+
+    #[test]
+    fn test_kmer_encode_canonical_rna() {
+        let canonical = KmerEncoder::new(2, true, EncodingType::RNA).unwrap();
+        assert_eq!(
+            canonical.encode(b"AC").unwrap(),
+            canonical.encode(b"GU").unwrap()
+        );
+    }
+
+    #[test]
+    fn test_kmer_encode_short_sequence_errors() {
+        let encoder = KmerEncoder::new(5, false, EncodingType::DNA).unwrap();
+        assert!(encoder.encode(b"ACG").is_err());
     }
 
     #[test]
     fn test_kmer_encode_invalid_char() {
-        let encoder = KmerEncoder::new(3, false, EncodingType::DNA);
-        let sequence = b"ACGTN"; // N is invalid for DNA
-
-        let result = encoder.encode(sequence);
-        assert!(result.is_err());
+        let encoder = KmerEncoder::new(3, false, EncodingType::DNA).unwrap();
+        assert!(encoder.encode(b"ACGTN").is_err());
     }
 
     #[test]
     fn test_kmer_encode_batch() {
-        let encoder = KmerEncoder::new(3, false, EncodingType::DNA);
+        let encoder = KmerEncoder::new(3, false, EncodingType::DNA).unwrap();
         let sequences = vec![b"ACGTACGT".as_ref(), b"AAACCCGGG".as_ref()];
 
         let batch = encoder.encode_batch(&sequences).unwrap();
 
-        assert_eq!(batch.shape(), &[2, 64]); // 2 sequences, 64 possible 3-mers
-
-        // Each row should have counts
-        for i in 0..2 {
-            let row_sum: f32 = batch.row(i).iter().sum();
-            assert!(row_sum > 0.0);
-        }
+        assert_eq!(batch.shape(), &[2, 64]);
+        assert_eq!(batch.row(0).sum(), 6.0);
+        assert_eq!(batch.row(1).sum(), 7.0);
     }
 
     #[test]
     fn test_kmer_encode_empty_batch() {
-        let encoder = KmerEncoder::new(3, false, EncodingType::DNA);
+        let encoder = KmerEncoder::new(3, false, EncodingType::DNA).unwrap();
         let sequences: Vec<&[u8]> = vec![];
 
         let batch = encoder.encode_batch(&sequences).unwrap();
-        assert_eq!(batch.shape(), &[0, 64]); // 0 sequences, 64 possible 3-mers
+        assert_eq!(batch.shape(), &[0, 64]);
     }
 
     #[test]
     fn test_kmer_encode_case_insensitive() {
-        let encoder = KmerEncoder::new(3, false, EncodingType::DNA);
-
-        let seq1 = b"ACGT";
-        let seq2 = b"acgt";
-
-        let encoded1 = encoder.encode(seq1).unwrap();
-        let encoded2 = encoder.encode(seq2).unwrap();
-
-        // Should produce the same encoding
-        assert_eq!(encoded1, encoded2);
+        let encoder = KmerEncoder::new(3, false, EncodingType::DNA).unwrap();
+        assert_eq!(
+            encoder.encode(b"ACGT").unwrap(),
+            encoder.encode(b"acgt").unwrap()
+        );
     }
 }
 
@@ -390,6 +376,10 @@ pub mod python {
         ///
         /// Returns:
         ///     A new KmerEncoder instance
+        ///
+        /// Raises:
+        ///     ValueError: If k is 0, the vocabulary would exceed 16M k-mers,
+        ///         or canonical is requested for protein sequences
         #[new]
         pub fn new(k: usize, canonical: bool, encoding_type: &str) -> PyResult<Self> {
             let enc_type = encoding_type
@@ -397,7 +387,8 @@ pub mod python {
                 .map_err(|e| PyErr::new::<pyo3::exceptions::PyValueError, _>(e.to_string()))?;
 
             Ok(Self {
-                inner: KmerEncoder::new(k, canonical, enc_type),
+                inner: KmerEncoder::new(k, canonical, enc_type)
+                    .map_err(|e| PyErr::new::<pyo3::exceptions::PyValueError, _>(e.to_string()))?,
             })
         }
 

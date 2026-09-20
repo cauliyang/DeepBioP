@@ -90,7 +90,15 @@ impl deepbiop_core::dataset::IterableDataset for FastaDataset {
                 Item = deepbiop_core::dataset::DatasetResult<deepbiop_core::seq::SequenceRecord>,
             > + '_,
     > {
-        Box::new(FastaStreamIterator::new(&self.file_path))
+        match FastaStreamIterator::open(&self.file_path) {
+            Ok(iter) => Box::new(iter),
+            Err(e) => Box::new(std::iter::once(Err(
+                deepbiop_core::error::DPError::InvalidValue(format!(
+                    "Failed to open FASTA file '{}': {}",
+                    self.file_path, e
+                )),
+            ))),
+        }
     }
 
     fn paths(&self) -> Vec<PathBuf> {
@@ -105,20 +113,21 @@ impl deepbiop_core::dataset::IterableDataset for FastaDataset {
 /// Streaming iterator for IterableDataset trait implementation.
 ///
 /// This provides true streaming access without loading the entire file.
-struct FastaStreamIterator {
-    reader: fasta::io::Reader<BufReader<Box<dyn Read + Send>>>,
+pub struct FastaStreamIterator {
+    reader: fasta::io::Reader<BufReader<Box<dyn Read + Send + Sync>>>,
 }
 
 impl FastaStreamIterator {
-    fn new(file_path: &str) -> Self {
-        // Create reader with compression support
-        let file_reader = deepbiop_utils::io::create_reader_for_compressed_file(file_path)
-            .expect("Failed to create file reader");
-
+    /// Open a FASTA file (plain, gzip, or bgzip) for streaming record iteration.
+    ///
+    /// Propagates the reader-creation error instead of panicking, so callers
+    /// (including Python bindings) can surface a proper error to the caller.
+    pub fn open(path: &str) -> Result<Self> {
+        let file_reader = deepbiop_utils::io::create_reader_for_compressed_file(path)?;
         let buffered = BufReader::new(file_reader);
         let reader = fasta::io::Reader::new(buffered);
 
-        Self { reader }
+        Ok(Self { reader })
     }
 }
 
@@ -258,5 +267,26 @@ mod tests {
     fn test_nonexistent_file() {
         let result = FastaDataset::new("nonexistent.fa");
         assert!(result.is_err());
+    }
+
+    #[test]
+    fn test_stream_iterator_open_missing_file_does_not_panic() {
+        let result = FastaStreamIterator::open("nonexistent.fa");
+        assert!(result.is_err());
+    }
+
+    #[test]
+    fn test_dataset_iter_on_missing_file_yields_error_item_instead_of_panicking() {
+        // Construct a dataset around a path that does not exist. `FastaDataset::new`
+        // itself only checks existence at construction time; simulate a file that
+        // disappears afterwards by pointing `iter()` at a non-existent stream source
+        // through the public `FastaStreamIterator::open` error path.
+        let dataset = FastaDataset {
+            file_path: "nonexistent.fa".to_string(),
+            records_count: None,
+        };
+        let mut iter = dataset.iter();
+        assert!(iter.next().unwrap().is_err());
+        assert!(iter.next().is_none());
     }
 }

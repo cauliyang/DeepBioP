@@ -12,6 +12,7 @@ description = "VCF variant file processing for deep learning preprocessing"
 
 [dependencies]
 noodles = { workspace = true }
+deepbiop-utils = { workspace = true }
 ahash = { workspace = true }
 anyhow = { workspace = true }
 rayon = { workspace = true }
@@ -21,6 +22,9 @@ thiserror = { workspace = true }
 
 pyo3 = { workspace = true, optional = true }
 pyo3-stub-gen = { workspace = true, optional = true }
+
+[dev-dependencies]
+tempfile = { workspace = true }
 
 [features]
 python = ["dep:pyo3", "dep:pyo3-stub-gen"]

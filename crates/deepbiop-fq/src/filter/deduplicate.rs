@@ -7,8 +7,9 @@ use noodles::fastq;
 
 /// Deduplicate records based on sequence content.
 ///
-/// Uses a hash set to track seen sequences. Can deduplicate based on
-/// exact sequence match or sequence identity ignoring quality scores.
+/// Keeps the first occurrence of every distinct sequence (quality scores are
+/// ignored). Every distinct sequence is held in memory for the lifetime of the
+/// filter, so memory grows with the number of unique reads.
 ///
 /// # Examples
 ///
@@ -33,26 +34,12 @@ use noodles::fastq;
 /// assert!(dedup.passes(&record1)); // First occurrence, passes
 /// assert!(!dedup.passes(&record2)); // Duplicate sequence, fails
 /// ```
-#[derive(Debug, Clone, Builder)]
+#[derive(Debug, Clone, Default, Builder)]
 #[builder(setter(into), default)]
 pub struct Deduplicator {
-    /// Set of seen sequence hashes
+    /// Distinct sequences seen so far
     #[builder(setter(skip))]
     seen_sequences: HashSet<Vec<u8>>,
-
-    /// If true, keep the first occurrence of each unique sequence.
-    /// If false, remove all duplicates including the first.
-    #[builder(default = "true")]
-    keep_first: bool,
-}
-
-impl Default for Deduplicator {
-    fn default() -> Self {
-        Self {
-            seen_sequences: HashSet::default(),
-            keep_first: true,
-        }
-    }
 }
 
 impl Deduplicator {
@@ -61,14 +48,6 @@ impl Deduplicator {
     /// By default, keeps the first occurrence of each unique sequence.
     pub fn new() -> Self {
         Self::default()
-    }
-
-    /// Create a deduplicator that removes all duplicates (including first occurrence).
-    pub fn remove_all_duplicates() -> Self {
-        Self {
-            seen_sequences: HashSet::default(),
-            keep_first: false,
-        }
     }
 
     /// Check if a sequence has been seen before.
@@ -85,41 +64,27 @@ impl Deduplicator {
     pub fn clear(&mut self) {
         self.seen_sequences.clear();
     }
-
-    /// Get whether the filter keeps first occurrences.
-    pub fn keep_first(&self) -> bool {
-        self.keep_first
-    }
 }
 
 impl Filter for Deduplicator {
     fn passes(&mut self, record: &fastq::Record) -> bool {
-        let sequence = record.sequence().to_vec();
-
-        if self.seen_sequences.contains(&sequence) {
-            // Sequence is a duplicate
-            false
-        } else {
-            // First time seeing this sequence
-            self.seen_sequences.insert(sequence);
-            self.keep_first
+        if self.seen_sequences.contains(record.sequence()) {
+            return false;
         }
+        self.seen_sequences.insert(record.sequence().to_vec());
+        true
     }
 }
 
 impl FilterWithReason for Deduplicator {
     fn check(&mut self, record: &fastq::Record) -> Option<String> {
-        let sequence = record.sequence().to_vec();
-
-        if self.seen_sequences.contains(&sequence) {
-            Some(format!("Duplicate sequence (length: {})", sequence.len()))
+        if self.passes(record) {
+            None
         } else {
-            self.seen_sequences.insert(sequence);
-            if self.keep_first {
-                None
-            } else {
-                Some("Duplicate sequence (removing all occurrences)".to_string())
-            }
+            Some(format!(
+                "Duplicate sequence (length: {})",
+                record.sequence().len()
+            ))
         }
     }
 }
@@ -215,19 +180,6 @@ mod tests {
     }
 
     #[test]
-    fn test_remove_all_duplicates() {
-        let mut dedup = Deduplicator::remove_all_duplicates();
-
-        // First occurrence also fails when keep_first = false
-        assert!(!dedup.passes(&create_record("read1", b"ACGT")));
-        assert_eq!(dedup.unique_count(), 1);
-
-        // Subsequent occurrences also fail
-        assert!(!dedup.passes(&create_record("read2", b"ACGT")));
-        assert_eq!(dedup.unique_count(), 1);
-    }
-
-    #[test]
     fn test_filter_with_reason() {
         let mut dedup = Deduplicator::new();
 
@@ -243,10 +195,7 @@ mod tests {
 
     #[test]
     fn test_builder() {
-        let mut dedup = DeduplicatorBuilder::default()
-            .keep_first(true)
-            .build()
-            .unwrap();
+        let mut dedup = DeduplicatorBuilder::default().build().unwrap();
 
         assert!(dedup.passes(&create_record("read1", b"ACGT")));
         assert!(!dedup.passes(&create_record("read2", b"ACGT")));
