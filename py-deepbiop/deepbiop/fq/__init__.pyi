@@ -5,14 +5,27 @@ import os
 import pathlib
 import typing
 
+import numpy
+import numpy.typing
+
 __all__ = [
+    "Deduplicator",
     "EncoderOption",
     "FastqDataset",
     "FastqIterator",
     "FastqRecord",
+    "FastqStreamDataset",
+    "FastqStreamIterator",
+    "IntegerEncoder",
+    "LengthFilter",
+    "OneHotEncoder",
     "ParquetEncoder",
     "Predict",
+    "PyStreamingFastqIterator",
+    "QualityFilter",
     "RecordData",
+    "StreamingFastqDataset",
+    "Subsampler",
     "convert_multiple_fqs_to_one_fq",
     "encode_fq_path_to_parquet",
     "encode_fq_path_to_parquet_chunk",
@@ -28,6 +41,32 @@ __all__ = [
     "write_fq",
     "write_fq_parallel",
 ]
+
+@typing.final
+class Deduplicator:
+    r"""Python wrapper for Deduplicator."""
+    def __new__(cls) -> Deduplicator:
+        r"""Create a new deduplicator.
+
+        By default, keeps the first occurrence of each unique sequence.
+        """
+    def is_duplicate(self, sequence: typing.Sequence[builtins.int]) -> builtins.bool:
+        r"""Check if a sequence has been seen before."""
+    def passes(self, sequence: typing.Sequence[builtins.int]) -> builtins.bool:
+        r"""Check if a record passes the filter.
+
+        Args:
+            sequence: The sequence to check (bytes)
+
+        Returns:
+            True if the sequence passes (first occurrence), False if duplicate
+        """
+    def unique_count(self) -> builtins.int:
+        r"""Get the number of unique sequences seen so far."""
+    def clear(self) -> None:
+        r"""Clear all tracked sequences (reset the deduplicator)."""
+    def __repr__(self) -> builtins.str:
+        r"""String representation."""
 
 @typing.final
 class EncoderOption:
@@ -92,13 +131,274 @@ class FastqRecord:
     def __repr__(self) -> builtins.str: ...
 
 @typing.final
+class FastqStreamDataset:
+    r"""Streaming FASTQ dataset for efficient iteration over large files.
+
+    This dataset provides memory-efficient streaming iteration over FASTQ files,
+    reading records one at a time without loading the entire file into memory.
+    Yields records as dictionaries with NumPy arrays for zero-copy efficiency.
+
+    # Examples
+
+    ```python
+    from deepbiop.fq import FastqStreamDataset
+
+    dataset = FastqStreamDataset("data.fastq.gz")
+    for record in dataset:
+        seq = record["sequence"]  # NumPy array
+        qual = record["quality"]  # NumPy array
+        print(f"ID: {record['id']}, Length: {len(seq)}")
+    ```
+    """
+    def __new__(cls, file_path: builtins.str) -> FastqStreamDataset:
+        r"""Create a new streaming FASTQ dataset.
+
+        # Arguments
+
+        * `file_path` - Path to FASTQ file (supports .fastq, .fastq.gz, .fastq.bgz)
+
+        # Returns
+
+        FastqStreamDataset instance
+
+        # Raises
+
+        * `FileNotFoundError` - If file doesn't exist
+        * `IOError` - If file cannot be opened
+        """
+    def __iter__(self) -> FastqStreamIterator:
+        r"""Return iterator over dataset records.
+
+        Each record is a dictionary with:
+        - 'id': str - Sequence identifier
+        - 'sequence': np.ndarray (uint8) - Nucleotide sequence bytes
+        - 'quality': np.ndarray (uint8) - Quality score bytes
+        - 'description': Optional[str] - Sequence description
+        """
+    def __len__(self) -> builtins.int:
+        r"""Get estimated number of records in dataset.
+
+        # Returns
+
+        int - Estimated record count (0 if unavailable)
+        """
+    def __getitem__(self, index: builtins.int) -> dict:
+        r"""Get record by index (map-style dataset access).
+
+        # Arguments
+
+        * `index` - Index of record to retrieve
+
+        # Returns
+
+        Dict with 'id', 'sequence', 'quality', 'description'
+
+        # Note
+
+        Each call opens the file fresh and reads sequentially up to `index`,
+        so random access is O(n) in the index. Iteration is preferred for
+        sequential access.
+        """
+    def __repr__(self) -> builtins.str:
+        r"""Human-readable representation."""
+    def __getnewargs__(self) -> tuple[builtins.str]:
+        r"""Provide arguments for __new__ during unpickling.
+
+        This is called by pickle to get arguments to pass to __new__().
+
+        # Returns
+
+        Tuple of (file_path,) to pass to __new__
+        """
+    def __getstate__(self) -> dict:
+        r"""Pickling support for multiprocessing (DataLoader with num_workers > 0).
+
+        # Returns
+
+        Dict with file_path and size_hint for reconstruction
+        """
+    def __setstate__(self, state: dict) -> None:
+        r"""Unpickling support for multiprocessing.
+
+        # Arguments
+
+        * `state` - Dict with file_path and size_hint from __getstate__
+        """
+
+@typing.final
+class FastqStreamIterator:
+    r"""Iterator for streaming FASTQ dataset."""
+    def __iter__(self) -> FastqStreamIterator: ...
+    def __next__(self) -> dict | None: ...
+
+@typing.final
+class IntegerEncoder:
+    r"""Python wrapper for IntegerEncoder.
+
+    Encodes biological sequences as integer arrays (A=0, C=1, G=2, T/U=3).
+    """
+    def __new__(cls, encoding_type: builtins.str) -> IntegerEncoder:
+        r"""Create a new integer encoder.
+
+        Args:
+            encoding_type: Type of sequence ("dna", "rna", or "protein")
+
+        Returns:
+            A new IntegerEncoder instance
+        """
+    def encode(
+        self, sequence: typing.Sequence[builtins.int]
+    ) -> numpy.typing.NDArray[numpy.float32]:
+        r"""Encode a single sequence as an integer array.
+
+        Args:
+            sequence: The sequence to encode (bytes)
+
+        Returns:
+            NumPy array of shape [sequence_length] with integer values
+
+        Raises:
+            ValueError: If the sequence contains invalid characters
+        """
+    def encode_batch(
+        self, sequences: typing.Sequence[typing.Sequence[builtins.int]]
+    ) -> numpy.typing.NDArray[numpy.float32]:
+        r"""Encode multiple sequences in parallel.
+
+        All sequences are padded to the length of the longest sequence with -1.
+
+        Args:
+            sequences: List of sequences to encode (list of bytes)
+
+        Returns:
+            NumPy array of shape [num_sequences, max_length]
+
+        Raises:
+            ValueError: If any sequence fails to encode
+        """
+    def encoding_type(self) -> builtins.str:
+        r"""Get the encoding type."""
+    def __repr__(self) -> builtins.str:
+        r"""String representation."""
+
+@typing.final
+class LengthFilter:
+    r"""Python wrapper for LengthFilter."""
+    @property
+    def min_length(self) -> builtins.int | None:
+        r"""Get the minimum length threshold."""
+    @property
+    def max_length(self) -> builtins.int | None:
+        r"""Get the maximum length threshold."""
+    def __new__(
+        cls,
+        min_length: builtins.int | None = None,
+        max_length: builtins.int | None = None,
+    ) -> LengthFilter:
+        r"""Create a new length filter.
+
+        Args:
+            min_length: Minimum sequence length (inclusive), or None for no minimum
+            max_length: Maximum sequence length (inclusive), or None for no maximum
+
+        Returns:
+            A new LengthFilter instance
+        """
+    @staticmethod
+    def min_only(min: builtins.int) -> LengthFilter:
+        r"""Create a filter that only accepts sequences with at least min bases."""
+    @staticmethod
+    def max_only(max: builtins.int) -> LengthFilter:
+        r"""Create a filter that only accepts sequences with at most max bases."""
+    @staticmethod
+    def range(min: builtins.int, max: builtins.int) -> LengthFilter:
+        r"""Create a filter that accepts sequences within a specific length range."""
+    def passes(self, sequence: typing.Sequence[builtins.int]) -> builtins.bool:
+        r"""Check if a record passes the filter.
+
+        Args:
+            sequence: The sequence to check (bytes)
+
+        Returns:
+            True if the sequence passes, False otherwise
+        """
+    def __repr__(self) -> builtins.str:
+        r"""String representation."""
+
+@typing.final
+class OneHotEncoder:
+    r"""Python wrapper for OneHotEncoder.
+
+    Encodes biological sequences as one-hot matrices for machine learning.
+    """
+    def __new__(
+        cls,
+        encoding_type: builtins.str,
+        ambiguous_strategy: builtins.str,
+        seed: builtins.int | None = None,
+    ) -> OneHotEncoder:
+        r"""Create a new one-hot encoder.
+
+        Args:
+            encoding_type: Type of sequence ("dna", "rna", or "protein")
+            ambiguous_strategy: How to handle ambiguous bases ("skip", "mask", or "random")
+            seed: Optional random seed for reproducible random replacements
+
+        Returns:
+            A new OneHotEncoder instance
+        """
+    def encode(
+        self, sequence: typing.Sequence[builtins.int]
+    ) -> numpy.typing.NDArray[numpy.float32]:
+        r"""Encode a single sequence as a one-hot matrix.
+
+        Args:
+            sequence: The sequence to encode (bytes)
+
+        Returns:
+            NumPy array of shape [sequence_length, alphabet_size]
+
+        Raises:
+            ValueError: If the sequence contains invalid characters
+        """
+    def encode_batch(
+        self, sequences: typing.Sequence[typing.Sequence[builtins.int]]
+    ) -> numpy.typing.NDArray[numpy.float32]:
+        r"""Encode multiple sequences in parallel.
+
+        All sequences are padded to the length of the longest sequence with zeros.
+
+        Args:
+            sequences: List of sequences to encode (list of bytes)
+
+        Returns:
+            NumPy array of shape [num_sequences, max_length, alphabet_size]
+
+        Raises:
+            ValueError: If any sequence fails to encode
+        """
+    def encoding_type(self) -> builtins.str:
+        r"""Get the encoding type.
+
+        Returns:
+            The encoding type as a string ("dna", "rna", or "protein")
+        """
+    def ambiguous_strategy(self) -> builtins.str:
+        r"""Get the ambiguous strategy.
+
+        Returns:
+            The ambiguous strategy as a string ("skip", "mask", or "random")
+        """
+    def __repr__(self) -> builtins.str:
+        r"""String representation."""
+
+@typing.final
 class ParquetEncoder:
     def __new__(cls, option: EncoderOption) -> ParquetEncoder: ...
 
 @typing.final
 class Predict:
     r"""A struct to store the prediction result."""
-
     @property
     def prediction(self) -> builtins.list[builtins.int]: ...
     @prediction.setter
@@ -143,8 +443,6 @@ class Predict:
         append_interval_number: builtins.int,
     ) -> builtins.list[tuple[builtins.int, builtins.int]]:
         r"""Smooth and select intervals."""
-    def seq_len(self) -> builtins.int:
-        r"""Get the sequence length."""
     def qual_array(self) -> builtins.list[builtins.int]:
         r"""Get the quality score array."""
     def show_info(
@@ -155,6 +453,71 @@ class Predict:
         r"""Show the information of the prediction."""
     def __getstate__(self) -> typing.Any: ...
     def __setstate__(self, state: typing.Any) -> None: ...
+
+@typing.final
+class PyStreamingFastqIterator:
+    r"""Python iterator wrapper for streaming FASTQ."""
+    def __iter__(self) -> PyStreamingFastqIterator: ...
+    def __next__(self) -> typing.Any | None: ...
+
+@typing.final
+class QualityFilter:
+    r"""Python wrapper for QualityFilter."""
+    @property
+    def quality_offset(self) -> builtins.int:
+        r"""Get the quality offset."""
+    @property
+    def min_mean_quality(self) -> builtins.float | None:
+        r"""Get the minimum mean quality threshold."""
+    @property
+    def min_base_quality(self) -> builtins.int | None:
+        r"""Get the minimum base quality threshold."""
+    def __new__(
+        cls,
+        min_mean_quality: builtins.float | None = None,
+        min_base_quality: builtins.int | None = None,
+        quality_offset: builtins.int = 33,
+    ) -> QualityFilter:
+        r"""Create a new quality filter.
+
+        Args:
+            min_mean_quality: Minimum mean quality score, or None for no minimum
+            min_base_quality: Minimum quality for any single base, or None for no minimum
+            quality_offset: Quality score encoding offset (typically 33 for Phred+33)
+
+        Returns:
+            A new QualityFilter instance
+        """
+    @staticmethod
+    def mean_quality(
+        min_mean: builtins.float, quality_offset: builtins.int = 33
+    ) -> QualityFilter:
+        r"""Create a filter based on mean quality only."""
+    @staticmethod
+    def base_quality(
+        min_base: builtins.int, quality_offset: builtins.int = 33
+    ) -> QualityFilter:
+        r"""Create a filter based on minimum base quality only."""
+    def passes(
+        self,
+        sequence: typing.Sequence[builtins.int],
+        quality: typing.Sequence[builtins.int],
+    ) -> builtins.bool:
+        r"""Check if a record passes the filter.
+
+        Args:
+            sequence: The sequence (bytes)
+            quality: The quality scores (bytes)
+
+        Returns:
+            True if the record passes, False otherwise
+        """
+    def calculate_mean_quality(
+        self, quality: typing.Sequence[builtins.int]
+    ) -> builtins.float:
+        r"""Calculate mean quality score for a record."""
+    def __repr__(self) -> builtins.str:
+        r"""String representation."""
 
 @typing.final
 class RecordData:
@@ -173,6 +536,69 @@ class RecordData:
     def __new__(
         cls, id: builtins.str, seq: builtins.str, qual: builtins.str
     ) -> RecordData: ...
+
+@typing.final
+class StreamingFastqDataset:
+    r"""Python wrapper for streaming FASTQ dataset."""
+    def __new__(
+        cls, path: builtins.str, shuffle_buffer_size: builtins.int = 0
+    ) -> StreamingFastqDataset:
+        r"""Create a new streaming FASTQ dataset.
+
+        # Arguments
+        * `path` - Path to FASTQ file
+        * `shuffle_buffer_size` - Size of shuffle buffer (default: 0 = no shuffling)
+
+        # Example
+        ```python
+        dataset = StreamingFastqDataset(
+            "large_file.fastq.gz", shuffle_buffer_size=10000
+        )
+        for record in dataset:
+            print(record["id"], len(record["sequence"]))
+        ```
+        """
+    def __iter__(self) -> PyStreamingFastqIterator:
+        r"""Make the dataset iterable from Python."""
+    def __repr__(self) -> builtins.str: ...
+
+@typing.final
+class Subsampler:
+    r"""Python wrapper for Subsampler."""
+    @staticmethod
+    def random_fraction(
+        fraction: builtins.float, seed: builtins.int | None = None
+    ) -> Subsampler:
+        r"""Create a subsampler that keeps a random fraction of records.
+
+        Args:
+            fraction: Fraction of records to keep (0.0 to 1.0)
+            seed: Optional seed for reproducible random sampling
+
+        Returns:
+            A new Subsampler instance
+        """
+    @staticmethod
+    def every_nth(n: builtins.int) -> Subsampler:
+        r"""Create a subsampler that keeps every Nth record."""
+    @staticmethod
+    def first_n(n: builtins.int) -> Subsampler:
+        r"""Create a subsampler that keeps the first N records."""
+    def passes(self, _sequence: typing.Sequence[builtins.int]) -> builtins.bool:
+        r"""Check if a record passes the filter.
+
+        Args:
+            sequence: The sequence (bytes) - not used for subsampling but required for API consistency
+
+        Returns:
+            True if this record should be kept based on the sampling strategy
+        """
+    def record_count(self) -> builtins.int:
+        r"""Get the current record count."""
+    def reset(self) -> None:
+        r"""Reset the internal counter (useful for processing multiple files)."""
+    def __repr__(self) -> builtins.str:
+        r"""String representation."""
 
 def convert_multiple_fqs_to_one_fq(
     paths: typing.Sequence[builtins.str | os.PathLike | pathlib.Path],

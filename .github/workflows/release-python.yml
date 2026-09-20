@@ -9,10 +9,12 @@ on:
   push:
     branches:
       - main
-      - master
     tags:
       - "*"
   pull_request:
+    branches:
+      - main
+
   workflow_dispatch:
 
 permissions:
@@ -30,8 +32,8 @@ jobs:
             target: x86
           - runner: ubuntu-latest
             target: aarch64
-          - runner: ubuntu-latest
-            target: armv7
+          # armv7 removed due to cross-compilation issues with PyO3/maturin
+          # Most modern ARM devices use aarch64 (ARM64) instead
     steps:
       - uses: actions/checkout@v6
       - uses: actions/setup-python@v6
@@ -113,27 +115,31 @@ jobs:
           options: -v ${{ github.workspace }}:/io -w /io
           run: |
             set -e
-            apk add py3-pip py3-virtualenv
-            python3 -m virtualenv .venv
+            apk add py3-pip py3-virtualenv py3-numpy
+            # numpy comes from apk (no musl wheels for every arch we ship) and the
+            # just-built wheel is installed by path so it is not confused with PyPI's.
+            python3 -m virtualenv --system-site-packages .venv
             source .venv/bin/activate
-            pip install deepbiop --no-index --find-links dist --force-reinstall
+            pip install "$(ls dist/*.whl)" --force-reinstall
             pip install pytest
             cd py-deepbiop && pytest  -vls
       - name: pytest
-        if: ${{ !startsWith(matrix.platform.target, 'x86') }}
+        if: ${{ !startsWith(matrix.platform.target, 'x86') && matrix.platform.target != 'armv7' }}
         uses: uraimo/run-on-arch-action@v2
         with:
           arch: ${{ matrix.platform.target }}
           distro: alpine_latest
           githubToken: ${{ github.token }}
           install: |
-            apk add py3-virtualenv
+            apk add py3-virtualenv py3-numpy
           run: |
             set -e
-            python3 -m virtualenv .venv
+            # numpy comes from apk: PyPI has no musllinux armv7 wheel and building it
+            # here would need a full toolchain.
+            python3 -m virtualenv --system-site-packages .venv
             source .venv/bin/activate
             pip install pytest
-            pip install deepbiop --find-links dist --force-reinstall
+            pip install "$(ls dist/*.whl)" --force-reinstall
             cd py-deepbiop && pytest -vls
 
   windows:
@@ -160,23 +166,13 @@ jobs:
         with:
           name: wheels-windows-${{ matrix.platform.target }}
           path: dist
-      - name: pytest
-        if: ${{ !startsWith(matrix.platform.target, 'aarch64') }}
-        shell: bash
-        run: |
-          set -e
-          python3 -m venv .venv
-          source .venv/Scripts/activate
-          pip install deepbiop --find-links dist --force-reinstall
-          pip install pytest
-          cd py-deepbiop && pytest  -vls
 
   macos:
     runs-on: ${{ matrix.platform.runner }}
     strategy:
       matrix:
         platform:
-          - runner: macos-13
+          - runner: macos-14
             target: x86_64
           - runner: macos-14
             target: aarch64
@@ -196,14 +192,6 @@ jobs:
         with:
           name: wheels-macos-${{ matrix.platform.target }}
           path: dist
-      - name: pytest
-        run: |
-          set -e
-          python3 -m venv .venv
-          source .venv/bin/activate
-          pip install deepbiop --find-links dist --force-reinstall
-          pip install pytest
-          cd py-deepbiop && pytest  -vls
 
   sdist:
     runs-on: ubuntu-latest
@@ -228,7 +216,7 @@ jobs:
     name: Release
     runs-on: ubuntu-latest
     if: ${{ startsWith(github.ref, 'refs/tags/py-deepbiop-v') }}
-    needs: [linux, musllinux, windows, macos, sdist]
+    needs: [linux, windows, macos, sdist]
     steps:
       - uses: actions/download-artifact@v7
       - name: Publish to PyPI

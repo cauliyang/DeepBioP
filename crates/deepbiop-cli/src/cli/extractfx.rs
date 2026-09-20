@@ -60,7 +60,7 @@ fn fa_worker(options: &ExtractFx) -> Result<()> {
         info!("load {} selected reads from {:?}", reads.len(), reads_path);
         records
     } else if let Some(number) = options.number {
-        let records = fa::io::select_record_from_fq_by_random(&options.fx, number)?;
+        let records = fa::io::select_record_from_fa_by_random(&options.fx, number)?;
         info!("select {} reads by random", number);
         records
     } else {

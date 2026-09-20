@@ -1,22 +1,16 @@
 use anyhow::Result;
 use noodles::{bam, bgzf};
 use rayon::prelude::*;
-use std::{fs::File, num::NonZeroUsize, path::Path, thread};
+use std::{fs::File, path::Path};
 
+use deepbiop_utils as utils;
 use noodles::fastq;
 
 // FIXME: The function has a bug since seq != qual
 
 pub fn bam2fq(bam: &Path, threads: Option<usize>) -> Result<Vec<fastq::Record>> {
+    let worker_count = utils::parallel::calculate_worker_count(threads);
     let file = File::open(bam)?;
-    let worker_count = if let Some(threads) = threads {
-        NonZeroUsize::new(threads)
-            .unwrap()
-            .min(thread::available_parallelism().unwrap_or(NonZeroUsize::MIN))
-    } else {
-        thread::available_parallelism().unwrap_or(NonZeroUsize::MIN)
-    };
-
     let decoder = bgzf::io::MultithreadedReader::with_worker_count(worker_count, file);
     let mut reader = bam::io::Reader::from(decoder);
     let _header = reader.read_header()?;

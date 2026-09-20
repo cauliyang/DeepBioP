@@ -1,3 +1,4 @@
+#[cfg(feature = "python")]
 use pyo3::PyErr;
 use thiserror::Error;
 
@@ -25,6 +26,7 @@ pub enum EncodingError {
     NotSameLengthForQualityAndSequence(String),
 }
 
+#[cfg(feature = "python")]
 impl From<EncodingError> for PyErr {
     fn from(error: EncodingError) -> PyErr {
         use EncodingError::*;

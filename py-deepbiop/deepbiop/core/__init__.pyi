@@ -3,7 +3,14 @@
 import builtins
 import typing
 
+import numpy
+import numpy.typing
+
 __all__ = [
+    "Batch",
+    "KmerEncoder",
+    "SequenceRecord",
+    "collate_batch",
     "generate_kmers",
     "generate_kmers_table",
     "kmers_to_seq",
@@ -12,9 +19,159 @@ __all__ = [
     "seq_to_kmers",
 ]
 
+@typing.final
+class Batch:
+    r"""Python wrapper for Batch struct.
+
+    This class represents a batched collection of biological sequences ready for GPU processing.
+    It handles padding, masking, and collation of variable-length sequences.
+
+    # Attributes
+
+    * `ids` - List of sequence identifiers
+    * `sequences` - 2D numpy array [batch_size, max_length] containing sequences
+    * `quality_scores` - Optional 2D numpy array [batch_size, max_length] containing quality scores
+    * `attention_mask` - 2D numpy array [batch_size, max_length] (1=real, 0=padding)
+    * `lengths` - List of original sequence lengths before padding
+    """
+
+@typing.final
+class KmerEncoder:
+    r"""Python wrapper for KmerEncoder.
+
+    Encodes biological sequences as k-mer frequency vectors.
+    """
+    def __new__(
+        cls, k: builtins.int, canonical: builtins.bool, encoding_type: builtins.str
+    ) -> KmerEncoder:
+        r"""Create a new k-mer encoder.
+
+        Args:
+            k: K-mer length
+            canonical: Whether to use canonical k-mers (k-mer and reverse complement are the same)
+            encoding_type: Type of sequence ("dna", "rna", or "protein")
+
+        Returns:
+            A new KmerEncoder instance
+
+        Raises:
+            ValueError: If k is 0, the vocabulary would exceed 16M k-mers,
+                or canonical is requested for protein sequences
+        """
+    def encode(
+        self, sequence: typing.Sequence[builtins.int]
+    ) -> numpy.typing.NDArray[numpy.float32]:
+        r"""Encode a single sequence as a k-mer frequency vector.
+
+        Args:
+            sequence: The sequence to encode (bytes)
+
+        Returns:
+            NumPy array of shape [num_possible_kmers] with k-mer counts
+
+        Raises:
+            ValueError: If the sequence contains invalid characters
+        """
+    def encode_batch(
+        self, sequences: typing.Sequence[typing.Sequence[builtins.int]]
+    ) -> numpy.typing.NDArray[numpy.float32]:
+        r"""Encode multiple sequences in parallel.
+
+        Args:
+            sequences: List of sequences to encode (list of bytes)
+
+        Returns:
+            NumPy array of shape [num_sequences, num_possible_kmers]
+
+        Raises:
+            ValueError: If any sequence fails to encode
+        """
+    def k(self) -> builtins.int:
+        r"""Get the k-mer length."""
+    def is_canonical(self) -> builtins.bool:
+        r"""Check if using canonical k-mers."""
+    def encoding_type(self) -> builtins.str:
+        r"""Get the encoding type."""
+    def __repr__(self) -> builtins.str:
+        r"""String representation."""
+
+@typing.final
+class SequenceRecord:
+    r"""A biological sequence record with identifier, sequence, and optional metadata.
+
+    This struct represents a single biological sequence, which could be DNA, RNA, or protein.
+    It includes the sequence identifier, the sequence data itself, optional quality scores
+    (for FASTQ format), and an optional description string.
+    """
+    @property
+    def id(self) -> builtins.str:
+        r"""Sequence identifier (e.g., read name, accession number)."""
+    @id.setter
+    def id(self, value: builtins.str) -> None:
+        r"""Sequence identifier (e.g., read name, accession number)."""
+    @property
+    def sequence(self) -> builtins.list[builtins.int]:
+        r"""The biological sequence data."""
+    @sequence.setter
+    def sequence(self, value: typing.Sequence[builtins.int]) -> None:
+        r"""The biological sequence data."""
+    @property
+    def quality_scores(self) -> builtins.list[builtins.int] | None:
+        r"""Optional Phred quality scores (same length as sequence)."""
+    @quality_scores.setter
+    def quality_scores(self, value: typing.Sequence[builtins.int] | None) -> None:
+        r"""Optional Phred quality scores (same length as sequence)."""
+    @property
+    def description(self) -> builtins.str | None:
+        r"""Optional description from the header line."""
+    @description.setter
+    def description(self, value: builtins.str | None) -> None:
+        r"""Optional description from the header line."""
+
+def collate_batch(
+    records: typing.Sequence[SequenceRecord],
+    padding: builtins.str = "longest",
+    max_length: builtins.int | None = None,
+    pad_value: builtins.int = 0,
+    truncate: builtins.bool = False,
+) -> Batch:
+    r"""Collate a list of SequenceRecords into a Batch.
+
+    This function handles padding and masking of variable-length sequences
+    for efficient GPU processing.
+
+    # Arguments
+
+    * `records` - List of SequenceRecord objects to batch
+    * `padding` - Padding strategy: "longest", "fixed", or "bucketed"
+    * `max_length` - Maximum sequence length (for "fixed" padding only)
+    * `pad_value` - Value to use for padding (default: 0)
+    * `truncate` - Whether to truncate sequences exceeding max_length (default: False)
+
+    # Returns
+
+    A Batch object containing padded sequences and metadata
+
+    # Examples
+
+    ```python
+    from deepbiop.core import SequenceRecord, collate_batch
+
+    records = [
+        SequenceRecord("seq1", b"ACGT", None, None),
+        SequenceRecord("seq2", b"TG", None, None),
+    ]
+
+    # Dynamic padding to longest sequence
+    batch = collate_batch(records, padding="longest")
+
+    # Fixed-length padding
+    batch = collate_batch(records, padding="fixed", max_length=10)
+    ```
+    """
+
 def generate_kmers(base: builtins.str, k: builtins.int) -> builtins.list[builtins.str]:
-    r"""
-    Generate all possible k-mers from a set of base characters.
+    r"""Generate all possible k-mers from a set of base characters.
 
     This function takes a string of base characters and a k-mer length,
     and generates all possible k-mer combinations of that length.
@@ -32,8 +189,7 @@ def generate_kmers(base: builtins.str, k: builtins.int) -> builtins.list[builtin
 def generate_kmers_table(
     base: builtins.str, k: builtins.int
 ) -> builtins.dict[builtins.list[builtins.int], builtins.int]:
-    r"""
-    Generate a lookup table mapping k-mers to unique IDs.
+    r"""Generate a lookup table mapping k-mers to unique IDs.
 
     This function takes a string of base characters and a k-mer length,
     and generates a HashMap mapping each possible k-mer to a unique integer ID.
@@ -49,8 +205,7 @@ def generate_kmers_table(
     """
 
 def kmers_to_seq(kmers: typing.Sequence[builtins.str]) -> builtins.str:
-    r"""
-    Convert k-mers back into a DNA sequence.
+    r"""Convert k-mers back into a DNA sequence.
 
     This function takes a vector of k-mers and reconstructs the original DNA sequence.
     The k-mers are assumed to be in order and overlapping.
@@ -65,8 +220,7 @@ def kmers_to_seq(kmers: typing.Sequence[builtins.str]) -> builtins.str:
     """
 
 def normalize_seq(seq: builtins.str, iupac: builtins.bool) -> builtins.str:
-    r"""
-    Normalize a DNA sequence by converting any non-standard nucleotides to standard ones.
+    r"""Normalize a DNA sequence by converting any non-standard nucleotides to standard ones.
 
     This function takes a DNA sequence as a `String` and a boolean flag `iupac` indicating whether to normalize using IUPAC ambiguity codes.
     It returns a normalized DNA sequence as a `String`.
@@ -82,8 +236,7 @@ def normalize_seq(seq: builtins.str, iupac: builtins.bool) -> builtins.str:
     """
 
 def reverse_complement(seq: builtins.str) -> builtins.str:
-    r"""
-    Generate the reverse complement of a DNA sequence.
+    r"""Generate the reverse complement of a DNA sequence.
 
     This function takes a DNA sequence as a `String` and returns its reverse complement.
     The reverse complement is generated by reversing the sequence and replacing each nucleotide
@@ -111,8 +264,7 @@ def reverse_complement(seq: builtins.str) -> builtins.str:
 def seq_to_kmers(
     seq: builtins.str, k: builtins.int, overlap: builtins.bool
 ) -> builtins.list[builtins.str]:
-    r"""
-    Convert a DNA sequence into k-mers.
+    r"""Convert a DNA sequence into k-mers.
 
     This function takes a DNA sequence and splits it into k-mers of specified length.
     The sequence is first normalized to handle non-standard nucleotides.

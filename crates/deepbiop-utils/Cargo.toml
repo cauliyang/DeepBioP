@@ -11,8 +11,8 @@ readme = "../../README.md"
 description = "Deep Learning Preprocessing Library for Biological Data"
 
 [dependencies]
-pyo3 = { workspace = true }
-pyo3-stub-gen = { workspace = true }
+pyo3 = { workspace = true, optional = true }
+pyo3-stub-gen = { workspace = true, optional = true }
 colored = { workspace = true }
 textwrap = { workspace = true }
 ahash = { workspace = true }
@@ -27,10 +27,16 @@ lexical = { workspace = true }
 log = { workspace = true }
 serde = { workspace = true }
 tempfile = { workspace = true }
+deepbiop-core = { path = "../deepbiop-core", version = "0.1.16" }
+rand = { workspace = true }
 
-arrow = { workspace = true }
-parquet = { workspace = true }
+arrow = { workspace = true, optional = true }
+parquet = { workspace = true, optional = true }
 serde_json = { workspace = true }
+ndarray = { workspace = true }
+ndarray-npy = { workspace = true }
 
 [features]
-python = []
+python = ["dep:pyo3", "dep:pyo3-stub-gen"]
+cache = ["dep:arrow", "dep:parquet"]
+default = []

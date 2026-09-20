@@ -2,8 +2,6 @@
 
 import builtins
 import enum
-import os
-import pathlib
 import typing
 
 __all__ = [
@@ -11,39 +9,15 @@ __all__ = [
     "GenomicInterval",
     "PslAlignment",
     "SequenceFileType",
-    "check_compressed_type",
-    "generate_unmaped_intervals",
     "highlight_targets",
-    "majority_voting",
-    "parse_psl_by_qname",
-    "remove_intervals_and_keep_left",
 ]
 
 @typing.final
 class GenomicInterval:
-    r"""
-    A segment is a genomic interval defined by a chromosome, a start position and an end position.
+    r"""A segment is a genomic interval defined by a chromosome, a start position and an end position.
 
     The start position is inclusive and the end position is exclusive.
     """
-
-    @property
-    def start(self) -> builtins.int: ...
-    @start.setter
-    def start(self, value: builtins.int) -> None: ...
-    @property
-    def end(self) -> builtins.int: ...
-    @end.setter
-    def end(self, value: builtins.int) -> None: ...
-    @property
-    def chr(self) -> builtins.str: ...
-    @chr.setter
-    def chr(self, value: builtins.str) -> None: ...
-    def __new__(
-        cls, chr: builtins.str, start: builtins.int, end: builtins.int
-    ) -> GenomicInterval: ...
-    def overlap(self, other: GenomicInterval) -> builtins.bool: ...
-    def __repr__(self) -> builtins.str: ...
 
 @typing.final
 class PslAlignment:
@@ -87,12 +61,10 @@ class PslAlignment:
     def identity(self) -> builtins.float: ...
     @identity.setter
     def identity(self, value: builtins.float) -> None: ...
-    def __repr__(self) -> builtins.str: ...
 
 @typing.final
 class CompressedType(enum.Enum):
-    r"""
-    Represents different types of file compression formats.
+    r"""Represents different types of file compression formats.
 
     This enum is used to identify and handle various compression formats commonly used for files.
     It can be used in Python through the deepbiop.utils module.
@@ -126,43 +98,8 @@ class SequenceFileType(enum.Enum):
     Fastq = ...
     Unknown = ...
 
-def check_compressed_type(
-    path: builtins.str | os.PathLike | pathlib.Path,
-) -> CompressedType:
-    r"""
-    Check the compression type of a file.
-
-    Args:
-        path: Path to the file to check
-
-    Returns
-    -------
-        The compression type of the file (None, Gzip, Bzip2, Xz)
-
-    Raises
-    ------
-        IOError: If the file cannot be opened or read
-    """
-
-def generate_unmaped_intervals(
-    input: typing.Sequence[tuple[builtins.int, builtins.int]],
-    total_length: builtins.int,
-) -> builtins.list[tuple[builtins.int, builtins.int]]: ...
 def highlight_targets(
     sequence: builtins.str,
     targets: typing.Sequence[tuple[builtins.int, builtins.int]],
     text_width: builtins.int | None = None,
 ) -> builtins.str: ...
-def majority_voting(
-    labels: typing.Sequence[builtins.int], window_size: builtins.int
-) -> builtins.list[builtins.int]: ...
-def parse_psl_by_qname(
-    file_path: builtins.str | os.PathLike | pathlib.Path,
-) -> builtins.dict[builtins.str, builtins.list[PslAlignment]]:
-    r"""Parse PSL file by query name."""
-
-def remove_intervals_and_keep_left(
-    seq: builtins.str, intervals: typing.Sequence[tuple[builtins.int, builtins.int]]
-) -> tuple[
-    builtins.list[builtins.str], builtins.list[tuple[builtins.int, builtins.int]]
-]: ...

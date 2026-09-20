@@ -7,12 +7,23 @@ edition = { workspace = true }
 name = "deepbiop"
 crate-type = ["cdylib", "rlib"]
 
+[[bin]]
+name = "stub_gen"
+path = "src/bin/stub_gen.rs"
+
+[features]
+# Enabled by maturin (see [tool.maturin] in pyproject.toml). Kept off by default so
+# `cargo test --workspace` can link test binaries against libpython.
+extension-module = ["pyo3/extension-module"]
+
 [dependencies]
-deepbiop-fq = { workspace = true, features = ['python'] }
+deepbiop-fq = { workspace = true, features = ['python', 'cache'] }
 deepbiop-bam = { workspace = true, features = ['python'] }
-deepbiop-utils = { workspace = true, features = ['python'] }
-deepbiop-fa = { workspace = true, features = ['python'] }
+deepbiop-utils = { workspace = true, features = ['python', 'cache'] }
+deepbiop-fa = { workspace = true, features = ['python', 'cache'] }
 deepbiop-core = { workspace = true, features = ['python'] }
+deepbiop-vcf = { workspace = true, features = ['python'] }
+deepbiop-gtf = { workspace = true, features = ['python'] }
 
 pyo3-stub-gen = { workspace = true }
 pyo3 = { workspace = true }
@@ -22,8 +33,10 @@ rayon = { workspace = true }
 pyo3-log = { workspace = true }
 anyhow = { workspace = true }
 needletail = { workspace = true }
+noodles = { workspace = true }
 numpy = { workspace = true }
 parquet = { workspace = true }
+rand = { workspace = true }
 
 [build-dependencies]
 pyo3-build-config = "0.29"
