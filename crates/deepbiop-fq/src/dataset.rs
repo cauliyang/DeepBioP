@@ -48,7 +48,10 @@ impl FastqRecord {
 }
 
 #[cfg_attr(feature = "python", gen_stub_pyclass)]
-#[cfg_attr(feature = "python", pyclass(name = "FastqDataset"))]
+#[cfg_attr(
+    feature = "python",
+    pyclass(name = "FastqDataset", module = "deepbiop.fq", skip_from_py_object)
+)]
 #[derive(Clone)]
 #[allow(dead_code)]
 pub struct FastqDataset {

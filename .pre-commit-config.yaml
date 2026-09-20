@@ -21,7 +21,7 @@ repos:
       - id: trailing-whitespace
 
   - repo: https://github.com/charliermarsh/ruff-pre-commit
-    rev: v0.14.4
+    rev: v0.16.8
     hooks:
       # Run the linter.
       - id: ruff-check
@@ -46,15 +46,14 @@ repos:
             --ignore-regex=examples/.*,
             -vv,
           ]
-
   # shell scripts linter
   - repo: https://github.com/shellcheck-py/shellcheck-py
-    rev: v0.11.0.1
+    rev: v0.11.0.1-1
     hooks:
       - id: shellcheck
 
   - repo: https://github.com/DevinR528/cargo-sort
-    rev: v2.0.2
+    rev: v2.1.4
     hooks:
       - id: cargo-sort
 

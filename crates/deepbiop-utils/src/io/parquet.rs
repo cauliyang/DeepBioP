@@ -28,7 +28,7 @@ pub fn write_parquet_for_batches<P: AsRef<Path>>(
 ) -> Result<()> {
     let file = File::create(path.as_ref())?;
     let props = WriterProperties::builder()
-        .set_max_row_group_size(100000) // Adjust this value based on your data size
+        .set_max_row_group_row_count(Some(100000)) // Adjust this value based on your data size
         .set_write_batch_size(1024)
         .build();
     let mut writer = ArrowWriter::try_new(file, schema, Some(props))?;

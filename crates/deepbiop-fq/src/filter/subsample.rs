@@ -3,8 +3,8 @@
 use super::{Filter, FilterWithReason};
 use derive_builder::Builder;
 use noodles::fastq;
-use rand::rngs::StdRng;
-use rand::{Rng, SeedableRng};
+use rand::rngs::SmallRng;
+use rand::{RngExt, SeedableRng};
 
 /// Subsample records using various strategies.
 ///
@@ -57,7 +57,7 @@ pub struct Subsampler {
 
     /// Internal RNG for random subsampling
     #[builder(setter(skip))]
-    rng: Option<StdRng>,
+    rng: Option<SmallRng>,
 }
 
 impl Subsampler {
@@ -118,7 +118,7 @@ impl Subsampler {
     pub fn reset(&mut self) {
         self.record_count = 0;
         if let Some(seed) = self.seed {
-            self.rng = Some(StdRng::seed_from_u64(seed));
+            self.rng = Some(SmallRng::seed_from_u64(seed));
         }
     }
 
@@ -126,9 +126,9 @@ impl Subsampler {
     fn ensure_rng(&mut self) {
         if self.fraction.is_some() && self.rng.is_none() {
             self.rng = Some(if let Some(seed) = self.seed {
-                StdRng::seed_from_u64(seed)
+                SmallRng::seed_from_u64(seed)
             } else {
-                StdRng::from_rng(&mut rand::rng())
+                SmallRng::from_rng(&mut rand::rng())
             });
         }
     }
@@ -165,16 +165,10 @@ impl FilterWithReason for Subsampler {
             None
         } else if self.fraction.is_some() {
             Some("Filtered by random sampling".to_string())
-        } else if self.every_nth.is_some() {
-            Some(format!(
-                "Filtered by every_nth (keeping every {} record)",
-                self.every_nth.unwrap()
-            ))
-        } else if self.first_n.is_some() {
-            Some(format!(
-                "Filtered by first_n (kept first {} records)",
-                self.first_n.unwrap()
-            ))
+        } else if let Some(n) = self.every_nth {
+            Some(format!("Filtered by every_nth (keeping every {n} record)"))
+        } else if let Some(n) = self.first_n {
+            Some(format!("Filtered by first_n (kept first {n} records)"))
         } else {
             None
         }

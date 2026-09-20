@@ -84,7 +84,7 @@ impl PyGtfReader {
 }
 
 #[gen_stub_pyclass]
-#[pyclass(name = "GenomicFeature", module = "deepbiop.gtf")]
+#[pyclass(name = "GenomicFeature", module = "deepbiop.gtf", from_py_object)]
 #[derive(Clone)]
 /// Represents a genomic feature from a GTF file
 pub struct PyGenomicFeature {

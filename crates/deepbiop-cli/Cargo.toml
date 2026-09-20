@@ -31,14 +31,14 @@ serde = { workspace = true }
 serde_json = { workspace = true }
 needletail = { workspace = true }
 
-clap = { version = "4.5", features = ["derive"] }
-clap_complete = "4.5"
+clap = { version = "4.6", features = ["derive"] }
+clap_complete = "4.6"
 clap-verbosity-flag = "3.0"
 ctrlc = "3.5"
 human-panic = "2.0"
-env_logger = "0.11.8"
+env_logger = "0.11.11"
 clap-markdown = "0.1.5"
-bon = { version = "3.8.1"}
+bon = { version = "3.10.1"}
 
 [[bin]]
 path = "src/main.rs"

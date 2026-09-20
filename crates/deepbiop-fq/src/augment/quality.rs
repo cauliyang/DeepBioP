@@ -1,6 +1,6 @@
 //! Quality score simulation for FASTQ records.
 
-use rand::Rng;
+use rand::RngExt;
 use rand_distr::{Distribution, Normal};
 
 /// Quality score distribution model.
@@ -60,7 +60,7 @@ pub enum QualityModel {
 #[derive(Debug, Clone)]
 pub struct QualitySimulator {
     model: QualityModel,
-    rng: rand::rngs::StdRng,
+    rng: rand::rngs::SmallRng,
 }
 
 impl QualitySimulator {
@@ -74,11 +74,11 @@ impl QualitySimulator {
         use rand::SeedableRng;
 
         let rng = match seed {
-            Some(seed) => rand::rngs::StdRng::seed_from_u64(seed),
+            Some(seed) => rand::rngs::SmallRng::seed_from_u64(seed),
             None => {
                 // Create a seeded RNG from thread_rng
                 let seed = rand::random::<u64>();
-                rand::rngs::StdRng::seed_from_u64(seed)
+                rand::rngs::SmallRng::seed_from_u64(seed)
             }
         };
 

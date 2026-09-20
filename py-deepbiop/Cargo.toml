@@ -7,17 +7,20 @@ edition = { workspace = true }
 name = "deepbiop"
 crate-type = ["cdylib", "rlib"]
 
-# Binary disabled due to linking issues with extension-module feature
-# Stubs are maintained manually in deepbiop/*.pyi files
-# [[bin]]
-# name = "stub_gen"
-# path = "src/bin/stub_gen.rs"
+[[bin]]
+name = "stub_gen"
+path = "src/bin/stub_gen.rs"
+
+[features]
+# Enabled by maturin (see [tool.maturin] in pyproject.toml). Kept off by default so
+# `cargo test --workspace` can link test binaries against libpython.
+extension-module = ["pyo3/extension-module"]
 
 [dependencies]
-deepbiop-fq = { workspace = true, features = ['python'] }
+deepbiop-fq = { workspace = true, features = ['python', 'cache'] }
 deepbiop-bam = { workspace = true, features = ['python'] }
 deepbiop-utils = { workspace = true, features = ['python', 'cache'] }
-deepbiop-fa = { workspace = true, features = ['python'] }
+deepbiop-fa = { workspace = true, features = ['python', 'cache'] }
 deepbiop-core = { workspace = true, features = ['python'] }
 deepbiop-vcf = { workspace = true, features = ['python'] }
 deepbiop-gtf = { workspace = true, features = ['python'] }
@@ -35,4 +38,4 @@ parquet = { workspace = true }
 rand = { workspace = true }
 
 [build-dependencies]
-pyo3-build-config = "0.27"
+pyo3-build-config = "0.29"

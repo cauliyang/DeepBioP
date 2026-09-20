@@ -4,7 +4,7 @@
 //! particularly useful for sampling from large biological datasets without
 //! loading all data into memory.
 
-use rand::{rng, Rng};
+use rand::{rng, RngExt};
 
 /// Performs reservoir sampling to randomly select k items from an iterator
 ///

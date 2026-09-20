@@ -26,7 +26,10 @@ pub const BASES: &[u8] = b"ATCGN";
 /// let options = EncoderOption::default();
 /// ```
 #[cfg_attr(feature = "python", gen_stub_pyclass)]
-#[cfg_attr(feature = "python", pyclass(get_all, set_all))]
+#[cfg_attr(
+    feature = "python",
+    pyclass(get_all, set_all, module = "deepbiop.fa", from_py_object)
+)]
 #[derive(Debug, Builder, Default, Clone, Serialize, Deserialize)]
 pub struct EncoderOption {
     #[builder(default = "BASES.to_vec()")]

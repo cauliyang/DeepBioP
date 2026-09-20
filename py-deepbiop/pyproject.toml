@@ -252,3 +252,6 @@ cache-keys = [
 ]
 # Uncomment to build rust code in development mode
 # config-settings = { build-args = '--profile=dev' }
+[tool.maturin]
+python-source = "."
+features = ["extension-module"]

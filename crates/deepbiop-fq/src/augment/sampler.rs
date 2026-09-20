@@ -2,8 +2,8 @@
 
 use super::Augmentation;
 use derive_builder::Builder;
-use rand::rngs::StdRng;
-use rand::{Rng, SeedableRng};
+use rand::rngs::SmallRng;
+use rand::{RngExt, SeedableRng};
 
 /// Random subsequence sampler.
 ///
@@ -38,7 +38,7 @@ pub struct Sampler {
 
     /// Internal RNG
     #[builder(setter(skip), default = "None")]
-    rng: Option<StdRng>,
+    rng: Option<SmallRng>,
 }
 
 /// Strategy for extracting subsequences.
@@ -116,9 +116,9 @@ impl Sampler {
     fn ensure_rng(&mut self) {
         if self.rng.is_none() && self.strategy == SamplingStrategy::Random {
             self.rng = Some(if let Some(seed) = self.seed {
-                StdRng::seed_from_u64(seed)
+                SmallRng::seed_from_u64(seed)
             } else {
-                StdRng::from_rng(&mut rand::rng())
+                SmallRng::from_rng(&mut rand::rng())
             });
         }
     }

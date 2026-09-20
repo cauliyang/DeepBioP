@@ -45,7 +45,7 @@ impl ParquetWriter {
         let arrow_exporter = ArrowExporter::new(include_quality, include_gc);
         let writer_props = WriterProperties::builder()
             .set_compression(parquet::basic::Compression::SNAPPY)
-            .set_max_row_group_size(100_000)
+            .set_max_row_group_row_count(Some(100_000))
             .set_write_batch_size(1024)
             .build();
 

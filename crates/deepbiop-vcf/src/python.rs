@@ -74,7 +74,7 @@ impl PyVcfReader {
 }
 
 #[gen_stub_pyclass]
-#[pyclass(name = "Variant", module = "deepbiop.vcf")]
+#[pyclass(name = "Variant", module = "deepbiop.vcf", from_py_object)]
 #[derive(Clone)]
 /// Represents a genomic variant from a VCF file
 pub struct PyVariant {

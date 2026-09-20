@@ -2,8 +2,8 @@
 
 use super::Augmentation;
 use derive_builder::Builder;
-use rand::rngs::StdRng;
-use rand::{Rng, SeedableRng};
+use rand::rngs::SmallRng;
+use rand::{RngExt, SeedableRng};
 use std::sync::Arc;
 
 /// Random point mutation augmenter.
@@ -40,7 +40,7 @@ pub struct Mutator {
 
     /// Internal RNG
     #[builder(setter(skip), default = "None")]
-    rng: Option<StdRng>,
+    rng: Option<SmallRng>,
 }
 
 impl Mutator {
@@ -119,9 +119,9 @@ impl Mutator {
     fn ensure_rng(&mut self) {
         if self.rng.is_none() {
             self.rng = Some(if let Some(seed) = self.seed {
-                StdRng::seed_from_u64(seed)
+                SmallRng::seed_from_u64(seed)
             } else {
-                StdRng::from_rng(&mut rand::rng())
+                SmallRng::from_rng(&mut rand::rng())
             });
         }
     }
@@ -297,7 +297,7 @@ mod tests {
         for (original, mutated) in sequence.iter().zip(result.iter()) {
             assert_ne!(original, mutated, "Base should be mutated");
             assert!(
-                [b'C', b'G', b'T'].contains(mutated),
+                b"CGT".contains(mutated),
                 "Mutated base should be C, G, or T, got {}",
                 *mutated as char
             );
@@ -314,7 +314,7 @@ mod tests {
         // All mutations should be to RNA bases
         for &base in &result {
             assert!(
-                [b'A', b'C', b'G', b'U'].contains(&base),
+                b"ACGU".contains(&base),
                 "Expected RNA base, got {}",
                 base as char
             );

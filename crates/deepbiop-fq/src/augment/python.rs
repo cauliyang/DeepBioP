@@ -140,7 +140,7 @@ impl PySampler {
 }
 
 /// Python wrapper for QualityModel.
-#[cfg_attr(feature = "python", pyclass(name = "QualityModel"))]
+#[cfg_attr(feature = "python", pyclass(name = "QualityModel", from_py_object))]
 #[derive(Clone)]
 pub struct PyQualityModel {
     inner: QualityModel,

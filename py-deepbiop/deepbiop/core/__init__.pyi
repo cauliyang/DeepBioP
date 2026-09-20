@@ -3,6 +3,15 @@
 import builtins
 import typing
 
+__all__ = [
+    "generate_kmers",
+    "generate_kmers_table",
+    "kmers_to_seq",
+    "normalize_seq",
+    "reverse_complement",
+    "seq_to_kmers",
+]
+
 def generate_kmers(base: builtins.str, k: builtins.int) -> builtins.list[builtins.str]:
     r"""Generate all possible k-mers from a set of base characters.
 

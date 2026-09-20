@@ -26,7 +26,7 @@ use pyo3_stub_gen::derive::*;
 
 /// Python wrapper for AlignmentFeatures
 #[gen_stub_pyclass]
-#[pyclass(name = "AlignmentFeatures", module = "deepbiop.bam")]
+#[pyclass(name = "AlignmentFeatures", module = "deepbiop.bam", from_py_object)]
 #[derive(Clone)]
 pub struct PyAlignmentFeatures {
     inner: AlignmentFeatures,

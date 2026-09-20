@@ -61,7 +61,7 @@ pub fn reverse_complement(seq: String) -> String {
 /// It includes the sequence identifier, the sequence data itself, optional quality scores
 /// (for FASTQ format), and an optional description string.
 #[cfg_attr(feature = "python", gen_stub_pyclass())]
-#[cfg_attr(feature = "python", pyclass(get_all, set_all))]
+#[cfg_attr(feature = "python", pyclass(get_all, set_all, from_py_object))]
 #[derive(Debug, Clone, PartialEq, Eq)]
 pub struct SequenceRecord {
     /// Sequence identifier (e.g., read name, accession number)
