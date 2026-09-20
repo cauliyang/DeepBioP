@@ -1,5 +1,7 @@
-[build]
-rustflags = ["-C", "target-cpu=native"]
+# NOTE: do not add `target-cpu=native` here. This file is part of the repository,
+# so it applies to the wheels built in CI too; a binary tuned for the build host's
+# CPU crashes with SIGILL for users on older CPUs. Set RUSTFLAGS locally or add an
+# untracked .cargo/config.toml if you want host-specific optimisation.
 
 [target.aarch64-apple-darwin]
 rustflags = ["-C", "link-arg=-undefined", "-C", "link-arg=dynamic_lookup"]

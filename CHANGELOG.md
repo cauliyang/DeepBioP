@@ -8,6 +8,9 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ## [Unreleased]
 
 ### Fixed
+- Wheels are no longer built with `target-cpu=native`: the flag lived in the committed
+  `.cargo/config.toml`, so released binaries were tuned for the CI host's CPU and died
+  with SIGILL on older machines.
 - Canonical k-mer encoding folds a k-mer with its reverse complement, `k` is bounded
   (vocabulary capped at 16M), and too-short sequences error instead of returning zeros.
 - Streaming datasets (`FastqStreamDataset`, `FastaStreamDataset`, `BamStreamDataset`) hold
