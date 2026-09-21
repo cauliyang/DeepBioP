@@ -19,7 +19,7 @@ arrow = "60.0"
 bio = "4.0"
 bitvec = "1.1"
 bstr = "1.13.1"
-candle-core = { git = "https://github.com/huggingface/candle.git", version = "0.11.0" }
+candle-core = "0.11.0"
 colored = "3.1"
 deepbiop-bam = { version = "0.1.16", path = "crates/deepbiop-bam" }
 deepbiop-core = { version = "0.1.14", path = "crates/deepbiop-core" }
