@@ -37,7 +37,7 @@ lazy_static = "1.5.0"
 lexical = "7.0"
 log = "0.4"
 ndarray = { version = "0.17", features = ["serde", "rayon"] }
-ndarray-npy = "0.10"
+ndarray-npy = "0.11"
 needletail = "0.7"
 noodles = { version = "0.116.0", features = [
   "bgzf",
